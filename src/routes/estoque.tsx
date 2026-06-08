@@ -1,8 +1,19 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useRef, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { DataTable, type Column } from "@/components/data-table";
 import { Button } from "@/components/ui/button";
-import { ArrowDownToLine, ArrowUpFromLine, Plus } from "lucide-react";
+import { ArrowDownToLine, ArrowUpFromLine, FileCode2, Plus, UploadCloud } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { toast } from "sonner";
 import { StatusBadge } from "./index";
 
 export const Route = createFileRoute("/estoque")({
@@ -75,15 +86,119 @@ const colMov: Column<Movimentacao>[] = [
 ];
 
 function EstoquePage() {
+  const [open, setOpen] = useState(false);
+  const [file, setFile] = useState<File | null>(null);
+  const [dragging, setDragging] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  function handleFile(f: File | null) {
+    if (!f) return;
+    if (!f.name.toLowerCase().endsWith(".xml")) {
+      toast.error("Arquivo inválido", { description: "Envie um arquivo XML de NF-e." });
+      return;
+    }
+    setFile(f);
+  }
+
+  function confirmImport() {
+    if (!file) return;
+    toast.success("XML processado", {
+      description: `${file.name} — saldo de estoque e custos atualizados.`,
+    });
+    setFile(null);
+    setOpen(false);
+  }
+
   return (
     <AppShell
       title="Estoque"
       subtitle="Produtos, parâmetros fiscais e movimentação."
       actions={
         <>
-          <Button variant="outline" size="sm" className="h-8 gap-1.5 border-border">
-            <ArrowDownToLine className="h-3.5 w-3.5" /> Entrada
-          </Button>
+          <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline" size="sm" className="h-8 gap-1.5 border-border">
+                <ArrowDownToLine className="h-3.5 w-3.5" /> Entrada
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-lg">
+              <DialogHeader>
+                <DialogTitle>Entrada por NF-e de compra</DialogTitle>
+                <DialogDescription>
+                  Arraste o XML da nota de compra para atualizar o saldo de estoque e custos automaticamente.
+                </DialogDescription>
+              </DialogHeader>
+              <div
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  setDragging(true);
+                }}
+                onDragLeave={() => setDragging(false)}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  setDragging(false);
+                  handleFile(e.dataTransfer.files?.[0] ?? null);
+                }}
+                onClick={() => inputRef.current?.click()}
+                className={`flex cursor-pointer flex-col items-center justify-center gap-3 rounded-lg border border-dashed px-6 py-10 text-center transition-colors ${
+                  dragging
+                    ? "border-gold bg-gold/5"
+                    : "border-border bg-secondary/30 hover:border-gold/60"
+                }`}
+              >
+                {file ? (
+                  <>
+                    <FileCode2 className="h-8 w-8 text-gold" />
+                    <div>
+                      <p className="text-sm font-medium text-foreground">{file.name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {(file.size / 1024).toFixed(1)} KB · pronto para processar
+                      </p>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <UploadCloud className="h-8 w-8 text-muted-foreground" />
+                    <div>
+                      <p className="text-sm font-medium text-foreground">
+                        Solte o arquivo XML aqui
+                      </p>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        ou clique para selecionar do seu computador
+                      </p>
+                    </div>
+                  </>
+                )}
+                <input
+                  ref={inputRef}
+                  type="file"
+                  accept=".xml,text/xml,application/xml"
+                  className="hidden"
+                  onChange={(e) => handleFile(e.target.files?.[0] ?? null)}
+                />
+              </div>
+              <DialogFooter>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setFile(null);
+                    setOpen(false);
+                  }}
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  size="sm"
+                  disabled={!file}
+                  className="bg-foreground text-background hover:bg-foreground/90"
+                  onClick={confirmImport}
+                >
+                  Processar XML
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
           <Button variant="outline" size="sm" className="h-8 gap-1.5 border-border">
             <ArrowUpFromLine className="h-3.5 w-3.5" /> Saída
           </Button>
