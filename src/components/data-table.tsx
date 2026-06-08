@@ -25,6 +25,7 @@ interface DataTableProps<T extends Record<string, unknown>> {
   data: T[];
   filename?: string;
   toolbar?: ReactNode;
+  rowClassName?: (row: T, index: number) => string | undefined;
 }
 
 export function DataTable<T extends Record<string, unknown>>({
@@ -34,6 +35,7 @@ export function DataTable<T extends Record<string, unknown>>({
   data,
   filename = "export",
   toolbar,
+  rowClassName,
 }: DataTableProps<T>) {
   return (
     <div className="rounded-lg border border-border bg-card">
@@ -93,7 +95,10 @@ export function DataTable<T extends Record<string, unknown>>({
           </TableHeader>
           <TableBody>
             {data.map((row, i) => (
-              <TableRow key={i} className="border-border hover:bg-secondary/40">
+              <TableRow
+                key={i}
+                className={`border-border hover:bg-secondary/40 ${rowClassName?.(row, i) ?? ""}`}
+              >
                 {columns.map((c) => (
                   <TableCell
                     key={c.key}
