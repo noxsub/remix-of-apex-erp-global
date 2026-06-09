@@ -1,11 +1,20 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { DataTable, type Column } from "@/components/data-table";
 import { Button } from "@/components/ui/button";
-import { Upload, Plus } from "lucide-react";
+import { Upload, Plus, FileText, UploadCloud, CheckCircle2 } from "lucide-react";
 import { StatusBadge } from "./index";
 import { toast } from "sonner";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Progress } from "@/components/ui/progress";
 
 export const Route = createFileRoute("/financeiro")({
   head: () => ({
@@ -51,20 +60,50 @@ const cols: Column<Conta>[] = [
 
 function FinanceiroPage() {
   const [tab, setTab] = useState<"receber" | "pagar">("receber");
+  const [importOpen, setImportOpen] = useState(false);
+  const [retFile, setRetFile] = useState<File | null>(null);
+  const [dragging, setDragging] = useState(false);
+  const [progress, setProgress] = useState<number | null>(null);
+  const [done, setDone] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
 
-  const handleImport = () => {
-    const input = document.createElement("input");
-    input.type = "file";
-    input.accept = ".ret,.txt,.cnab,.rem";
-    input.onchange = () => {
-      if (input.files?.[0]) {
-        toast.success(`Arquivo "${input.files[0].name}" recebido`, {
-          description: "Processando retorno bancário...",
-        });
-      }
-    };
-    input.click();
-  };
+  function handleRetFile(f: File | null) {
+    if (!f) return;
+    const ok = /\.(ret|txt|cnab|rem)$/i.test(f.name);
+    if (!ok) {
+      toast.error("Formato inválido", { description: "Envie um arquivo .RET / CNAB 240." });
+      return;
+    }
+    setRetFile(f);
+    setDone(false);
+    setProgress(null);
+  }
+
+  function simular() {
+    if (!retFile) return;
+    setProgress(0);
+    setDone(false);
+    const id = window.setInterval(() => {
+      setProgress((p) => {
+        const next = (p ?? 0) + Math.random() * 12 + 4;
+        if (next >= 100) {
+          window.clearInterval(id);
+          setDone(true);
+          toast.success("Conciliação simulada", {
+            description: `${retFile.name} — 47 títulos processados, 42 conciliados.`,
+          });
+          return 100;
+        }
+        return next;
+      });
+    }, 220);
+  }
+
+  function resetImport() {
+    setRetFile(null);
+    setProgress(null);
+    setDone(false);
+  }
 
   return (
     <AppShell
@@ -74,7 +113,10 @@ function FinanceiroPage() {
         <>
           <Button
             size="sm"
-            onClick={handleImport}
+            onClick={() => {
+              resetImport();
+              setImportOpen(true);
+            }}
             className="h-9 gap-2 bg-gradient-to-b from-[oklch(0.82_0.1_85)] to-[oklch(0.72_0.11_85)] text-primary-foreground shadow-sm hover:opacity-95 border border-[oklch(0.62_0.1_85)]"
           >
             <Upload className="h-4 w-4" />
@@ -83,6 +125,107 @@ function FinanceiroPage() {
           <Button variant="outline" size="sm" className="h-9 gap-1.5">
             <Plus className="h-3.5 w-3.5" /> Lançamento
           </Button>
+          <Dialog
+            open={importOpen}
+            onOpenChange={(v) => {
+              setImportOpen(v);
+              if (!v) resetImport();
+            }}
+          >
+            <DialogContent className="sm:max-w-xl">
+              <DialogHeader>
+                <DialogTitle>Processamento de retorno bancário</DialogTitle>
+                <DialogDescription>
+                  Importe arquivos <strong>.RET</strong> ou <strong>CNAB 240</strong> da sua VAN bancária para conciliar títulos automaticamente.
+                </DialogDescription>
+              </DialogHeader>
+
+              <div
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  setDragging(true);
+                }}
+                onDragLeave={() => setDragging(false)}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  setDragging(false);
+                  handleRetFile(e.dataTransfer.files?.[0] ?? null);
+                }}
+                onClick={() => inputRef.current?.click()}
+                className={`flex cursor-pointer flex-col items-center justify-center gap-3 rounded-lg border border-dashed px-6 py-10 text-center transition-colors ${
+                  dragging
+                    ? "border-gold bg-gold/5"
+                    : "border-border bg-secondary/30 hover:border-gold/60"
+                }`}
+              >
+                {retFile ? (
+                  <>
+                    <FileText className="h-8 w-8 text-gold" />
+                    <div>
+                      <p className="text-sm font-medium">{retFile.name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {(retFile.size / 1024).toFixed(1)} KB · CNAB 240 / .RET
+                      </p>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <UploadCloud className="h-8 w-8 text-muted-foreground" />
+                    <div>
+                      <p className="text-sm font-medium">Arraste o arquivo .RET / CNAB 240</p>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        ou clique para selecionar da sua VAN bancária
+                      </p>
+                    </div>
+                  </>
+                )}
+                <input
+                  ref={inputRef}
+                  type="file"
+                  accept=".ret,.txt,.cnab,.rem"
+                  className="hidden"
+                  onChange={(e) => handleRetFile(e.target.files?.[0] ?? null)}
+                />
+              </div>
+
+              {progress !== null && (
+                <div className="space-y-2 rounded-md border border-border bg-secondary/30 p-3">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="font-medium text-foreground">
+                      {done ? (
+                        <span className="inline-flex items-center gap-1.5 text-emerald-600">
+                          <CheckCircle2 className="h-3.5 w-3.5" /> Conciliação concluída
+                        </span>
+                      ) : (
+                        "Processando registros..."
+                      )}
+                    </span>
+                    <span className="tabular-nums text-muted-foreground">{Math.round(progress)}%</span>
+                  </div>
+                  <Progress value={progress} className="h-1.5" />
+                  {done && (
+                    <p className="text-[11px] text-muted-foreground">
+                      47 títulos lidos · 42 conciliados · 5 divergências
+                    </p>
+                  )}
+                </div>
+              )}
+
+              <DialogFooter>
+                <Button variant="outline" size="sm" onClick={() => setImportOpen(false)}>
+                  Fechar
+                </Button>
+                <Button
+                  size="sm"
+                  disabled={!retFile || (progress !== null && !done)}
+                  className="bg-foreground text-background hover:bg-foreground/90"
+                  onClick={simular}
+                >
+                  Simular Conciliação
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </>
       }
     >
