@@ -60,7 +60,12 @@ type Fornecedor = {
 };
 type Colaborador = {
   nome: string;
+  cpf?: string;
   cargo: string;
+  cep?: string;
+  endereco?: string;
+  numero?: string;
+  complemento?: string;
   telefone: string;
   comissao: string;
 };
