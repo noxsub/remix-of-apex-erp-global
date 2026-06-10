@@ -381,6 +381,44 @@ function NovoFornecedorDialog({ onSave }: { onSave: (f: Fornecedor) => void }) {
   });
   const [loadingIe, setLoadingIe] = useState(false);
   const [loadingCep, setLoadingCep] = useState(false);
+  const [loadingCnpj, setLoadingCnpj] = useState(false);
+
+  async function consultarCnpj() {
+    const d = onlyDigits(form.cnpj);
+    if (d.length !== 14) {
+      toast.error("CNPJ inválido", { description: "Informe os 14 dígitos do CNPJ." });
+      return;
+    }
+    setLoadingCnpj(true);
+    try {
+      const res = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${d}`);
+      if (!res.ok) throw new Error("not ok");
+      const data = await res.json();
+      const endereco = [data.logradouro, data.bairro].filter(Boolean).join(", ");
+      const cidade = [data.municipio, data.uf].filter(Boolean).join(" / ");
+      const cep = data.cep ? formatCep(String(data.cep)) : form.cep;
+      const telefone = data.ddd_telefone_1 ? formatTel(String(data.ddd_telefone_1)) : form.telefone;
+      setForm((p) => ({
+        ...p,
+        razao: data.razao_social ?? p.razao,
+        fantasia: data.nome_fantasia || p.fantasia,
+        cep,
+        endereco: endereco || p.endereco,
+        numero: data.numero ? String(data.numero) : p.numero,
+        complemento: data.complemento || p.complemento,
+        cidade: cidade || p.cidade,
+        telefone: telefone || p.telefone,
+        email: data.email || p.email,
+      }));
+      toast.success("CNPJ encontrado", { description: data.razao_social });
+    } catch {
+      toast.error("Não foi possível consultar o CNPJ", {
+        description: "Verifique o número ou tente novamente.",
+      });
+    } finally {
+      setLoadingCnpj(false);
+    }
+  }
 
   async function consultarSefaz() {
     const d = onlyDigits(form.cnpj);
@@ -459,11 +497,35 @@ function NovoFornecedorDialog({ onSave }: { onSave: (f: Fornecedor) => void }) {
 
         <div className="col-span-6 space-y-1.5 sm:col-span-3">
           <Label className="text-xs">CNPJ *</Label>
-          <Input
-            placeholder="00.000.000/0000-00"
-            value={form.cnpj}
-            onChange={(e) => setForm({ ...form, cnpj: formatCnpj(e.target.value) })}
-          />
+          <div className="flex gap-2">
+            <Input
+              placeholder="00.000.000/0000-00"
+              value={form.cnpj}
+              onChange={(e) => setForm({ ...form, cnpj: formatCnpj(e.target.value) })}
+              onBlur={() => {
+                if (onlyDigits(form.cnpj).length === 14) consultarCnpj();
+              }}
+            />
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="shrink-0 gap-1.5"
+              onClick={consultarCnpj}
+              disabled={loadingCnpj}
+              title="Preencher automaticamente via Receita Federal"
+            >
+              {loadingCnpj ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <Building2 className="h-3.5 w-3.5" />
+              )}
+              Buscar
+            </Button>
+          </div>
+          <p className="text-[10px] text-muted-foreground">
+            Preenche automaticamente os demais campos via Receita Federal.
+          </p>
         </div>
         <div className="col-span-6 space-y-1.5 sm:col-span-3">
           <Label className="text-xs">Inscrição Estadual</Label>
