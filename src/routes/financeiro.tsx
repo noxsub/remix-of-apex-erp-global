@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { DataTable, type Column } from "@/components/data-table";
 import { Button } from "@/components/ui/button";
@@ -35,7 +35,7 @@ type Conta = {
   status: string;
 };
 
-const receber: Conta[] = [
+const receberInicial: Conta[] = [
   { documento: "NF-12458", parceiro: "Acme Global Ltd.", emissao: "08/06/2026", vencimento: "08/07/2026", valor: "R$ 18.420,00", status: "Em aberto" },
   { documento: "NF-12457", parceiro: "Northwind Trading", emissao: "08/06/2026", vencimento: "07/07/2026", valor: "R$ 9.890,50", status: "Em aberto" },
   { documento: "NF-12450", parceiro: "Initech LLC", emissao: "01/06/2026", vencimento: "01/06/2026", valor: "R$ 12.780,00", status: "Pago" },
@@ -66,17 +66,63 @@ function FinanceiroPage() {
   const [progress, setProgress] = useState<number | null>(null);
   const [done, setDone] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const [receber, setReceber] = useState<Conta[]>(receberInicial);
+  const [updatedDocs, setUpdatedDocs] = useState<Set<string>>(new Set());
+  const pendingUpdates = useRef<Array<{ documento: string; status: string }>>([]);
+
+  const resumo = useMemo(() => {
+    const parse = (v: string) =>
+      Number(v.replace(/[^\d,-]/g, "").replace(/\./g, "").replace(",", ".")) || 0;
+    const fmt = (n: number) =>
+      n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+    const aberto = receber.filter((r) => r.status === "Em aberto");
+    const pago = receber.filter((r) => r.status === "Pago");
+    const venc = receber.filter((r) => r.status === "Vencido");
+    const diverg = receber.filter((r) => r.status === "Divergente");
+    return {
+      aReceber: [fmt(aberto.reduce((s, r) => s + parse(r.valor), 0)), `${aberto.length} títulos`],
+      recebidos: [fmt(pago.reduce((s, r) => s + parse(r.valor), 0)), `${pago.length} títulos`],
+      vencidos: [fmt(venc.reduce((s, r) => s + parse(r.valor), 0)), `${venc.length} títulos`],
+      divergentes: diverg.length,
+    };
+  }, [receber]);
 
   function handleRetFile(f: File | null) {
     if (!f) return;
-    const ok = /\.(ret|txt|cnab|rem)$/i.test(f.name);
+    const ok = /\.(ret|txt|cnab|rem|json)$/i.test(f.name);
     if (!ok) {
-      toast.error("Formato inválido", { description: "Envie um arquivo .RET / CNAB 240." });
+      toast.error("Formato inválido", { description: "Envie .RET / CNAB 240 ou .JSON." });
       return;
     }
     setRetFile(f);
     setDone(false);
     setProgress(null);
+    pendingUpdates.current = [];
+
+    if (/\.json$/i.test(f.name)) {
+      f.text()
+        .then((txt) => {
+          const parsed = JSON.parse(txt);
+          const items: Array<{ documento: string; status: string }> = Array.isArray(parsed)
+            ? parsed
+            : Array.isArray(parsed?.titulos)
+              ? parsed.titulos
+              : Array.isArray(parsed?.updates)
+                ? parsed.updates
+                : [];
+          if (!items.length) {
+            toast.error("JSON sem títulos reconhecíveis", {
+              description: 'Esperado: [{ "documento": "NF-...", "status": "Pago" | "Divergente" }]',
+            });
+            return;
+          }
+          pendingUpdates.current = items;
+          toast.success("JSON carregado", {
+            description: `${items.length} título(s) prontos para conciliação.`,
+          });
+        })
+        .catch(() => toast.error("JSON inválido"));
+    }
   }
 
   function simular() {
@@ -89,14 +135,42 @@ function FinanceiroPage() {
         if (next >= 100) {
           window.clearInterval(id);
           setDone(true);
-          toast.success("Conciliação simulada", {
-            description: `${retFile.name} — 47 títulos processados, 42 conciliados.`,
-          });
+          aplicarAtualizacoes();
           return 100;
         }
         return next;
       });
     }, 220);
+  }
+
+  function aplicarAtualizacoes() {
+    const updates = pendingUpdates.current;
+    if (updates.length === 0) {
+      toast.success("Conciliação simulada", {
+        description: `${retFile?.name} — 47 títulos processados, 42 conciliados.`,
+      });
+      return;
+    }
+    const map = new Map(updates.map((u) => [u.documento, u.status]));
+    const touched = new Set<string>();
+    setReceber((prev) =>
+      prev.map((r) => {
+        const novo = map.get(r.documento);
+        if (novo && novo !== r.status) {
+          touched.add(r.documento);
+          return { ...r, status: novo };
+        }
+        return r;
+      }),
+    );
+    setUpdatedDocs(touched);
+    window.setTimeout(() => setUpdatedDocs(new Set()), 12000);
+    const pagos = updates.filter((u) => u.status === "Pago").length;
+    const diverg = updates.filter((u) => u.status === "Divergente").length;
+    toast.success("Conciliação aplicada", {
+      description: `${touched.size} título(s) atualizados · ${pagos} pagos · ${diverg} divergentes.`,
+    });
+    setTab("receber");
   }
 
   function resetImport() {
@@ -164,7 +238,8 @@ function FinanceiroPage() {
                     <div>
                       <p className="text-sm font-medium">{retFile.name}</p>
                       <p className="text-xs text-muted-foreground">
-                        {(retFile.size / 1024).toFixed(1)} KB · CNAB 240 / .RET
+                        {(retFile.size / 1024).toFixed(1)} KB ·{" "}
+                        {/\.json$/i.test(retFile.name) ? "JSON de conciliação" : "CNAB 240 / .RET"}
                       </p>
                     </div>
                   </>
@@ -172,9 +247,9 @@ function FinanceiroPage() {
                   <>
                     <UploadCloud className="h-8 w-8 text-muted-foreground" />
                     <div>
-                      <p className="text-sm font-medium">Arraste o arquivo .RET / CNAB 240</p>
+                      <p className="text-sm font-medium">Arraste o arquivo .RET, CNAB 240 ou .JSON</p>
                       <p className="mt-1 text-xs text-muted-foreground">
-                        ou clique para selecionar da sua VAN bancária
+                        VAN bancária (.RET / CNAB) ou retorno estruturado em .JSON
                       </p>
                     </div>
                   </>
@@ -182,7 +257,7 @@ function FinanceiroPage() {
                 <input
                   ref={inputRef}
                   type="file"
-                  accept=".ret,.txt,.cnab,.rem"
+                  accept=".ret,.txt,.cnab,.rem,.json,application/json"
                   className="hidden"
                   onChange={(e) => handleRetFile(e.target.files?.[0] ?? null)}
                 />
@@ -231,10 +306,14 @@ function FinanceiroPage() {
     >
       <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
         {[
-          ["A Receber (mês)", "R$ 184.920", "12 títulos"],
-          ["Recebidos", "R$ 96.450", "8 títulos"],
+          ["A Receber (mês)", resumo.aReceber[0], resumo.aReceber[1]],
+          ["Recebidos", resumo.recebidos[0], resumo.recebidos[1]],
           ["A Pagar (mês)", "R$ 92.180", "9 títulos"],
-          ["Vencidos", "R$ 5.510", "2 títulos"],
+          [
+            "Vencidos / Divergentes",
+            resumo.vencidos[0],
+            `${resumo.vencidos[1]} · ${resumo.divergentes} divergentes`,
+          ],
         ].map(([label, value, sub]) => (
           <div key={label} className="rounded-lg border border-border bg-card p-5">
             <div className="text-xs uppercase tracking-wider text-muted-foreground">{label}</div>
@@ -271,6 +350,11 @@ function FinanceiroPage() {
             columns={cols}
             data={receber}
             filename="contas-a-receber"
+            rowClassName={(r) =>
+              updatedDocs.has(r.documento)
+                ? "bg-gold/5 ring-1 ring-inset ring-gold/30 animate-pulse"
+                : ""
+            }
           />
         ) : (
           <DataTable
