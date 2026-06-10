@@ -344,6 +344,170 @@ function NovoClienteDialog({ onSave }: { onSave: (c: Cliente) => void }) {
   );
 }
 
+function NovoColaboradorDialog({ onSave }: { onSave: (c: Colaborador) => void }) {
+  const [form, setForm] = useState<Colaborador>({
+    nome: "",
+    cpf: "",
+    cargo: "",
+    cep: "",
+    endereco: "",
+    numero: "",
+    complemento: "",
+    telefone: "",
+    comissao: "0,0%",
+  });
+  const [loadingCep, setLoadingCep] = useState(false);
+
+  function formatCpf(s: string) {
+    const d = onlyDigits(s).slice(0, 11);
+    return d
+      .replace(/^(\d{3})(\d)/, "$1.$2")
+      .replace(/^(\d{3})\.(\d{3})(\d)/, "$1.$2.$3")
+      .replace(/\.(\d{3})(\d)/, ".$1-$2");
+  }
+
+  async function consultarCep() {
+    const d = onlyDigits(form.cep ?? "");
+    if (d.length !== 8) {
+      toast.error("CEP inválido", { description: "Informe os 8 dígitos do CEP." });
+      return;
+    }
+    setLoadingCep(true);
+    try {
+      const res = await fetch(`https://viacep.com.br/ws/${d}/json/`);
+      const data = await res.json();
+      if (data.erro) {
+        toast.error("CEP não encontrado");
+      } else {
+        setForm((p) => ({
+          ...p,
+          endereco: [data.logradouro, data.bairro, data.localidade, data.uf]
+            .filter(Boolean)
+            .join(", "),
+        }));
+        toast.success("Endereço preenchido", { description: data.logradouro });
+      }
+    } catch {
+      toast.error("Falha ao consultar ViaCEP");
+    } finally {
+      setLoadingCep(false);
+    }
+  }
+
+  const canSave = form.nome.trim().length > 0;
+
+  return (
+    <DialogContent className="sm:max-w-2xl">
+      <DialogHeader>
+        <DialogTitle>Novo Colaborador</DialogTitle>
+        <DialogDescription>
+          Cadastro de colaborador com integração ViaCEP para preenchimento automático do endereço.
+        </DialogDescription>
+      </DialogHeader>
+
+      <div className="grid grid-cols-6 gap-3">
+        <div className="col-span-6 space-y-1.5 sm:col-span-3">
+          <Label className="text-xs">Nome *</Label>
+          <Input value={form.nome} onChange={(e) => setForm({ ...form, nome: e.target.value })} />
+        </div>
+        <div className="col-span-6 space-y-1.5 sm:col-span-3">
+          <Label className="text-xs">CPF</Label>
+          <Input
+            placeholder="000.000.000-00"
+            value={form.cpf}
+            onChange={(e) => setForm({ ...form, cpf: formatCpf(e.target.value) })}
+          />
+        </div>
+
+        <div className="col-span-6 space-y-1.5 sm:col-span-2">
+          <Label className="text-xs">CEP</Label>
+          <div className="flex gap-2">
+            <Input
+              placeholder="00000-000"
+              value={form.cep}
+              onChange={(e) => setForm({ ...form, cep: formatCep(e.target.value) })}
+              onBlur={() => {
+                if (onlyDigits(form.cep ?? "").length === 8) consultarCep();
+              }}
+            />
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="shrink-0 gap-1.5"
+              onClick={consultarCep}
+              disabled={loadingCep}
+            >
+              {loadingCep ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <MapPin className="h-3.5 w-3.5" />
+              )}
+            </Button>
+          </div>
+        </div>
+        <div className="col-span-6 space-y-1.5 sm:col-span-4">
+          <Label className="text-xs">Endereço</Label>
+          <Input
+            placeholder="Preenchido via ViaCEP"
+            value={form.endereco}
+            onChange={(e) => setForm({ ...form, endereco: e.target.value })}
+          />
+        </div>
+
+        <div className="col-span-3 space-y-1.5 sm:col-span-2">
+          <Label className="text-xs">Número</Label>
+          <Input
+            value={form.numero}
+            onChange={(e) => setForm({ ...form, numero: e.target.value })}
+          />
+        </div>
+        <div className="col-span-3 space-y-1.5 sm:col-span-4">
+          <Label className="text-xs">Complemento</Label>
+          <Input
+            value={form.complemento}
+            onChange={(e) => setForm({ ...form, complemento: e.target.value })}
+          />
+        </div>
+
+        <div className="col-span-6 space-y-1.5 sm:col-span-3">
+          <Label className="text-xs">Telefone</Label>
+          <Input
+            placeholder="(00) 00000-0000"
+            value={form.telefone}
+            onChange={(e) => setForm({ ...form, telefone: formatTel(e.target.value) })}
+          />
+        </div>
+        <div className="col-span-6 space-y-1.5 sm:col-span-3">
+          <Label className="text-xs">Cargo</Label>
+          <Input
+            placeholder="Ex.: Vendedor, Cabeleireiro..."
+            value={form.cargo}
+            onChange={(e) => setForm({ ...form, cargo: e.target.value })}
+          />
+        </div>
+      </div>
+
+      <DialogFooter>
+        <Button
+          size="sm"
+          className="bg-foreground text-background hover:bg-foreground/90"
+          disabled={!canSave}
+          onClick={() =>
+            onSave({
+              ...form,
+              cargo: form.cargo || "—",
+              telefone: form.telefone || "—",
+            })
+          }
+        >
+          Salvar colaborador
+        </Button>
+      </DialogFooter>
+    </DialogContent>
+  );
+}
+
 function onlyDigits(s: string) {
   return s.replace(/\D/g, "");
 }
