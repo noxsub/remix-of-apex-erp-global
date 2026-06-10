@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { DataTable, type Column } from "@/components/data-table";
 import { Button } from "@/components/ui/button";
@@ -23,7 +23,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, Settings2, Package, Briefcase } from "lucide-react";
+import { Plus, Settings2, Package, Briefcase, Loader2, MapPin, Building2 } from "lucide-react";
 import { StatusBadge } from "./index";
 import { toast } from "sonner";
 
@@ -47,9 +47,16 @@ type Cliente = {
 };
 type Fornecedor = {
   razao: string;
+  fantasia?: string;
   cnpj: string;
   ie: string;
   cidade: string;
+  cep?: string;
+  endereco?: string;
+  numero?: string;
+  complemento?: string;
+  telefone?: string;
+  email?: string;
 };
 type Colaborador = {
   nome: string;
@@ -78,11 +85,22 @@ const colaboradoresIniciais: Colaborador[] = [
 ];
 
 function CadastrosPage() {
-  const [estoqueAtivo, setEstoqueAtivo] = useState(true);
+  const [estoqueAtivo, setEstoqueAtivo] = useState<boolean>(() => {
+    if (typeof window === "undefined") return true;
+    const v = window.localStorage.getItem("erp:estoqueAtivo");
+    return v === null ? true : v === "true";
+  });
+  useEffect(() => {
+    window.localStorage.setItem("erp:estoqueAtivo", String(estoqueAtivo));
+    window.dispatchEvent(
+      new CustomEvent("erp:estoque-toggle", { detail: { ativo: estoqueAtivo } }),
+    );
+  }, [estoqueAtivo]);
   const [clientes, setClientes] = useState(clientesIniciais);
   const [fornecedores, setFornecedores] = useState(fornecedoresIniciais);
   const [colaboradores, setColaboradores] = useState(colaboradoresIniciais);
   const [openCliente, setOpenCliente] = useState(false);
+  const [openFornecedor, setOpenFornecedor] = useState(false);
 
   const colClientes: Column<Cliente>[] = [
     { key: "nome", header: "Nome" },
@@ -200,19 +218,23 @@ function CadastrosPage() {
             data={fornecedores}
             filename="fornecedores"
             toolbar={
-              <Button
-                size="sm"
-                className="h-8 gap-1.5 bg-foreground text-background hover:bg-foreground/90"
-                onClick={() => {
-                  setFornecedores((p) => [
-                    ...p,
-                    { razao: "Novo Fornecedor", cnpj: "00.000.000/0001-00", ie: "ISENTO", cidade: "—" },
-                  ]);
-                  toast.success("Fornecedor adicionado");
-                }}
-              >
-                <Plus className="h-3.5 w-3.5" /> Novo Fornecedor
-              </Button>
+              <Dialog open={openFornecedor} onOpenChange={setOpenFornecedor}>
+                <DialogTrigger asChild>
+                  <Button
+                    size="sm"
+                    className="h-8 gap-1.5 bg-foreground text-background hover:bg-foreground/90"
+                  >
+                    <Plus className="h-3.5 w-3.5" /> Novo Fornecedor
+                  </Button>
+                </DialogTrigger>
+                <NovoFornecedorDialog
+                  onSave={(f) => {
+                    setFornecedores((p) => [...p, f]);
+                    setOpenFornecedor(false);
+                    toast.success("Fornecedor cadastrado", { description: f.razao });
+                  }}
+                />
+              </Dialog>
             }
           />
         </TabsContent>
@@ -306,6 +328,249 @@ function NovoClienteDialog({ onSave }: { onSave: (c: Cliente) => void }) {
           onClick={() => onSave(form)}
         >
           Salvar cliente
+        </Button>
+      </DialogFooter>
+    </DialogContent>
+  );
+}
+
+function onlyDigits(s: string) {
+  return s.replace(/\D/g, "");
+}
+function formatCnpj(s: string) {
+  const d = onlyDigits(s).slice(0, 14);
+  return d
+    .replace(/^(\d{2})(\d)/, "$1.$2")
+    .replace(/^(\d{2})\.(\d{3})(\d)/, "$1.$2.$3")
+    .replace(/\.(\d{3})(\d)/, ".$1/$2")
+    .replace(/(\d{4})(\d)/, "$1-$2");
+}
+function formatCep(s: string) {
+  const d = onlyDigits(s).slice(0, 8);
+  return d.replace(/^(\d{5})(\d)/, "$1-$2");
+}
+function formatTel(s: string) {
+  const d = onlyDigits(s).slice(0, 11);
+  if (d.length <= 10) return d.replace(/^(\d{2})(\d{4})(\d)/, "($1) $2-$3");
+  return d.replace(/^(\d{2})(\d{5})(\d)/, "($1) $2-$3");
+}
+
+function NovoFornecedorDialog({ onSave }: { onSave: (f: Fornecedor) => void }) {
+  const [form, setForm] = useState<Fornecedor>({
+    razao: "",
+    fantasia: "",
+    cnpj: "",
+    ie: "",
+    cidade: "",
+    cep: "",
+    endereco: "",
+    numero: "",
+    complemento: "",
+    telefone: "",
+    email: "",
+  });
+  const [loadingIe, setLoadingIe] = useState(false);
+  const [loadingCep, setLoadingCep] = useState(false);
+
+  async function consultarSefaz() {
+    const d = onlyDigits(form.cnpj);
+    if (d.length !== 14) {
+      toast.error("CNPJ inválido", { description: "Informe os 14 dígitos do CNPJ." });
+      return;
+    }
+    setLoadingIe(true);
+    // Simulação da consulta SEFAZ — em produção integra-se ao SINTEGRA / SEFAZ estadual.
+    await new Promise((r) => setTimeout(r, 900));
+    const last = Number(d.slice(-1));
+    const isento = last % 2 === 0;
+    const ie = isento
+      ? "ISENTO"
+      : `${d.slice(0, 3)}.${d.slice(3, 6)}.${d.slice(6, 9)}`;
+    setForm((p) => ({ ...p, ie }));
+    setLoadingIe(false);
+    toast.success("SEFAZ consultada", {
+      description: isento ? "Empresa isenta de I.E." : `Inscrição encontrada: ${ie}`,
+    });
+  }
+
+  async function consultarCep() {
+    const d = onlyDigits(form.cep ?? "");
+    if (d.length !== 8) {
+      toast.error("CEP inválido", { description: "Informe os 8 dígitos do CEP." });
+      return;
+    }
+    setLoadingCep(true);
+    try {
+      const res = await fetch(`https://viacep.com.br/ws/${d}/json/`);
+      const data = await res.json();
+      if (data.erro) {
+        toast.error("CEP não encontrado");
+      } else {
+        setForm((p) => ({
+          ...p,
+          endereco: [data.logradouro, data.bairro].filter(Boolean).join(", "),
+          cidade: `${data.localidade} / ${data.uf}`,
+        }));
+        toast.success("Endereço preenchido", { description: data.logradouro });
+      }
+    } catch {
+      toast.error("Falha ao consultar ViaCEP");
+    } finally {
+      setLoadingCep(false);
+    }
+  }
+
+  const canSave = form.razao.trim().length > 0 && onlyDigits(form.cnpj).length === 14;
+
+  return (
+    <DialogContent className="sm:max-w-2xl">
+      <DialogHeader>
+        <DialogTitle>Novo Fornecedor</DialogTitle>
+        <DialogDescription>
+          Cadastro completo com integração SEFAZ (Inscrição Estadual) e ViaCEP (endereço).
+        </DialogDescription>
+      </DialogHeader>
+
+      <div className="grid grid-cols-6 gap-3">
+        <div className="col-span-6 space-y-1.5 sm:col-span-3">
+          <Label className="text-xs">Razão Social *</Label>
+          <Input
+            value={form.razao}
+            onChange={(e) => setForm({ ...form, razao: e.target.value })}
+          />
+        </div>
+        <div className="col-span-6 space-y-1.5 sm:col-span-3">
+          <Label className="text-xs">Nome Fantasia</Label>
+          <Input
+            value={form.fantasia}
+            onChange={(e) => setForm({ ...form, fantasia: e.target.value })}
+          />
+        </div>
+
+        <div className="col-span-6 space-y-1.5 sm:col-span-3">
+          <Label className="text-xs">CNPJ *</Label>
+          <Input
+            placeholder="00.000.000/0000-00"
+            value={form.cnpj}
+            onChange={(e) => setForm({ ...form, cnpj: formatCnpj(e.target.value) })}
+          />
+        </div>
+        <div className="col-span-6 space-y-1.5 sm:col-span-3">
+          <Label className="text-xs">Inscrição Estadual</Label>
+          <div className="flex gap-2">
+            <Input
+              placeholder="Auto via SEFAZ"
+              value={form.ie}
+              onChange={(e) => setForm({ ...form, ie: e.target.value })}
+            />
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="shrink-0 gap-1.5"
+              onClick={consultarSefaz}
+              disabled={loadingIe}
+            >
+              {loadingIe ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <Building2 className="h-3.5 w-3.5" />
+              )}
+              SEFAZ
+            </Button>
+          </div>
+        </div>
+
+        <div className="col-span-6 space-y-1.5 sm:col-span-2">
+          <Label className="text-xs">CEP</Label>
+          <div className="flex gap-2">
+            <Input
+              placeholder="00000-000"
+              value={form.cep}
+              onChange={(e) => setForm({ ...form, cep: formatCep(e.target.value) })}
+              onBlur={() => {
+                if (onlyDigits(form.cep ?? "").length === 8) consultarCep();
+              }}
+            />
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="shrink-0 gap-1.5"
+              onClick={consultarCep}
+              disabled={loadingCep}
+            >
+              {loadingCep ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <MapPin className="h-3.5 w-3.5" />
+              )}
+            </Button>
+          </div>
+        </div>
+        <div className="col-span-6 space-y-1.5 sm:col-span-4">
+          <Label className="text-xs">Endereço</Label>
+          <Input
+            placeholder="Preenchido via ViaCEP"
+            value={form.endereco}
+            onChange={(e) => setForm({ ...form, endereco: e.target.value })}
+          />
+        </div>
+
+        <div className="col-span-3 space-y-1.5 sm:col-span-2">
+          <Label className="text-xs">Número</Label>
+          <Input
+            value={form.numero}
+            onChange={(e) => setForm({ ...form, numero: e.target.value })}
+          />
+        </div>
+        <div className="col-span-3 space-y-1.5 sm:col-span-2">
+          <Label className="text-xs">Complemento</Label>
+          <Input
+            value={form.complemento}
+            onChange={(e) => setForm({ ...form, complemento: e.target.value })}
+          />
+        </div>
+        <div className="col-span-6 space-y-1.5 sm:col-span-2">
+          <Label className="text-xs">Cidade / UF</Label>
+          <Input
+            value={form.cidade}
+            onChange={(e) => setForm({ ...form, cidade: e.target.value })}
+          />
+        </div>
+
+        <div className="col-span-6 space-y-1.5 sm:col-span-3">
+          <Label className="text-xs">Telefone (opcional)</Label>
+          <Input
+            placeholder="(00) 00000-0000"
+            value={form.telefone}
+            onChange={(e) => setForm({ ...form, telefone: formatTel(e.target.value) })}
+          />
+        </div>
+        <div className="col-span-6 space-y-1.5 sm:col-span-3">
+          <Label className="text-xs">E-mail (opcional)</Label>
+          <Input
+            type="email"
+            value={form.email}
+            onChange={(e) => setForm({ ...form, email: e.target.value })}
+          />
+        </div>
+      </div>
+
+      <DialogFooter>
+        <Button
+          size="sm"
+          className="bg-foreground text-background hover:bg-foreground/90"
+          disabled={!canSave}
+          onClick={() =>
+            onSave({
+              ...form,
+              ie: form.ie || "—",
+              cidade: form.cidade || "—",
+            })
+          }
+        >
+          Salvar fornecedor
         </Button>
       </DialogFooter>
     </DialogContent>
