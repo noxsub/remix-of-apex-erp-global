@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { DataTable, type Column } from "@/components/data-table";
 import { Button } from "@/components/ui/button";
@@ -23,7 +23,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, Settings2, Package, Briefcase } from "lucide-react";
+import { Plus, Settings2, Package, Briefcase, Loader2, MapPin, Building2 } from "lucide-react";
 import { StatusBadge } from "./index";
 import { toast } from "sonner";
 
@@ -47,9 +47,16 @@ type Cliente = {
 };
 type Fornecedor = {
   razao: string;
+  fantasia?: string;
   cnpj: string;
   ie: string;
   cidade: string;
+  cep?: string;
+  endereco?: string;
+  numero?: string;
+  complemento?: string;
+  telefone?: string;
+  email?: string;
 };
 type Colaborador = {
   nome: string;
@@ -78,11 +85,22 @@ const colaboradoresIniciais: Colaborador[] = [
 ];
 
 function CadastrosPage() {
-  const [estoqueAtivo, setEstoqueAtivo] = useState(true);
+  const [estoqueAtivo, setEstoqueAtivo] = useState<boolean>(() => {
+    if (typeof window === "undefined") return true;
+    const v = window.localStorage.getItem("erp:estoqueAtivo");
+    return v === null ? true : v === "true";
+  });
+  useEffect(() => {
+    window.localStorage.setItem("erp:estoqueAtivo", String(estoqueAtivo));
+    window.dispatchEvent(
+      new CustomEvent("erp:estoque-toggle", { detail: { ativo: estoqueAtivo } }),
+    );
+  }, [estoqueAtivo]);
   const [clientes, setClientes] = useState(clientesIniciais);
   const [fornecedores, setFornecedores] = useState(fornecedoresIniciais);
   const [colaboradores, setColaboradores] = useState(colaboradoresIniciais);
   const [openCliente, setOpenCliente] = useState(false);
+  const [openFornecedor, setOpenFornecedor] = useState(false);
 
   const colClientes: Column<Cliente>[] = [
     { key: "nome", header: "Nome" },
@@ -200,19 +218,23 @@ function CadastrosPage() {
             data={fornecedores}
             filename="fornecedores"
             toolbar={
-              <Button
-                size="sm"
-                className="h-8 gap-1.5 bg-foreground text-background hover:bg-foreground/90"
-                onClick={() => {
-                  setFornecedores((p) => [
-                    ...p,
-                    { razao: "Novo Fornecedor", cnpj: "00.000.000/0001-00", ie: "ISENTO", cidade: "—" },
-                  ]);
-                  toast.success("Fornecedor adicionado");
-                }}
-              >
-                <Plus className="h-3.5 w-3.5" /> Novo Fornecedor
-              </Button>
+              <Dialog open={openFornecedor} onOpenChange={setOpenFornecedor}>
+                <DialogTrigger asChild>
+                  <Button
+                    size="sm"
+                    className="h-8 gap-1.5 bg-foreground text-background hover:bg-foreground/90"
+                  >
+                    <Plus className="h-3.5 w-3.5" /> Novo Fornecedor
+                  </Button>
+                </DialogTrigger>
+                <NovoFornecedorDialog
+                  onSave={(f) => {
+                    setFornecedores((p) => [...p, f]);
+                    setOpenFornecedor(false);
+                    toast.success("Fornecedor cadastrado", { description: f.razao });
+                  }}
+                />
+              </Dialog>
             }
           />
         </TabsContent>
