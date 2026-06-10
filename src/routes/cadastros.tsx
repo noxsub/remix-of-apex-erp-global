@@ -106,6 +106,7 @@ function CadastrosPage() {
   const [colaboradores, setColaboradores] = useState(colaboradoresIniciais);
   const [openCliente, setOpenCliente] = useState(false);
   const [openFornecedor, setOpenFornecedor] = useState(false);
+  const [openColaborador, setOpenColaborador] = useState(false);
 
   const colClientes: Column<Cliente>[] = [
     { key: "nome", header: "Nome" },
@@ -252,19 +253,23 @@ function CadastrosPage() {
             data={colaboradores}
             filename="colaboradores"
             toolbar={
-              <Button
-                size="sm"
-                className="h-8 gap-1.5 bg-foreground text-background hover:bg-foreground/90"
-                onClick={() => {
-                  setColaboradores((p) => [
-                    ...p,
-                    { nome: "Novo Colaborador", cargo: "—", telefone: "—", comissao: "0,0%" },
-                  ]);
-                  toast.success("Colaborador adicionado");
-                }}
-              >
-                <Plus className="h-3.5 w-3.5" /> Novo Colaborador
-              </Button>
+              <Dialog open={openColaborador} onOpenChange={setOpenColaborador}>
+                <DialogTrigger asChild>
+                  <Button
+                    size="sm"
+                    className="h-8 gap-1.5 bg-foreground text-background hover:bg-foreground/90"
+                  >
+                    <Plus className="h-3.5 w-3.5" /> Novo Colaborador
+                  </Button>
+                </DialogTrigger>
+                <NovoColaboradorDialog
+                  onSave={(c) => {
+                    setColaboradores((p) => [...p, c]);
+                    setOpenColaborador(false);
+                    toast.success("Colaborador cadastrado", { description: c.nome });
+                  }}
+                />
+              </Dialog>
             }
           />
         </TabsContent>
