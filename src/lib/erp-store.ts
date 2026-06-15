@@ -34,10 +34,20 @@ export type Orcamento = {
   total: number;
 };
 
+export type PedidoFaturado = {
+  nf: string;
+  data: string;
+  clienteNome: string;
+  itens: number;
+  total: number;
+  status: string;
+};
+
 const KEYS = {
   clientes: "erp:clientes",
   fornecedores: "erp:fornecedores",
   orcamentos: "erp:orcamentos",
+  faturados: "erp:faturados",
 } as const;
 
 function read<T>(key: string, fallback: T): T {
@@ -98,4 +108,7 @@ export function useFornecedores() {
 }
 export function useOrcamentos() {
   return usePersisted<Orcamento[]>(KEYS.orcamentos, []);
+}
+export function useFaturados() {
+  return usePersisted<PedidoFaturado[]>(KEYS.faturados, []);
 }
