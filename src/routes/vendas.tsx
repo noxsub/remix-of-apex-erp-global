@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { DataTable, type Column } from "@/components/data-table";
 import { Button } from "@/components/ui/button";
@@ -12,7 +12,25 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, Trash2, FileText } from "lucide-react";
+import { Plus, Trash2, FileText, ChevronsUpDown, Check, ArrowLeft, RotateCcw } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import { cn } from "@/lib/utils";
+import { toast } from "sonner";
+import {
+  useClientes,
+  useFornecedores,
+  useOrcamentos,
+  type Orcamento,
+  type OrcamentoItem,
+} from "@/lib/erp-store";
 import { StatusBadge } from "./index";
 
 export const Route = createFileRoute("/vendas")({
@@ -58,10 +76,25 @@ const colPed: Column<Pedido>[] = [
   { key: "status", header: "Status", render: (r) => <StatusBadge value={r.status} /> },
 ];
 
-type Item = { sku: string; qtd: number };
+type Item = OrcamentoItem;
+
+type ConferenciaState = {
+  clienteNome: string;
+  condicao: string;
+  items: Item[];
+  total: number;
+};
 
 function VendasPage() {
+  const [clientes] = useClientes();
+  const [fornecedores] = useFornecedores();
+  const [orcamentos, setOrcamentos] = useOrcamentos();
+
+  const [clienteNome, setClienteNome] = useState<string>("");
+  const [condicao, setCondicao] = useState<string>("30");
   const [items, setItems] = useState<Item[]>([{ sku: "SKU-10042", qtd: 1 }]);
+  const [orcamentoEditandoId, setOrcamentoEditandoId] = useState<string | null>(null);
+  const [conferencia, setConferencia] = useState<ConferenciaState | null>(null);
 
   const addItem = () => setItems([...items, { sku: produtosEstoque[0].sku, qtd: 1 }]);
   const removeItem = (i: number) => setItems(items.filter((_, idx) => idx !== i));
@@ -73,6 +106,95 @@ function VendasPage() {
     return acc + (p ? p.preco * it.qtd : 0);
   }, 0);
 
+  const opcoesCliente = useMemo(() => {
+    const fromClientes = clientes.map((c) => ({
+      key: `cli:${c.documento}`,
+      nome: c.nome,
+      detalhe: c.documento,
+      origem: "Cliente" as const,
+      busca: `${c.nome} ${c.documento}`.toLowerCase(),
+    }));
+    const fromFornecedores = fornecedores.map((f) => ({
+      key: `forn:${f.cnpj}`,
+      nome: f.razao,
+      detalhe: [f.fantasia, f.cnpj].filter(Boolean).join(" · "),
+      origem: "Fornecedor" as const,
+      busca: `${f.razao} ${f.fantasia ?? ""} ${f.cnpj}`.toLowerCase(),
+    }));
+    return [...fromClientes, ...fromFornecedores];
+  }, [clientes, fornecedores]);
+
+  function resetForm() {
+    setClienteNome("");
+    setCondicao("30");
+    setItems([{ sku: "SKU-10042", qtd: 1 }]);
+    setOrcamentoEditandoId(null);
+  }
+
+  function salvarOrcamento() {
+    if (!clienteNome) {
+      toast.error("Selecione um cliente antes de salvar o orçamento.");
+      return;
+    }
+    const id = orcamentoEditandoId ?? `ORC-${Date.now()}`;
+    const novo: Orcamento = {
+      id,
+      criadoEm: new Date().toLocaleString("pt-BR"),
+      clienteNome,
+      condicao,
+      items,
+      total,
+    };
+    setOrcamentos((prev) => {
+      const semAtual = prev.filter((o) => o.id !== id);
+      return [novo, ...semAtual];
+    });
+    toast.success("Orçamento salvo", {
+      description: `${id} · ${clienteNome} · sem integração fiscal`,
+    });
+    resetForm();
+  }
+
+  function retomarOrcamento(o: Orcamento) {
+    setClienteNome(o.clienteNome);
+    setCondicao(o.condicao);
+    setItems(o.items);
+    setOrcamentoEditandoId(o.id);
+    toast.info("Orçamento retomado", { description: `${o.id} carregado para edição.` });
+  }
+
+  function descartarOrcamento(id: string) {
+    setOrcamentos((prev) => prev.filter((o) => o.id !== id));
+    if (orcamentoEditandoId === id) resetForm();
+  }
+
+  function abrirConferencia() {
+    if (!clienteNome) {
+      toast.error("Selecione um cliente antes de faturar.");
+      return;
+    }
+    setConferencia({ clienteNome, condicao, items, total });
+  }
+
+  if (conferencia) {
+    return (
+      <ConferenciaView
+        data={conferencia}
+        onVoltar={() => setConferencia(null)}
+        onConfirmar={() => {
+          if (orcamentoEditandoId) {
+            setOrcamentos((prev) => prev.filter((o) => o.id !== orcamentoEditandoId));
+          }
+          toast.success("Pedido enviado para faturamento", {
+            description: "A integração fiscal será aplicada nesta etapa.",
+          });
+          setConferencia(null);
+          resetForm();
+        }}
+      />
+    );
+  }
+
   return (
     <AppShell
       title="Vendas / Faturamento"
@@ -81,17 +203,25 @@ function VendasPage() {
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
         <div className="xl:col-span-2 rounded-lg border border-border bg-card">
           <div className="border-b border-border px-5 py-4">
-            <h3 className="text-sm font-semibold tracking-tight">Novo pedido</h3>
-            <p className="text-xs text-muted-foreground">Os itens consomem o estoque ao faturar.</p>
+            <h3 className="text-sm font-semibold tracking-tight">
+              {orcamentoEditandoId ? `Editando orçamento ${orcamentoEditandoId}` : "Novo pedido"}
+            </h3>
+            <p className="text-xs text-muted-foreground">
+              Os itens consomem o estoque ao faturar. Orçamentos não geram retenção fiscal.
+            </p>
           </div>
           <div className="grid grid-cols-1 gap-4 p-5 md:grid-cols-2">
             <div className="space-y-1.5">
               <Label className="text-xs">Cliente</Label>
-              <Input placeholder="Selecione o cliente" className="h-9" />
+              <ClienteCombobox
+                value={clienteNome}
+                onChange={setClienteNome}
+                options={opcoesCliente}
+              />
             </div>
             <div className="space-y-1.5">
               <Label className="text-xs">Condição de pagamento</Label>
-              <Select defaultValue="30">
+              <Select value={condicao} onValueChange={setCondicao}>
                 <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="0">À vista</SelectItem>
@@ -160,8 +290,14 @@ function VendasPage() {
               </div>
             </div>
             <div className="flex gap-2">
-              <Button variant="outline" size="sm" className="h-9">Salvar rascunho</Button>
-              <Button size="sm" className="h-9 gap-1.5 bg-foreground text-background hover:bg-foreground/90">
+              <Button variant="outline" size="sm" className="h-9" onClick={salvarOrcamento}>
+                {orcamentoEditandoId ? "Atualizar orçamento" : "Orçamento"}
+              </Button>
+              <Button
+                size="sm"
+                className="h-9 gap-1.5 bg-foreground text-background hover:bg-foreground/90"
+                onClick={abrirConferencia}
+              >
                 <FileText className="h-3.5 w-3.5" /> Faturar pedido
               </Button>
             </div>
@@ -187,6 +323,53 @@ function VendasPage() {
         </div>
       </div>
 
+      {orcamentos.length > 0 && (
+        <div className="mt-4 rounded-lg border border-border bg-card">
+          <div className="border-b border-border px-5 py-4">
+            <h3 className="text-sm font-semibold tracking-tight">Orçamentos salvos</h3>
+            <p className="text-xs text-muted-foreground">
+              Sem integração fiscal. Retome para converter em venda.
+            </p>
+          </div>
+          <div className="divide-y divide-border">
+            {orcamentos.map((o) => (
+              <div
+                key={o.id}
+                className="flex flex-wrap items-center justify-between gap-3 px-5 py-3 text-sm"
+              >
+                <div className="flex flex-col">
+                  <span className="font-medium">{o.id} · {o.clienteNome}</span>
+                  <span className="text-xs text-muted-foreground">
+                    {o.criadoEm} · {o.items.length} item(ns)
+                  </span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="tabular-nums font-medium">
+                    {o.total.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+                  </span>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-8 gap-1.5"
+                    onClick={() => retomarOrcamento(o)}
+                  >
+                    <RotateCcw className="h-3.5 w-3.5" /> Retomar
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-8 text-muted-foreground hover:text-destructive"
+                    onClick={() => descartarOrcamento(o.id)}
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div className="mt-4">
         <DataTable
           title="Pedidos recentes"
@@ -194,6 +377,217 @@ function VendasPage() {
           data={pedidos}
           filename="pedidos"
         />
+      </div>
+    </AppShell>
+  );
+}
+
+type ClienteOption = {
+  key: string;
+  nome: string;
+  detalhe: string;
+  origem: "Cliente" | "Fornecedor";
+  busca: string;
+};
+
+function ClienteCombobox({
+  value,
+  onChange,
+  options,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  options: ClienteOption[];
+}) {
+  const [open, setOpen] = useState(false);
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          variant="outline"
+          role="combobox"
+          aria-expanded={open}
+          className="h-9 w-full justify-between font-normal"
+        >
+          <span className={cn("truncate", !value && "text-muted-foreground")}>
+            {value || "Selecione ou digite o cliente"}
+          </span>
+          <ChevronsUpDown className="ml-2 h-3.5 w-3.5 shrink-0 opacity-50" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+        <Command
+          filter={(itemValue, search) => {
+            const opt = options.find((o) => o.key === itemValue);
+            if (!opt) return 0;
+            return opt.busca.includes(search.toLowerCase()) ? 1 : 0;
+          }}
+        >
+          <CommandInput placeholder="Buscar por razão social, fantasia ou CNPJ..." />
+          <CommandList>
+            <CommandEmpty>Nenhum cadastro encontrado.</CommandEmpty>
+            <CommandGroup>
+              {options.map((opt) => (
+                <CommandItem
+                  key={opt.key}
+                  value={opt.key}
+                  onSelect={() => {
+                    onChange(opt.nome);
+                    setOpen(false);
+                  }}
+                >
+                  <Check
+                    className={cn(
+                      "mr-2 h-3.5 w-3.5",
+                      value === opt.nome ? "opacity-100" : "opacity-0",
+                    )}
+                  />
+                  <div className="flex flex-col">
+                    <span className="text-sm">{opt.nome}</span>
+                    <span className="text-[11px] text-muted-foreground">
+                      {opt.origem} · {opt.detalhe}
+                    </span>
+                  </div>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+function ConferenciaView({
+  data,
+  onVoltar,
+  onConfirmar,
+}: {
+  data: ConferenciaState;
+  onVoltar: () => void;
+  onConfirmar: () => void;
+}) {
+  // Estimativas de retenções (placeholders — serão substituídos pela integração fiscal real)
+  const base = data.total;
+  const retencoes = [
+    { sigla: "IRRF", aliquota: 1.5, descricao: "Imposto de Renda Retido na Fonte" },
+    { sigla: "PIS", aliquota: 0.65, descricao: "PIS — retenção sobre serviços" },
+    { sigla: "COFINS", aliquota: 3.0, descricao: "COFINS — retenção sobre serviços" },
+    { sigla: "CSLL", aliquota: 1.0, descricao: "Contribuição Social s/ Lucro" },
+    { sigla: "ISS", aliquota: 5.0, descricao: "ISS — varia conforme município" },
+  ].map((r) => ({ ...r, valor: (base * r.aliquota) / 100 }));
+  const totalRetencoes = retencoes.reduce((a, r) => a + r.valor, 0);
+  const liquido = base - totalRetencoes;
+
+  const condicaoLabel: Record<string, string> = {
+    "0": "À vista",
+    "30": "30 dias",
+    "60": "30/60 dias",
+    "90": "30/60/90 dias",
+  };
+
+  return (
+    <AppShell
+      title="Conferência de Faturamento"
+      subtitle="Revise o pedido e as retenções estimadas antes de enviar ao fiscal."
+    >
+      <div className="mb-4 flex items-center justify-between">
+        <Button variant="outline" size="sm" className="h-8 gap-1.5" onClick={onVoltar}>
+          <ArrowLeft className="h-3.5 w-3.5" /> Voltar ao pedido
+        </Button>
+        <Button
+          size="sm"
+          className="h-8 gap-1.5 bg-foreground text-background hover:bg-foreground/90"
+          onClick={onConfirmar}
+        >
+          <FileText className="h-3.5 w-3.5" /> Confirmar e enviar ao fiscal
+        </Button>
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
+        <div className="xl:col-span-2 rounded-lg border border-border bg-card">
+          <div className="border-b border-border px-5 py-4">
+            <h3 className="text-sm font-semibold tracking-tight">Pedido</h3>
+            <p className="text-xs text-muted-foreground">
+              Cliente: <span className="text-foreground">{data.clienteNome}</span> · Condição:{" "}
+              {condicaoLabel[data.condicao] ?? data.condicao}
+            </p>
+          </div>
+          <div className="divide-y divide-border">
+            {data.items.map((it, i) => {
+              const p = produtosEstoque.find((p) => p.sku === it.sku)!;
+              return (
+                <div key={i} className="grid grid-cols-12 items-center gap-2 px-5 py-3 text-sm">
+                  <div className="col-span-7">
+                    <div className="font-medium">{p.nome}</div>
+                    <div className="text-[11px] text-muted-foreground">{p.sku}</div>
+                  </div>
+                  <div className="col-span-2 text-right tabular-nums">{it.qtd} un.</div>
+                  <div className="col-span-3 text-right tabular-nums">
+                    {(p.preco * it.qtd).toLocaleString("pt-BR", {
+                      style: "currency",
+                      currency: "BRL",
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          <div className="flex items-center justify-between border-t border-border px-5 py-4">
+            <span className="text-[11px] uppercase tracking-wider text-muted-foreground">
+              Total bruto do pedido
+            </span>
+            <span className="text-xl font-semibold tabular-nums">
+              {base.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+            </span>
+          </div>
+        </div>
+
+        <div className="rounded-lg border border-border bg-card">
+          <div className="border-b border-border px-5 py-4">
+            <h3 className="text-sm font-semibold tracking-tight">Retenções de Impostos</h3>
+            <p className="text-xs text-muted-foreground">
+              Valores estimados — a integração fiscal validará as alíquotas finais.
+            </p>
+          </div>
+          <div className="divide-y divide-border">
+            {retencoes.map((r) => (
+              <div
+                key={r.sigla}
+                className="flex items-center justify-between px-5 py-3 text-sm"
+              >
+                <div>
+                  <div className="font-medium">
+                    {r.sigla} <span className="text-muted-foreground">({r.aliquota}%)</span>
+                  </div>
+                  <div className="text-[11px] text-muted-foreground">{r.descricao}</div>
+                </div>
+                <div className="tabular-nums">
+                  -{" "}
+                  {r.valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="space-y-2 border-t border-border px-5 py-4 text-sm">
+            <div className="flex items-center justify-between text-muted-foreground">
+              <span>Total de retenções</span>
+              <span className="tabular-nums">
+                -{" "}
+                {totalRetencoes.toLocaleString("pt-BR", {
+                  style: "currency",
+                  currency: "BRL",
+                })}
+              </span>
+            </div>
+            <div className="flex items-center justify-between border-t border-border pt-2 font-semibold">
+              <span>Valor líquido a receber</span>
+              <span className="text-lg tabular-nums">
+                {liquido.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+              </span>
+            </div>
+          </div>
+        </div>
       </div>
     </AppShell>
   );
