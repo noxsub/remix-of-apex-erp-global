@@ -26,6 +26,12 @@ import {
 import { Plus, Settings2, Package, Briefcase, Loader2, MapPin, Building2 } from "lucide-react";
 import { StatusBadge } from "./index";
 import { toast } from "sonner";
+import {
+  useClientes,
+  useFornecedores,
+  type Cliente,
+  type Fornecedor,
+} from "@/lib/erp-store";
 
 export const Route = createFileRoute("/cadastros")({
   head: () => ({
@@ -37,27 +43,6 @@ export const Route = createFileRoute("/cadastros")({
   component: CadastrosPage,
 });
 
-type Cliente = {
-  nome: string;
-  documento: string;
-  telefone: string;
-  email: string;
-  tipo: string;
-  status: string;
-};
-type Fornecedor = {
-  razao: string;
-  fantasia?: string;
-  cnpj: string;
-  ie: string;
-  cidade: string;
-  cep?: string;
-  endereco?: string;
-  numero?: string;
-  complemento?: string;
-  telefone?: string;
-  email?: string;
-};
 type Colaborador = {
   nome: string;
   cpf?: string;
@@ -69,19 +54,6 @@ type Colaborador = {
   telefone: string;
   comissao: string;
 };
-
-const clientesIniciais: Cliente[] = [
-  { nome: "Acme Global Ltd.", documento: "12.345.678/0001-90", telefone: "(11) 4002-8922", email: "compras@acme.com", tipo: "Revendedor", status: "Ativo" },
-  { nome: "Maria Silva", documento: "123.456.789-00", telefone: "(11) 99876-5432", email: "maria@email.com", tipo: "Consumidor Final", status: "Ativo" },
-  { nome: "Northwind Trading", documento: "98.765.432/0001-10", telefone: "(21) 3030-4040", email: "ops@northwind.com", tipo: "Revendedor", status: "Ativo" },
-  { nome: "João Pereira", documento: "987.654.321-00", telefone: "(31) 98765-1122", email: "joao.p@email.com", tipo: "Consumidor Final", status: "Ativo" },
-];
-
-const fornecedoresIniciais: Fornecedor[] = [
-  { razao: "Fornecedor Alpha S.A.", cnpj: "11.222.333/0001-44", ie: "123.456.789.110", cidade: "São Paulo / SP" },
-  { razao: "Distribuidora Beta Ltda", cnpj: "22.333.444/0001-55", ie: "987.654.321.000", cidade: "Curitiba / PR" },
-  { razao: "Logística Express ME", cnpj: "33.444.555/0001-66", ie: "ISENTO", cidade: "Belo Horizonte / MG" },
-];
 
 const colaboradoresIniciais: Colaborador[] = [
   { nome: "Marina Almeida", cargo: "Vendedora Sênior", telefone: "(11) 99111-2233", comissao: "5,0%" },
@@ -101,8 +73,8 @@ function CadastrosPage() {
       new CustomEvent("erp:estoque-toggle", { detail: { ativo: estoqueAtivo } }),
     );
   }, [estoqueAtivo]);
-  const [clientes, setClientes] = useState(clientesIniciais);
-  const [fornecedores, setFornecedores] = useState(fornecedoresIniciais);
+  const [clientes, setClientes] = useClientes();
+  const [fornecedores, setFornecedores] = useFornecedores();
   const [colaboradores, setColaboradores] = useState(colaboradoresIniciais);
   const [openCliente, setOpenCliente] = useState(false);
   const [openFornecedor, setOpenFornecedor] = useState(false);
