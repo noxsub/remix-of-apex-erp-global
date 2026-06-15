@@ -490,14 +490,17 @@ function ConferenciaView({
   onVoltar: () => void;
   onConfirmar: () => void;
 }) {
-  // Estimativas de retenções (placeholders — serão substituídos pela integração fiscal real)
+  // Reforma Tributária (EC 132/2023 + LC 214/2025) — IVA Dual: CBS + IBS substituem
+  // PIS/COFINS/ICMS/ISS. IS incide sobre bens/serviços específicos. IRRF/CSLL seguem.
+  // Alíquotas de referência para 2026 (fase de transição); valores finais virão da
+  // integração com o módulo fiscal.
   const base = data.total;
   const retencoes = [
+    { sigla: "CBS", aliquota: 0.9, descricao: "Contribuição sobre Bens e Serviços (federal) — Reforma Tributária" },
+    { sigla: "IBS", aliquota: 0.1, descricao: "Imposto sobre Bens e Serviços (estadual/municipal) — Reforma Tributária" },
+    { sigla: "IS", aliquota: 0.0, descricao: "Imposto Seletivo — aplicável a bens/serviços específicos" },
     { sigla: "IRRF", aliquota: 1.5, descricao: "Imposto de Renda Retido na Fonte" },
-    { sigla: "PIS", aliquota: 0.65, descricao: "PIS — retenção sobre serviços" },
-    { sigla: "COFINS", aliquota: 3.0, descricao: "COFINS — retenção sobre serviços" },
-    { sigla: "CSLL", aliquota: 1.0, descricao: "Contribuição Social s/ Lucro" },
-    { sigla: "ISS", aliquota: 5.0, descricao: "ISS — varia conforme município" },
+    { sigla: "CSLL", aliquota: 1.0, descricao: "Contribuição Social sobre o Lucro Líquido" },
   ].map((r) => ({ ...r, valor: (base * r.aliquota) / 100 }));
   const totalRetencoes = retencoes.reduce((a, r) => a + r.valor, 0);
   const liquido = base - totalRetencoes;
