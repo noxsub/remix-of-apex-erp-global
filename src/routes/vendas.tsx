@@ -28,8 +28,10 @@ import {
   useClientes,
   useFornecedores,
   useOrcamentos,
+  useFaturados,
   type Orcamento,
   type OrcamentoItem,
+  type PedidoFaturado,
 } from "@/lib/erp-store";
 import { StatusBadge } from "./index";
 
@@ -51,8 +53,8 @@ const produtosEstoque = [
   { sku: "SKU-10046", nome: "Headset Wireless ANC", preco: 1199, estoque: 64 },
 ];
 
-type Pedido = {
-  numero: string;
+type PedidoRow = {
+  nf: string;
   data: string;
   cliente: string;
   itens: number;
@@ -60,15 +62,14 @@ type Pedido = {
   status: string;
 };
 
-const pedidos: Pedido[] = [
-  { numero: "PED-2026-0184", data: "08/06/2026", cliente: "Acme Global Ltd.", itens: 4, total: "R$ 18.420,00", status: "Faturado" },
-  { numero: "PED-2026-0183", data: "08/06/2026", cliente: "Northwind Trading", itens: 2, total: "R$ 9.890,50", status: "Enviado" },
-  { numero: "PED-2026-0182", data: "07/06/2026", cliente: "Contoso S.A.", itens: 7, total: "R$ 24.100,00", status: "Rascunho" },
-  { numero: "PED-2026-0181", data: "07/06/2026", cliente: "Fabrikam Inc.", itens: 1, total: "R$ 3.250,00", status: "Faturado" },
+const pedidosHistorico: PedidoRow[] = [
+  { nf: "NF-2026-000184", data: "08/06/2026", cliente: "Acme Global Ltd.", itens: 4, total: "R$ 18.420,00", status: "Faturado" },
+  { nf: "NF-2026-000183", data: "08/06/2026", cliente: "Northwind Trading", itens: 2, total: "R$ 9.890,50", status: "Enviado" },
+  { nf: "NF-2026-000181", data: "07/06/2026", cliente: "Fabrikam Inc.", itens: 1, total: "R$ 3.250,00", status: "Faturado" },
 ];
 
-const colPed: Column<Pedido>[] = [
-  { key: "numero", header: "Pedido" },
+const colPed: Column<PedidoRow>[] = [
+  { key: "nf", header: "NF" },
   { key: "data", header: "Data" },
   { key: "cliente", header: "Cliente" },
   { key: "itens", header: "Itens", align: "right" },
@@ -89,6 +90,7 @@ function VendasPage() {
   const [clientes] = useClientes();
   const [fornecedores] = useFornecedores();
   const [orcamentos, setOrcamentos] = useOrcamentos();
+  const [faturados, setFaturados] = useFaturados();
 
   const [clienteNome, setClienteNome] = useState<string>("");
   const [condicao, setCondicao] = useState<string>("30");
@@ -185,8 +187,19 @@ function VendasPage() {
           if (orcamentoEditandoId) {
             setOrcamentos((prev) => prev.filter((o) => o.id !== orcamentoEditandoId));
           }
-          toast.success("Pedido enviado para faturamento", {
-            description: "A integração fiscal será aplicada nesta etapa.",
+          const seqBase = faturados.length + pedidosHistorico.length + 1;
+          const nf = `NF-${new Date().getFullYear()}-${String(seqBase).padStart(6, "0")}`;
+          const novo: PedidoFaturado = {
+            nf,
+            data: new Date().toLocaleDateString("pt-BR"),
+            clienteNome: conferencia.clienteNome,
+            itens: conferencia.items.length,
+            total: conferencia.total,
+            status: "Faturado",
+          };
+          setFaturados((prev) => [novo, ...prev]);
+          toast.success("Pedido faturado", {
+            description: `${nf} gerada e enviada ao módulo fiscal.`,
           });
           setConferencia(null);
           resetForm();
@@ -374,7 +387,17 @@ function VendasPage() {
         <DataTable
           title="Pedidos recentes"
           columns={colPed}
-          data={pedidos}
+          data={[
+            ...faturados.map((f) => ({
+              nf: f.nf,
+              data: f.data,
+              cliente: f.clienteNome,
+              itens: f.itens,
+              total: f.total.toLocaleString("pt-BR", { style: "currency", currency: "BRL" }),
+              status: f.status,
+            })),
+            ...pedidosHistorico,
+          ]}
           filename="pedidos"
         />
       </div>
