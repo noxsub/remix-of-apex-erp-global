@@ -28,8 +28,10 @@ import {
   useClientes,
   useFornecedores,
   useOrcamentos,
+  useFaturados,
   type Orcamento,
   type OrcamentoItem,
+  type PedidoFaturado,
 } from "@/lib/erp-store";
 import { StatusBadge } from "./index";
 
@@ -51,8 +53,8 @@ const produtosEstoque = [
   { sku: "SKU-10046", nome: "Headset Wireless ANC", preco: 1199, estoque: 64 },
 ];
 
-type Pedido = {
-  numero: string;
+type PedidoRow = {
+  nf: string;
   data: string;
   cliente: string;
   itens: number;
@@ -60,15 +62,14 @@ type Pedido = {
   status: string;
 };
 
-const pedidos: Pedido[] = [
-  { numero: "PED-2026-0184", data: "08/06/2026", cliente: "Acme Global Ltd.", itens: 4, total: "R$ 18.420,00", status: "Faturado" },
-  { numero: "PED-2026-0183", data: "08/06/2026", cliente: "Northwind Trading", itens: 2, total: "R$ 9.890,50", status: "Enviado" },
-  { numero: "PED-2026-0182", data: "07/06/2026", cliente: "Contoso S.A.", itens: 7, total: "R$ 24.100,00", status: "Rascunho" },
-  { numero: "PED-2026-0181", data: "07/06/2026", cliente: "Fabrikam Inc.", itens: 1, total: "R$ 3.250,00", status: "Faturado" },
+const pedidosHistorico: PedidoRow[] = [
+  { nf: "NF-2026-000184", data: "08/06/2026", cliente: "Acme Global Ltd.", itens: 4, total: "R$ 18.420,00", status: "Faturado" },
+  { nf: "NF-2026-000183", data: "08/06/2026", cliente: "Northwind Trading", itens: 2, total: "R$ 9.890,50", status: "Enviado" },
+  { nf: "NF-2026-000181", data: "07/06/2026", cliente: "Fabrikam Inc.", itens: 1, total: "R$ 3.250,00", status: "Faturado" },
 ];
 
-const colPed: Column<Pedido>[] = [
-  { key: "numero", header: "Pedido" },
+const colPed: Column<PedidoRow>[] = [
+  { key: "nf", header: "NF" },
   { key: "data", header: "Data" },
   { key: "cliente", header: "Cliente" },
   { key: "itens", header: "Itens", align: "right" },
@@ -89,6 +90,7 @@ function VendasPage() {
   const [clientes] = useClientes();
   const [fornecedores] = useFornecedores();
   const [orcamentos, setOrcamentos] = useOrcamentos();
+  const [faturados, setFaturados] = useFaturados();
 
   const [clienteNome, setClienteNome] = useState<string>("");
   const [condicao, setCondicao] = useState<string>("30");
@@ -185,8 +187,19 @@ function VendasPage() {
           if (orcamentoEditandoId) {
             setOrcamentos((prev) => prev.filter((o) => o.id !== orcamentoEditandoId));
           }
-          toast.success("Pedido enviado para faturamento", {
-            description: "A integração fiscal será aplicada nesta etapa.",
+          const seqBase = faturados.length + pedidosHistorico.length + 1;
+          const nf = `NF-${new Date().getFullYear()}-${String(seqBase).padStart(6, "0")}`;
+          const novo: PedidoFaturado = {
+            nf,
+            data: new Date().toLocaleDateString("pt-BR"),
+            clienteNome: conferencia.clienteNome,
+            itens: conferencia.items.length,
+            total: conferencia.total,
+            status: "Faturado",
+          };
+          setFaturados((prev) => [novo, ...prev]);
+          toast.success("Pedido faturado", {
+            description: `${nf} gerada e enviada ao módulo fiscal.`,
           });
           setConferencia(null);
           resetForm();
@@ -374,7 +387,17 @@ function VendasPage() {
         <DataTable
           title="Pedidos recentes"
           columns={colPed}
-          data={pedidos}
+          data={[
+            ...faturados.map((f) => ({
+              nf: f.nf,
+              data: f.data,
+              cliente: f.clienteNome,
+              itens: f.itens,
+              total: f.total.toLocaleString("pt-BR", { style: "currency", currency: "BRL" }),
+              status: f.status,
+            })),
+            ...pedidosHistorico,
+          ]}
           filename="pedidos"
         />
       </div>
@@ -467,14 +490,17 @@ function ConferenciaView({
   onVoltar: () => void;
   onConfirmar: () => void;
 }) {
-  // Estimativas de retenções (placeholders — serão substituídos pela integração fiscal real)
+  // Reforma Tributária (EC 132/2023 + LC 214/2025) — IVA Dual: CBS + IBS substituem
+  // PIS/COFINS/ICMS/ISS. IS incide sobre bens/serviços específicos. IRRF/CSLL seguem.
+  // Alíquotas de referência para 2026 (fase de transição); valores finais virão da
+  // integração com o módulo fiscal.
   const base = data.total;
   const retencoes = [
+    { sigla: "CBS", aliquota: 0.9, descricao: "Contribuição sobre Bens e Serviços (federal) — Reforma Tributária" },
+    { sigla: "IBS", aliquota: 0.1, descricao: "Imposto sobre Bens e Serviços (estadual/municipal) — Reforma Tributária" },
+    { sigla: "IS", aliquota: 0.0, descricao: "Imposto Seletivo — aplicável a bens/serviços específicos" },
     { sigla: "IRRF", aliquota: 1.5, descricao: "Imposto de Renda Retido na Fonte" },
-    { sigla: "PIS", aliquota: 0.65, descricao: "PIS — retenção sobre serviços" },
-    { sigla: "COFINS", aliquota: 3.0, descricao: "COFINS — retenção sobre serviços" },
-    { sigla: "CSLL", aliquota: 1.0, descricao: "Contribuição Social s/ Lucro" },
-    { sigla: "ISS", aliquota: 5.0, descricao: "ISS — varia conforme município" },
+    { sigla: "CSLL", aliquota: 1.0, descricao: "Contribuição Social sobre o Lucro Líquido" },
   ].map((r) => ({ ...r, valor: (base * r.aliquota) / 100 }));
   const totalRetencoes = retencoes.reduce((a, r) => a + r.valor, 0);
   const liquido = base - totalRetencoes;
