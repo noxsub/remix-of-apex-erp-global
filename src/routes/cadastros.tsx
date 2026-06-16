@@ -24,7 +24,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Plus, Settings2, Package, Briefcase, Loader2, MapPin, Building2 } from "lucide-react";
-import { StatusBadge } from "./index";
+import { StatusBadge } from "@/components/status-badge";
 import { toast } from "sonner";
 import {
   useClientes,

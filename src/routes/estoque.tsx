@@ -17,7 +17,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { StatusBadge } from "./index";
+import { StatusBadge } from "@/components/status-badge";
 
 export const Route = createFileRoute("/estoque")({
   head: () => ({

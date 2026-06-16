@@ -12,8 +12,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, Trash2, FileText, ChevronsUpDown, Check, ArrowLeft, RotateCcw } from "lucide-react";
+import { Plus, Trash2, FileText, ChevronsUpDown, Check, ArrowLeft, RotateCcw, Settings2 } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import {
   Command,
   CommandEmpty,
@@ -33,7 +42,8 @@ import {
   type OrcamentoItem,
   type PedidoFaturado,
 } from "@/lib/erp-store";
-import { StatusBadge } from "./index";
+import { useTaxConfig, taxDescriptions, type TipoOperacao, type TaxRates } from "@/lib/tax-config";
+import { StatusBadge } from "@/components/status-badge";
 
 export const Route = createFileRoute("/vendas")({
   head: () => ({
@@ -490,18 +500,17 @@ function ConferenciaView({
   onVoltar: () => void;
   onConfirmar: () => void;
 }) {
-  // Reforma Tributária (EC 132/2023 + LC 214/2025) — IVA Dual: CBS + IBS substituem
-  // PIS/COFINS/ICMS/ISS. IS incide sobre bens/serviços específicos. IRRF/CSLL seguem.
-  // Alíquotas de referência para 2026 (fase de transição); valores finais virão da
-  // integração com o módulo fiscal.
+  const [taxConfig, setTaxConfig] = useTaxConfig();
+  const [tipo, setTipo] = useState<TipoOperacao>("produto");
+  const [editOpen, setEditOpen] = useState(false);
   const base = data.total;
-  const retencoes = [
-    { sigla: "CBS", aliquota: 0.9, descricao: "Contribuição sobre Bens e Serviços (federal) — Reforma Tributária" },
-    { sigla: "IBS", aliquota: 0.1, descricao: "Imposto sobre Bens e Serviços (estadual/municipal) — Reforma Tributária" },
-    { sigla: "IS", aliquota: 0.0, descricao: "Imposto Seletivo — aplicável a bens/serviços específicos" },
-    { sigla: "IRRF", aliquota: 1.5, descricao: "Imposto de Renda Retido na Fonte" },
-    { sigla: "CSLL", aliquota: 1.0, descricao: "Contribuição Social sobre o Lucro Líquido" },
-  ].map((r) => ({ ...r, valor: (base * r.aliquota) / 100 }));
+  const rates = taxConfig[tipo];
+  const retencoes = (Object.keys(taxDescriptions) as (keyof TaxRates)[]).map((k) => ({
+    sigla: taxDescriptions[k].label,
+    descricao: taxDescriptions[k].descricao,
+    aliquota: rates[k],
+    valor: (base * rates[k]) / 100,
+  }));
   const totalRetencoes = retencoes.reduce((a, r) => a + r.valor, 0);
   const liquido = base - totalRetencoes;
 
@@ -571,8 +580,32 @@ function ConferenciaView({
 
         <div className="rounded-lg border border-border bg-card">
           <div className="border-b border-border px-5 py-4">
-            <h3 className="text-sm font-semibold tracking-tight">Retenções de Impostos</h3>
-            <p className="text-xs text-muted-foreground">
+            <div className="flex items-center justify-between gap-2">
+              <h3 className="text-sm font-semibold tracking-tight">Retenções de Impostos</h3>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 gap-1 text-xs text-muted-foreground hover:text-foreground"
+                onClick={() => setEditOpen(true)}
+              >
+                <Settings2 className="h-3 w-3" /> Configurar
+              </Button>
+            </div>
+            <div className="mt-2 flex items-center gap-1 rounded-md border border-border bg-secondary/40 p-0.5 text-xs">
+              {(["produto", "servico"] as TipoOperacao[]).map((t) => (
+                <button
+                  key={t}
+                  onClick={() => setTipo(t)}
+                  className={cn(
+                    "flex-1 rounded-sm px-2 py-1 capitalize",
+                    tipo === t ? "bg-card shadow-sm font-medium" : "text-muted-foreground",
+                  )}
+                >
+                  {t}
+                </button>
+              ))}
+            </div>
+            <p className="mt-2 text-xs text-muted-foreground">
               Valores estimados — a integração fiscal validará as alíquotas finais.
             </p>
           </div>
@@ -615,6 +648,88 @@ function ConferenciaView({
           </div>
         </div>
       </div>
+      <TaxConfigDialog
+        open={editOpen}
+        onOpenChange={setEditOpen}
+        config={taxConfig}
+        onSave={(c) => {
+          setTaxConfig(c);
+          setEditOpen(false);
+          toast.success("Alíquotas atualizadas");
+        }}
+      />
     </AppShell>
+  );
+}
+
+function TaxConfigDialog({
+  open,
+  onOpenChange,
+  config,
+  onSave,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  config: import("@/lib/tax-config").TaxConfig;
+  onSave: (c: import("@/lib/tax-config").TaxConfig) => void;
+}) {
+  const [draft, setDraft] = useState(config);
+  // sync when reopened
+  function setRate(t: TipoOperacao, k: keyof TaxRates, v: number) {
+    setDraft((p) => ({ ...p, [t]: { ...p[t], [k]: v } }));
+  }
+  return (
+    <Dialog
+      open={open}
+      onOpenChange={(v) => {
+        onOpenChange(v);
+        if (v) setDraft(config);
+      }}
+    >
+      <DialogContent className="sm:max-w-2xl">
+        <DialogHeader>
+          <DialogTitle>Configurar alíquotas (Reforma Tributária)</DialogTitle>
+          <DialogDescription>
+            Defina CBS, IBS, IS, IRRF e CSLL por tipo de operação. Valores em %.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+          {(["produto", "servico"] as TipoOperacao[]).map((t) => (
+            <div key={t} className="rounded-md border border-border p-4">
+              <div className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                {t === "produto" ? "Produto (revenda)" : "Serviço"}
+              </div>
+              <div className="space-y-2.5">
+                {(Object.keys(taxDescriptions) as (keyof TaxRates)[]).map((k) => (
+                  <div key={k} className="flex items-center justify-between gap-3">
+                    <Label className="text-xs font-medium">{taxDescriptions[k].label}</Label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      min={0}
+                      className="h-8 w-28 text-right tabular-nums"
+                      value={draft[t][k]}
+                      onChange={(e) => setRate(t, k, Number(e.target.value))}
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+        <DialogFooter>
+          <Button variant="outline" size="sm" onClick={() => onOpenChange(false)}>
+            Cancelar
+          </Button>
+          <Button
+            size="sm"
+            className="bg-foreground text-background hover:bg-foreground/90"
+            onClick={() => onSave(draft)}
+          >
+            Salvar alíquotas
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
