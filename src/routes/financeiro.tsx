@@ -4,7 +4,7 @@ import { AppShell } from "@/components/app-shell";
 import { DataTable, type Column } from "@/components/data-table";
 import { Button } from "@/components/ui/button";
 import { Upload, Plus, FileText, UploadCloud, CheckCircle2 } from "lucide-react";
-import { StatusBadge } from "./index";
+import { StatusBadge } from "@/components/status-badge";
 import { toast } from "sonner";
 import {
   Dialog,

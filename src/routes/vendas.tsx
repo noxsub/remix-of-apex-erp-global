@@ -43,7 +43,7 @@ import {
   type PedidoFaturado,
 } from "@/lib/erp-store";
 import { useTaxConfig, taxDescriptions, type TipoOperacao, type TaxRates } from "@/lib/tax-config";
-import { StatusBadge } from "./index";
+import { StatusBadge } from "@/components/status-badge";
 
 export const Route = createFileRoute("/vendas")({
   head: () => ({
