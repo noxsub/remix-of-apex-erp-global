@@ -13,7 +13,6 @@ import { Route as VendasRouteImport } from './routes/vendas'
 import { Route as FinanceiroRouteImport } from './routes/financeiro'
 import { Route as EstoqueRouteImport } from './routes/estoque'
 import { Route as CadastrosRouteImport } from './routes/cadastros'
-import { Route as IndexRouteImport } from './routes/index'
 
 const VendasRoute = VendasRouteImport.update({
   id: '/vendas',
@@ -35,21 +34,14 @@ const CadastrosRoute = CadastrosRouteImport.update({
   path: '/cadastros',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => rootRouteImport,
-} as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
   '/cadastros': typeof CadastrosRoute
   '/estoque': typeof EstoqueRoute
   '/financeiro': typeof FinanceiroRoute
   '/vendas': typeof VendasRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
   '/cadastros': typeof CadastrosRoute
   '/estoque': typeof EstoqueRoute
   '/financeiro': typeof FinanceiroRoute
@@ -57,7 +49,6 @@ export interface FileRoutesByTo {
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
   '/cadastros': typeof CadastrosRoute
   '/estoque': typeof EstoqueRoute
   '/financeiro': typeof FinanceiroRoute
@@ -65,14 +56,13 @@ export interface FileRoutesById {
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/cadastros' | '/estoque' | '/financeiro' | '/vendas'
+  fullPaths: '/cadastros' | '/estoque' | '/financeiro' | '/vendas'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/cadastros' | '/estoque' | '/financeiro' | '/vendas'
-  id: '__root__' | '/' | '/cadastros' | '/estoque' | '/financeiro' | '/vendas'
+  to: '/cadastros' | '/estoque' | '/financeiro' | '/vendas'
+  id: '__root__' | '/cadastros' | '/estoque' | '/financeiro' | '/vendas'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
   CadastrosRoute: typeof CadastrosRoute
   EstoqueRoute: typeof EstoqueRoute
   FinanceiroRoute: typeof FinanceiroRoute
@@ -109,18 +99,10 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CadastrosRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
   CadastrosRoute: CadastrosRoute,
   EstoqueRoute: EstoqueRoute,
   FinanceiroRoute: FinanceiroRoute,
