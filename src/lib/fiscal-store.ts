@@ -10,6 +10,17 @@ export type RegimeTributario =
 
 export type RegimeApuracao = "caixa" | "competencia";
 
+export type AtividadePreponderante = "produto" | "servico" | "ambos";
+
+export type CnaeRecord = {
+  codigo: string;
+  descricao: string;
+  principal: boolean;
+  atividade: AtividadePreponderante;
+  presuncaoIRPJ: number; // %
+  presuncaoCSLL: number; // %
+};
+
 export type EmpresaFiscal = {
   razaoSocial: string;
   fantasia: string;
@@ -17,9 +28,10 @@ export type EmpresaFiscal = {
   ie: string;
   im: string;
   regime: RegimeTributario;
-  crt: "1" | "2" | "3" | "4"; // 1 SN, 2 SN excesso sublimite, 3 Regime Normal, 4 SN MEI
-  cnaePrincipal: string;
-  cnaesSecundarios: string[];
+  crt: "1" | "2" | "3" | "4";
+  cnaePrincipal: string; // legado — código do CNAE principal
+  cnaesSecundarios: string[]; // legado — códigos
+  cnaes: CnaeRecord[]; // novo cadastro completo
   regimeApuracao: RegimeApuracao;
   uf: string;
   municipio: string;
@@ -35,23 +47,24 @@ export const empresaFiscalDefault: EmpresaFiscal = {
   crt: "3",
   cnaePrincipal: "",
   cnaesSecundarios: [],
+  cnaes: [],
   regimeApuracao: "competencia",
   uf: "SP",
   municipio: "São Paulo",
 };
 
-// ─── Perfil fiscal de cliente (biblioteca reutilizável) ─────────────────────
+// ─── Perfil fiscal de cliente ───────────────────────────────────────────────
 
 export type ContribuinteIcms = "sim" | "nao" | "isento";
 
 export type PerfilFiscalCliente = {
   id: string;
-  nome: string; // ex.: "Revendedor SP - Contribuinte ICMS"
+  nome: string;
   contribuinteIcms: ContribuinteIcms;
   indicadorIe: "contribuinte" | "isento" | "nao_contribuinte";
   suframa: boolean;
-  cfopDentroUF: string; // ex.: "5102"
-  cfopForaUF: string; // ex.: "6102"
+  cfopDentroUF: string;
+  cfopForaUF: string;
   retencoes: {
     irrf: boolean;
     csll: boolean;
@@ -103,19 +116,35 @@ export const perfilFiscalPadrao: PerfilFiscalCliente[] = [
 
 export type TipoItem = "produto" | "servico";
 
+export type ConfigEntradaItem = {
+  cfopEntrada: string; // 1102 / 2102
+  cstEntrada: string;
+  creditoIcms: number; // %
+  creditoPis: number;
+  creditoCofins: number;
+  creditoIpi: number;
+  origemCusto: "media" | "ultima";
+};
+
+export type ConfigSaidaItem = {
+  cfopDentroUF: string;
+  cfopForaUF: string;
+  cstSaida: string;
+  margemPadrao: number; // %
+};
+
 export type ItemFiscal = {
   id: string;
   tipo: TipoItem;
   sku: string;
   nome: string;
-  unidade: string; // un, kg, m, hr...
+  unidade: string;
   preco: number;
-  // Tributário
-  ncm?: string; // produto
-  cest?: string; // produto
-  codigoServicoLC116?: string; // serviço
-  origem: "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8"; // origem mercadoria
-  cstCsosn: string; // ex: "102", "00", "60"
+  ncm?: string;
+  cest?: string;
+  codigoServicoLC116?: string;
+  origem: "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8";
+  cstCsosn: string;
   aliquotas: {
     icms: number;
     ipi: number;
@@ -127,8 +156,30 @@ export type ItemFiscal = {
     is: number;
   };
   beneficioFiscal?: string;
-  peso?: number; // kg
-  volume?: number; // m³
+  peso?: number;
+  volume?: number;
+  custoMedio?: number;
+  estoqueAtual?: number;
+  estoqueMinimo?: number;
+  entrada?: ConfigEntradaItem;
+  saida?: ConfigSaidaItem;
+};
+
+export const entradaDefault: ConfigEntradaItem = {
+  cfopEntrada: "1102",
+  cstEntrada: "00",
+  creditoIcms: 18,
+  creditoPis: 1.65,
+  creditoCofins: 7.6,
+  creditoIpi: 0,
+  origemCusto: "media",
+};
+
+export const saidaDefault: ConfigSaidaItem = {
+  cfopDentroUF: "5102",
+  cfopForaUF: "6102",
+  cstSaida: "00",
+  margemPadrao: 30,
 };
 
 export const itensFiscaisIniciais: ItemFiscal[] = [
@@ -144,6 +195,39 @@ export const itensFiscaisIniciais: ItemFiscal[] = [
     origem: "0",
     cstCsosn: "102",
     aliquotas: { icms: 18, ipi: 0, pis: 0.65, cofins: 3, iss: 0, cbs: 0.9, ibs: 0.1, is: 0 },
+    estoqueAtual: 184,
+    entrada: entradaDefault,
+    saida: saidaDefault,
+  },
+  {
+    id: "if-10043",
+    tipo: "produto",
+    sku: "SKU-10043",
+    nome: 'Monitor UltraWide 34"',
+    unidade: "un",
+    preco: 3499,
+    ncm: "85285200",
+    origem: "0",
+    cstCsosn: "102",
+    aliquotas: { icms: 18, ipi: 0, pis: 0.65, cofins: 3, iss: 0, cbs: 0.9, ibs: 0.1, is: 0 },
+    estoqueAtual: 42,
+    entrada: entradaDefault,
+    saida: saidaDefault,
+  },
+  {
+    id: "if-10044",
+    tipo: "produto",
+    sku: "SKU-10044",
+    nome: "Teclado Mecânico RGB",
+    unidade: "un",
+    preco: 599,
+    ncm: "84716052",
+    origem: "0",
+    cstCsosn: "102",
+    aliquotas: { icms: 18, ipi: 0, pis: 0.65, cofins: 3, iss: 0, cbs: 0.9, ibs: 0.1, is: 0 },
+    estoqueAtual: 8,
+    entrada: entradaDefault,
+    saida: saidaDefault,
   },
   {
     id: "if-10045",
@@ -156,6 +240,24 @@ export const itensFiscaisIniciais: ItemFiscal[] = [
     origem: "0",
     cstCsosn: "102",
     aliquotas: { icms: 18, ipi: 0, pis: 0.65, cofins: 3, iss: 0, cbs: 0.9, ibs: 0.1, is: 0 },
+    estoqueAtual: 312,
+    entrada: entradaDefault,
+    saida: saidaDefault,
+  },
+  {
+    id: "if-10046",
+    tipo: "produto",
+    sku: "SKU-10046",
+    nome: "Headset Wireless ANC",
+    unidade: "un",
+    preco: 1199,
+    ncm: "85183000",
+    origem: "0",
+    cstCsosn: "102",
+    aliquotas: { icms: 18, ipi: 0, pis: 0.65, cofins: 3, iss: 0, cbs: 0.9, ibs: 0.1, is: 0 },
+    estoqueAtual: 64,
+    entrada: entradaDefault,
+    saida: saidaDefault,
   },
   {
     id: "if-srv-consult",
@@ -171,7 +273,7 @@ export const itensFiscaisIniciais: ItemFiscal[] = [
   },
 ];
 
-// ─── Alíquotas padrão (CBS/IBS/IS + retenções) ──────────────────────────────
+// ─── Alíquotas padrão ───────────────────────────────────────────────────────
 
 export type TipoOperacao = "produto" | "servico";
 
@@ -193,7 +295,82 @@ export const aliquotasPadraoDefault: AliquotasPadrao = {
   servico: { cbs: 0.9, ibs: 0.1, is: 0, irrf: 1.5, csll: 1, pis: 0.65, cofins: 3, iss: 5 },
 };
 
-// ─── Configuração NF (numeração + ambiente) ─────────────────────────────────
+// ─── Apuração IRPJ / CSLL ───────────────────────────────────────────────────
+
+export type ApuracaoConfig = {
+  regime: RegimeTributario;
+  periodicidade: "trimestral" | "anual";
+  presuncaoIRPJ: { produto: number; servico: number }; // %
+  presuncaoCSLL: { produto: number; servico: number }; // %
+  aliquotaIRPJ: number; // 15
+  adicionalIRPJ: number; // 10
+  limiteAdicionalMensal: number; // 20000
+  aliquotaCSLL: number; // 9
+};
+
+export const apuracaoConfigDefault: ApuracaoConfig = {
+  regime: "Lucro Presumido",
+  periodicidade: "trimestral",
+  presuncaoIRPJ: { produto: 8, servico: 32 },
+  presuncaoCSLL: { produto: 12, servico: 32 },
+  aliquotaIRPJ: 15,
+  adicionalIRPJ: 10,
+  limiteAdicionalMensal: 20000,
+  aliquotaCSLL: 9,
+};
+
+// ─── Códigos de serviço (LC 116) — biblioteca sugerida via IA ───────────────
+
+export type CodigoServico = {
+  codigo: string;
+  descricao: string;
+  cnaeRelacionado?: string;
+  issSugerido: number;
+};
+
+// Mapeamento determinístico CNAE → LC 116 (substitui IA real até backend ser ativado)
+// Cobre os CNAEs mais comuns; expandir conforme necessário.
+const MAPA_CNAE_LC116: Record<string, CodigoServico[]> = {
+  "6201": [
+    { codigo: "1.04", descricao: "Elaboração de programas de computador", issSugerido: 2 },
+    { codigo: "1.05", descricao: "Licenciamento ou cessão de direito de uso de software", issSugerido: 2 },
+  ],
+  "6202": [
+    { codigo: "1.05", descricao: "Licenciamento ou cessão de direito de uso de software", issSugerido: 2 },
+    { codigo: "1.07", descricao: "Suporte técnico em informática", issSugerido: 2.9 },
+  ],
+  "6203": [{ codigo: "1.07", descricao: "Suporte técnico em informática", issSugerido: 2.9 }],
+  "6204": [{ codigo: "1.07", descricao: "Suporte técnico em informática", issSugerido: 2.9 }],
+  "6209": [{ codigo: "1.07", descricao: "Suporte técnico em informática", issSugerido: 2.9 }],
+  "6311": [{ codigo: "1.03", descricao: "Processamento, armazenamento e hospedagem de dados", issSugerido: 2 }],
+  "7020": [{ codigo: "17.01", descricao: "Assessoria/consultoria de qualquer natureza", issSugerido: 5 }],
+  "7319": [{ codigo: "17.06", descricao: "Propaganda e publicidade", issSugerido: 2.9 }],
+  "7410": [{ codigo: "23.01", descricao: "Design e composição gráfica", issSugerido: 2.9 }],
+  "8211": [{ codigo: "17.02", descricao: "Datilografia, digitação, secretaria virtual", issSugerido: 5 }],
+  "6920": [
+    { codigo: "17.19", descricao: "Contabilidade, inclusive serviços técnicos e auxiliares", issSugerido: 2 },
+    { codigo: "17.20", descricao: "Auditoria", issSugerido: 5 },
+  ],
+  "6911": [{ codigo: "17.13", descricao: "Advocacia", issSugerido: 5 }],
+  "8599": [{ codigo: "8.02", descricao: "Instrução, treinamento, avaliação de conhecimentos", issSugerido: 2 }],
+  "9602": [{ codigo: "6.01", descricao: "Barbearia, cabeleireiros, manicuros, pedicuros", issSugerido: 3 }],
+  "4321": [{ codigo: "7.06", descricao: "Instalação elétrica em geral", issSugerido: 5 }],
+  "4329": [{ codigo: "7.02", descricao: "Execução de obra por empreitada ou subempreitada", issSugerido: 5 }],
+};
+
+export function sugerirCodigosServicoPorCNAEs(cnaes: string[]): CodigoServico[] {
+  const seen = new Map<string, CodigoServico>();
+  for (const c of cnaes) {
+    const prefix = c.replace(/[^0-9]/g, "").slice(0, 4);
+    const sugest = MAPA_CNAE_LC116[prefix] ?? [];
+    for (const s of sugest) {
+      if (!seen.has(s.codigo)) seen.set(s.codigo, { ...s, cnaeRelacionado: c });
+    }
+  }
+  return Array.from(seen.values());
+}
+
+// ─── NF Config ──────────────────────────────────────────────────────────────
 
 export type Ambiente = "homologacao" | "producao";
 export type ModeloNF = "55" | "65" | "NFS-e";
@@ -214,7 +391,7 @@ export const nfConfigDefault: NFConfig = {
   proximoNumero: 1,
 };
 
-// ─── Persistência genérica ──────────────────────────────────────────────────
+// ─── Persistência ───────────────────────────────────────────────────────────
 
 const KEYS = {
   empresa: "erp:fiscal:empresa",
@@ -222,6 +399,8 @@ const KEYS = {
   itens: "erp:fiscal:itens",
   aliquotas: "erp:fiscal:aliquotas",
   nf: "erp:fiscal:nf-config",
+  apuracao: "erp:fiscal:apuracao",
+  codigosServ: "erp:fiscal:codigos-servico",
 } as const;
 
 function read<T>(key: string, fallback: T): T {
@@ -276,8 +455,13 @@ export function useAliquotasPadrao() {
 export function useNFConfig() {
   return usePersisted<NFConfig>(KEYS.nf, nfConfigDefault);
 }
+export function useApuracaoConfig() {
+  return usePersisted<ApuracaoConfig>(KEYS.apuracao, apuracaoConfigDefault);
+}
+export function useCodigosServico() {
+  return usePersisted<CodigoServico[]>(KEYS.codigosServ, []);
+}
 
-// Consome o próximo número e incrementa. Retorna a string formatada.
 export function consumirProximoNumeroNF(): { numero: number; formatado: string; serie: number; modelo: ModeloNF } {
   const atual = read<NFConfig>(KEYS.nf, nfConfigDefault);
   const numero = atual.proximoNumero;
