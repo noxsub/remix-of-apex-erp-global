@@ -41,9 +41,13 @@ import {
   type Orcamento,
   type OrcamentoItem,
   type PedidoFaturado,
+  type Cliente,
 } from "@/lib/erp-store";
 import { useTaxConfig, taxDescriptions, type TipoOperacao, type TaxRates } from "@/lib/tax-config";
+import { usePerfisFiscaisCliente, consumirProximoNumeroNF } from "@/lib/fiscal-store";
+import { Link } from "@tanstack/react-router";
 import { StatusBadge } from "@/components/status-badge";
+import { AlertTriangle } from "lucide-react";
 
 export const Route = createFileRoute("/vendas")({
   head: () => ({
