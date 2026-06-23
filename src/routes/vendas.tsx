@@ -44,7 +44,7 @@ import {
   type Cliente,
 } from "@/lib/erp-store";
 import { useTaxConfig, taxDescriptions, type TipoOperacao, type TaxRates } from "@/lib/tax-config";
-import { usePerfisFiscaisCliente, consumirProximoNumeroNF } from "@/lib/fiscal-store";
+import { usePerfisFiscaisCliente, consumirProximoNumeroNF, useItensFiscais, type ItemFiscal } from "@/lib/fiscal-store";
 import { Link } from "@tanstack/react-router";
 import { StatusBadge } from "@/components/status-badge";
 import { AlertTriangle } from "lucide-react";
@@ -53,19 +53,11 @@ export const Route = createFileRoute("/vendas")({
   head: () => ({
     meta: [
       { title: "Vendas / Faturamento — Global ERP" },
-      { name: "description", content: "Pedidos integrados ao estoque." },
+      { name: "description", content: "Pedidos integrados ao estoque e ao módulo Fiscal." },
     ],
   }),
   component: VendasPage,
 });
-
-const produtosEstoque = [
-  { sku: "SKU-10042", nome: "Notebook Pro 14\" M3", preco: 7299, estoque: 184 },
-  { sku: "SKU-10043", nome: "Monitor UltraWide 34\"", preco: 3499, estoque: 42 },
-  { sku: "SKU-10044", nome: "Teclado Mecânico RGB", preco: 599, estoque: 8 },
-  { sku: "SKU-10045", nome: "Mouse Ergonômico Vertical", preco: 289, estoque: 312 },
-  { sku: "SKU-10046", nome: "Headset Wireless ANC", preco: 1199, estoque: 64 },
-];
 
 type PedidoRow = {
   nf: string;
@@ -106,20 +98,35 @@ function VendasPage() {
   const [fornecedores] = useFornecedores();
   const [orcamentos, setOrcamentos] = useOrcamentos();
   const [faturados, setFaturados] = useFaturados();
+  const [itensFiscais] = useItensFiscais();
+
+  // Catálogo único de produtos/serviços vindo do módulo Fiscal.
+  const catalogo = useMemo(
+    () => itensFiscais.map((i) => ({
+      sku: i.sku,
+      nome: i.nome,
+      preco: i.preco,
+      estoque: i.estoqueAtual ?? 0,
+      tipo: i.tipo,
+      item: i,
+    })),
+    [itensFiscais],
+  );
+  const firstSku = catalogo[0]?.sku ?? "";
 
   const [clienteNome, setClienteNome] = useState<string>("");
   const [condicao, setCondicao] = useState<string>("30");
-  const [items, setItems] = useState<Item[]>([{ sku: "SKU-10042", qtd: 1 }]);
+  const [items, setItems] = useState<Item[]>(() => firstSku ? [{ sku: firstSku, qtd: 1 }] : []);
   const [orcamentoEditandoId, setOrcamentoEditandoId] = useState<string | null>(null);
   const [conferencia, setConferencia] = useState<ConferenciaState | null>(null);
 
-  const addItem = () => setItems([...items, { sku: produtosEstoque[0].sku, qtd: 1 }]);
+  const addItem = () => firstSku && setItems([...items, { sku: firstSku, qtd: 1 }]);
   const removeItem = (i: number) => setItems(items.filter((_, idx) => idx !== i));
   const updateItem = (i: number, patch: Partial<Item>) =>
     setItems(items.map((it, idx) => (idx === i ? { ...it, ...patch } : it)));
 
   const total = items.reduce((acc, it) => {
-    const p = produtosEstoque.find((p) => p.sku === it.sku);
+    const p = catalogo.find((p) => p.sku === it.sku);
     return acc + (p ? p.preco * it.qtd : 0);
   }, 0);
 
@@ -144,7 +151,7 @@ function VendasPage() {
   function resetForm() {
     setClienteNome("");
     setCondicao("30");
-    setItems([{ sku: "SKU-10042", qtd: 1 }]);
+    setItems(firstSku ? [{ sku: firstSku, qtd: 1 }] : []);
     setOrcamentoEditandoId(null);
   }
 
@@ -270,16 +277,16 @@ function VendasPage() {
             </div>
             <div className="space-y-2">
               {items.map((it, i) => {
-                const p = produtosEstoque.find((p) => p.sku === it.sku)!;
+                const p = catalogo.find((p) => p.sku === it.sku);
                 return (
                   <div key={i} className="grid grid-cols-12 items-center gap-2 rounded-md border border-border bg-secondary/30 p-2">
                     <div className="col-span-6">
                       <Select value={it.sku} onValueChange={(v) => updateItem(i, { sku: v })}>
                         <SelectTrigger className="h-9 bg-background"><SelectValue /></SelectTrigger>
                         <SelectContent>
-                          {produtosEstoque.map((pr) => (
+                          {catalogo.map((pr) => (
                             <SelectItem key={pr.sku} value={pr.sku}>
-                              {pr.nome} · {pr.sku}
+                              {pr.nome} · {pr.sku} {pr.tipo === "servico" ? "· serviço" : ""}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -295,8 +302,8 @@ function VendasPage() {
                       />
                     </div>
                     <div className="col-span-3 text-right text-sm tabular-nums">
-                      {(p.preco * it.qtd).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
-                      <div className="text-[10px] text-muted-foreground">Estoque: {p.estoque}</div>
+                      {((p?.preco ?? 0) * it.qtd).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+                      <div className="text-[10px] text-muted-foreground">Estoque: {p?.estoque ?? 0}</div>
                     </div>
                     <button
                       onClick={() => removeItem(i)}
@@ -507,6 +514,8 @@ function ConferenciaView({
 }) {
   const [taxConfig, setTaxConfig] = useTaxConfig();
   const [perfis] = usePerfisFiscaisCliente();
+  const [itensFiscais] = useItensFiscais();
+  const findItem = (sku: string): ItemFiscal | undefined => itensFiscais.find((i) => i.sku === sku);
   const perfilDoCliente = data.cliente?.fiscal?.perfilFiscalId
     ? perfis.find((p) => p.id === data.cliente!.fiscal!.perfilFiscalId)
     : undefined;
@@ -585,16 +594,16 @@ function ConferenciaView({
           </div>
           <div className="divide-y divide-border">
             {data.items.map((it, i) => {
-              const p = produtosEstoque.find((p) => p.sku === it.sku)!;
+              const p = findItem(it.sku);
               return (
                 <div key={i} className="grid grid-cols-12 items-center gap-2 px-5 py-3 text-sm">
                   <div className="col-span-7">
-                    <div className="font-medium">{p.nome}</div>
-                    <div className="text-[11px] text-muted-foreground">{p.sku}</div>
+                    <div className="font-medium">{p?.nome ?? it.sku}</div>
+                    <div className="text-[11px] text-muted-foreground">{it.sku}</div>
                   </div>
                   <div className="col-span-2 text-right tabular-nums">{it.qtd} un.</div>
                   <div className="col-span-3 text-right tabular-nums">
-                    {(p.preco * it.qtd).toLocaleString("pt-BR", {
+                    {((p?.preco ?? 0) * it.qtd).toLocaleString("pt-BR", {
                       style: "currency",
                       currency: "BRL",
                     })}

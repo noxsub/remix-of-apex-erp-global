@@ -1,57 +1,53 @@
-## Módulo Fiscal — escopo desta entrega
+## Expansão do módulo Fiscal — escopo desta entrega
 
-Novo módulo central de tributação. Vira a fonte da verdade para alíquotas, perfis e numeração de NF. Cadastros e Vendas passam a consumir dele.
+Tudo continua em `localStorage` (sem backend). Single source of truth = `fiscal-store`.
 
-### 1. Nova rota `/fiscal` (`src/routes/fiscal.tsx`)
+### 1. Vendas amarrado ao catálogo fiscal
+**`src/routes/vendas.tsx`**
+- O seletor de produtos do orçamento passa a ler de `useItensFiscais()` (não mais lista mock interna).
+- Cada linha do orçamento guarda `itemFiscalId`; tipo (produto/serviço) sai do item.
+- `ConferenciaView` calcula CBS/IBS/IS/PIS/COFINS/ICMS/ISS por linha = `alíquota do ItemFiscal` (com fallback para alíquotas padrão do Fiscal), e retenções (IRRF/CSLL/PIS/COFINS/ISS/INSS) a partir do **perfil fiscal do cliente**.
+- Aviso "Cadastro fiscal incompleto" com botão "Abrir no Fiscal" se o item ou o cliente não tiver perfil.
 
-Layout em abas, padrão dos outros módulos:
+### 2. Apuração IRPJ e CSLL
+**`src/lib/fiscal-store.ts`**
+- Nova entidade `ApuracaoConfig`: regime (Presumido/Real), periodicidade (trimestral/anual), % presunção IRPJ e CSLL por atividade (comércio 8%/12%, serviços 32%/32%, etc.), adicional IRPJ (10% acima de R$ 20k/mês), alíquota IRPJ (15%) e CSLL (9%).
+- Hook `useApuracaoConfig`.
 
-- **Empresa** — regime (Simples Nacional / Lucro Presumido / Lucro Real / MEI), CNAE principal + secundários, IE, IM, CRT, regime de apuração (caixa/competência).
-- **Escopo Tributário (Clientes)** — biblioteca de **Perfis Fiscais de Cliente** reutilizáveis: contribuinte ICMS (sim/não/isento), Suframa, indicador de IE, CFOP padrão dentro/fora UF, retenções aplicáveis (IRRF, CSLL, PIS, COFINS, ISS, INSS), observações da nota.
-- **Itens / Serviços** — cadastro completo: tipo (produto/serviço), NCM, CEST, código de serviço LC 116, origem (0–8), unidade, CST/CSOSN, alíquotas próprias (ICMS, IPI, PIS, COFINS, ISS, **CBS, IBS, IS**), benefício fiscal, peso/volume. Vira a base de produtos/serviços para Estoque e Vendas.
-- **Alíquotas padrão** — CBS/IBS/IS + IRRF/CSLL/PIS/COFINS/ISS por tipo de operação (produto/serviço). Migra o que hoje está no diálogo de Vendas para cá; o diálogo de Vendas vira só leitura/atalho.
-- **NF-e / NFS-e** — ambiente (homologação/produção), série, próximo número, modelo (55/65/NFS-e), CSC (placeholder), regime de emissão.
+**`src/routes/fiscal.tsx`** — nova aba **"IRPJ / CSLL"**:
+- Edita os percentuais de presunção e alíquotas.
+- Tabela de apuração por período lendo `useFaturados()`: receita bruta → base IRPJ/CSLL (presumido) → IRPJ devido + adicional + CSLL devido, separando produto vs. serviço.
+- Mostra também total de retenções IRRF/CSLL (compensáveis) sobre o período.
 
-Tudo persistido em `localStorage` seguindo o padrão de `erp-store.ts`.
+### 3. CNAE — modal flutuante de cadastro
+Na aba **Empresa**, botão "+" abre `Dialog` para cadastrar CNAE (código, descrição, principal/secundário, atividade preponderante = produto|serviço|ambos, % presunção IRPJ/CSLL sugerido). Lista de CNAEs já cadastrados com remover/editar.
 
-### 2. Novos stores em `src/lib/`
+### 4. Códigos de serviço LC 116 sugeridos por IA a partir dos CNAEs
+- Ativar **Lovable Cloud** + AI Gateway (Gemini Flash) para a sugestão.
+- Botão **"Sugerir códigos de serviço (IA)"** na aba **Itens/Serviços** → chama edge/server fn `suggest-service-codes` com os CNAEs cadastrados → retorna lista `{ codigo LC116, descricao, cnaeRelacionado, issSugerido }`.
+- Resultado vai para uma **biblioteca de códigos de serviço** (`useCodigosServico`) usada como autocomplete ao cadastrar item tipo serviço.
+- Cache local; usuário pode aceitar/rejeitar item por item antes de gravar.
 
-- `fiscal-store.ts` — `useEmpresaFiscal`, `usePerfisFiscaisCliente`, `useItensFiscais`, `useNFConfig`.
-- Refator `tax-config.ts` → passa a viver dentro do Fiscal (chave/`hook` mantidos para não quebrar Vendas).
+### 5. Importação de estoque (planilha padrão)
+- Novo botão **"Importar estoque (XLSX/CSV)"** na aba **Itens/Serviços**.
+- Botão **"Baixar modelo"** gera XLSX com colunas: `sku, nome, unidade, preco, ncm, cest, origem, cstCsosn, icms, ipi, pis, cofins, cbs, ibs, is, beneficioFiscal, peso, volume, cfopSaidaDentroUF, cfopSaidaForaUF, cfopEntrada, custoMedio, estoqueAtual, estoqueMinimo`.
+- Parser via `xlsx` (SheetJS) → valida → preview com erros por linha → confirma → grava em `useItensFiscais` (+ cria/atualiza saldos em `estoque-store`).
+- Lib: `bun add xlsx`.
 
-### 3. Integração com Cadastros (`src/routes/cadastros.tsx`)
+### 6. Base para Módulo de Entradas (preparação, não implementação completa)
+- Nova entidade `ConfigEntradaSaidaItem` em `ItemFiscal`: CFOP entrada, CFOP saída UF/fora UF, CST entrada, alíquotas de crédito (ICMS/PIS/COFINS), origem do custo (média/última entrada).
+- Aba **Itens/Serviços** ganha sub-aba por item: "Dados fiscais", "Entrada", "Saída".
+- TODO comentado: ao importar XML NF-e modelo 55 (futuro módulo Entradas), abrir mesma tela com os campos pré-preenchidos pelo XML; se SKU não existir, cria item fiscal automaticamente.
 
-Aba **Clientes** ganha uma seção/aba **"Escopo Tributário"** no formulário de novo/editar cliente:
+### Arquivos
+- editar `src/lib/fiscal-store.ts` (CNAE, ApuracaoConfig, CodigosServico, ConfigEntradaSaida)
+- editar `src/routes/fiscal.tsx` (modal CNAE, aba IRPJ/CSLL, botão IA, import XLSX, sub-abas por item)
+- editar `src/routes/vendas.tsx` (seletor lê de itens fiscais, cálculo via perfis)
+- novo `src/lib/xlsx-template.ts` (gera/parseia modelo)
+- novo `src/lib/api/suggest-service-codes.functions.ts` (server fn → AI Gateway)
+- ativar Lovable Cloud
 
-- Seleciona um **Perfil Fiscal** da biblioteca **ou** preenche inline (contribuinte ICMS, IE, Suframa, regime presumido do cliente, retenções específicas, CFOP override).
-- Campos ficam salvos junto do cliente (`Cliente.fiscal`).
-- Aviso visual se faltar escopo tributário (não bloqueia o cadastro, mas alerta no faturamento).
-
-Aba **Produtos/Serviços** passa a refletir os itens cadastrados no Fiscal (single source of truth).
-
-### 4. Integração com Vendas (`src/routes/vendas.tsx`)
-
-Na tela **Conferência / Enviar ao Fiscal**:
-
-- Calcula CBS/IBS/IS/retenções a partir do **perfil fiscal do cliente** + **item fiscal**.
-- Se cliente ou item não tem perfil → mostra alerta "Cadastro fiscal incompleto" com link direto para o Fiscal.
-- Mantém o botão "Configurar alíquotas" só como atalho para o módulo (em vez de editar inline).
-- Número da NF passa a vir do contador em `NFConfig` (incrementa de verdade).
-
-### 5. Navegação
-
-- Adiciona item **"Fiscal"** na sidebar (`src/components/app-sidebar.tsx`), entre Vendas e Financeiro.
-- Ícone `Receipt` ou `Scale` do lucide.
-
-### Detalhes técnicos
-
-- Sem backend ainda — tudo `localStorage` (`erp:fiscal:*`).
-- `Cliente` e `ItemFiscal` ganham campo opcional `perfilFiscalId` para apontar para a biblioteca.
-- Mantém compat: `useTaxConfig` continua exportado de `tax-config.ts`, mas agora lê de `useNFAliquotasPadrao` por baixo.
-- Sem migração destrutiva: clientes existentes ficam sem escopo tributário e aparecem com badge "Pendente fiscal".
-
-### Fora do escopo desta entrega
-
-- Integração real com SEFAZ / emissão de XML.
-- Cálculo de DIFAL, ICMS-ST por UF, partilha — fica como TODO comentado.
-- Importação de tabela NCM oficial — campo livre por enquanto.
+### Fora do escopo
+- Emissão real de NF, SPED, ECD/ECF.
+- Parser real de XML NF-e (vem com o módulo Entradas).
+- DIFAL e ICMS-ST.
