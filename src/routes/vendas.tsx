@@ -506,7 +506,13 @@ function ConferenciaView({
   onConfirmar: () => void;
 }) {
   const [taxConfig, setTaxConfig] = useTaxConfig();
-  const [tipo, setTipo] = useState<TipoOperacao>("produto");
+  const [perfis] = usePerfisFiscaisCliente();
+  const perfilDoCliente = data.cliente?.fiscal?.perfilFiscalId
+    ? perfis.find((p) => p.id === data.cliente!.fiscal!.perfilFiscalId)
+    : undefined;
+  const tipoInicial: TipoOperacao =
+    perfilDoCliente && perfilDoCliente.retencoes.iss ? "servico" : "produto";
+  const [tipo, setTipo] = useState<TipoOperacao>(tipoInicial);
   const [editOpen, setEditOpen] = useState(false);
   const base = data.total;
   const rates = taxConfig[tipo];
@@ -543,6 +549,30 @@ function ConferenciaView({
           <FileText className="h-3.5 w-3.5" /> Confirmar e enviar ao fiscal
         </Button>
       </div>
+
+      {!data.cliente?.fiscal?.perfilFiscalId && (
+        <div className="mb-4 flex items-start gap-3 rounded-md border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm">
+          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
+          <div className="flex-1">
+            <div className="font-medium text-amber-700 dark:text-amber-300">
+              Cadastro fiscal incompleto
+            </div>
+            <div className="text-xs text-amber-700/90 dark:text-amber-300/90">
+              O cliente <span className="font-medium">{data.clienteNome}</span> não tem perfil fiscal definido — as retenções estão usando as alíquotas padrão.{" "}
+              <Link to="/fiscal" className="font-medium underline-offset-4 hover:underline">
+                Configurar no módulo Fiscal →
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {perfilDoCliente && (
+        <div className="mb-4 rounded-md border border-emerald-500/30 bg-emerald-500/5 px-4 py-2 text-xs text-emerald-700 dark:text-emerald-300">
+          Perfil fiscal aplicado: <span className="font-medium">{perfilDoCliente.nome}</span> · CFOP{" "}
+          {perfilDoCliente.cfopDentroUF} (intra) / {perfilDoCliente.cfopForaUF} (inter)
+        </div>
+      )}
 
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
         <div className="xl:col-span-2 rounded-lg border border-border bg-card">
