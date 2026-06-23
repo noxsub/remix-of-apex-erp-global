@@ -302,8 +302,8 @@ function VendasPage() {
                       />
                     </div>
                     <div className="col-span-3 text-right text-sm tabular-nums">
-                      {(p.preco * it.qtd).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
-                      <div className="text-[10px] text-muted-foreground">Estoque: {p.estoque}</div>
+                      {((p?.preco ?? 0) * it.qtd).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+                      <div className="text-[10px] text-muted-foreground">Estoque: {p?.estoque ?? 0}</div>
                     </div>
                     <button
                       onClick={() => removeItem(i)}
