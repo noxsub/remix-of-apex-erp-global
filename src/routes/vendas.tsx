@@ -514,6 +514,8 @@ function ConferenciaView({
 }) {
   const [taxConfig, setTaxConfig] = useTaxConfig();
   const [perfis] = usePerfisFiscaisCliente();
+  const [itensFiscais] = useItensFiscais();
+  const findItem = (sku: string): ItemFiscal | undefined => itensFiscais.find((i) => i.sku === sku);
   const perfilDoCliente = data.cliente?.fiscal?.perfilFiscalId
     ? perfis.find((p) => p.id === data.cliente!.fiscal!.perfilFiscalId)
     : undefined;
@@ -592,16 +594,16 @@ function ConferenciaView({
           </div>
           <div className="divide-y divide-border">
             {data.items.map((it, i) => {
-              const p = produtosEstoque.find((p) => p.sku === it.sku)!;
+              const p = findItem(it.sku);
               return (
                 <div key={i} className="grid grid-cols-12 items-center gap-2 px-5 py-3 text-sm">
                   <div className="col-span-7">
-                    <div className="font-medium">{p.nome}</div>
-                    <div className="text-[11px] text-muted-foreground">{p.sku}</div>
+                    <div className="font-medium">{p?.nome ?? it.sku}</div>
+                    <div className="text-[11px] text-muted-foreground">{it.sku}</div>
                   </div>
                   <div className="col-span-2 text-right tabular-nums">{it.qtd} un.</div>
                   <div className="col-span-3 text-right tabular-nums">
-                    {(p.preco * it.qtd).toLocaleString("pt-BR", {
+                    {((p?.preco ?? 0) * it.qtd).toLocaleString("pt-BR", {
                       style: "currency",
                       currency: "BRL",
                     })}
