@@ -95,6 +95,7 @@ type Item = OrcamentoItem;
 
 type ConferenciaState = {
   clienteNome: string;
+  cliente?: Cliente;
   condicao: string;
   items: Item[];
   total: number;
@@ -189,7 +190,8 @@ function VendasPage() {
       toast.error("Selecione um cliente antes de faturar.");
       return;
     }
-    setConferencia({ clienteNome, condicao, items, total });
+    const cliente = clientes.find((c) => c.nome === clienteNome);
+    setConferencia({ clienteNome, cliente, condicao, items, total });
   }
 
   if (conferencia) {
@@ -201,8 +203,7 @@ function VendasPage() {
           if (orcamentoEditandoId) {
             setOrcamentos((prev) => prev.filter((o) => o.id !== orcamentoEditandoId));
           }
-          const seqBase = faturados.length + pedidosHistorico.length + 1;
-          const nf = `NF-${new Date().getFullYear()}-${String(seqBase).padStart(6, "0")}`;
+          const { formatado: nf } = consumirProximoNumeroNF();
           const novo: PedidoFaturado = {
             nf,
             data: new Date().toLocaleDateString("pt-BR"),
