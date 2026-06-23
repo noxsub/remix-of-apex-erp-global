@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { LayoutDashboard, Package, ShoppingCart, Wallet, Users } from "lucide-react";
+import { LayoutDashboard, Package, ShoppingCart, Wallet, Users, Receipt } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -17,6 +17,7 @@ const items = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard },
   { title: "Estoque", url: "/estoque", icon: Package },
   { title: "Vendas / Faturamento", url: "/vendas", icon: ShoppingCart },
+  { title: "Fiscal", url: "/fiscal", icon: Receipt },
   { title: "Financeiro", url: "/financeiro", icon: Wallet },
   { title: "Cadastros", url: "/cadastros", icon: Users },
 ];
