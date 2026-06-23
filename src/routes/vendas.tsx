@@ -44,7 +44,7 @@ import {
   type Cliente,
 } from "@/lib/erp-store";
 import { useTaxConfig, taxDescriptions, type TipoOperacao, type TaxRates } from "@/lib/tax-config";
-import { usePerfisFiscaisCliente, consumirProximoNumeroNF, useItensFiscais, useAliquotasPadrao, type ItemFiscal } from "@/lib/fiscal-store";
+import { usePerfisFiscaisCliente, consumirProximoNumeroNF, useItensFiscais, type ItemFiscal } from "@/lib/fiscal-store";
 import { Link } from "@tanstack/react-router";
 import { StatusBadge } from "@/components/status-badge";
 import { AlertTriangle } from "lucide-react";
