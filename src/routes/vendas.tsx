@@ -44,7 +44,7 @@ import {
   type Cliente,
 } from "@/lib/erp-store";
 import { useTaxConfig, taxDescriptions, type TipoOperacao, type TaxRates } from "@/lib/tax-config";
-import { usePerfisFiscaisCliente, consumirProximoNumeroNF } from "@/lib/fiscal-store";
+import { usePerfisFiscaisCliente, consumirProximoNumeroNF, useItensFiscais, useAliquotasPadrao, type ItemFiscal } from "@/lib/fiscal-store";
 import { Link } from "@tanstack/react-router";
 import { StatusBadge } from "@/components/status-badge";
 import { AlertTriangle } from "lucide-react";
@@ -53,19 +53,11 @@ export const Route = createFileRoute("/vendas")({
   head: () => ({
     meta: [
       { title: "Vendas / Faturamento — Global ERP" },
-      { name: "description", content: "Pedidos integrados ao estoque." },
+      { name: "description", content: "Pedidos integrados ao estoque e ao módulo Fiscal." },
     ],
   }),
   component: VendasPage,
 });
-
-const produtosEstoque = [
-  { sku: "SKU-10042", nome: "Notebook Pro 14\" M3", preco: 7299, estoque: 184 },
-  { sku: "SKU-10043", nome: "Monitor UltraWide 34\"", preco: 3499, estoque: 42 },
-  { sku: "SKU-10044", nome: "Teclado Mecânico RGB", preco: 599, estoque: 8 },
-  { sku: "SKU-10045", nome: "Mouse Ergonômico Vertical", preco: 289, estoque: 312 },
-  { sku: "SKU-10046", nome: "Headset Wireless ANC", preco: 1199, estoque: 64 },
-];
 
 type PedidoRow = {
   nf: string;
