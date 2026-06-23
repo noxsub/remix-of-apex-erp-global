@@ -1,5 +1,16 @@
 import { useEffect, useState } from "react";
 
+export type ClienteFiscal = {
+  perfilFiscalId?: string;
+  ie?: string;
+  im?: string;
+  uf?: string;
+  municipio?: string;
+  contribuinteIcms?: "sim" | "nao" | "isento";
+  suframa?: string;
+  observacoes?: string;
+};
+
 export type Cliente = {
   nome: string;
   documento: string;
@@ -7,6 +18,7 @@ export type Cliente = {
   email: string;
   tipo: string;
   status: string;
+  fiscal?: ClienteFiscal;
 };
 
 export type Fornecedor = {

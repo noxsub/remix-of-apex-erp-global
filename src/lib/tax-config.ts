@@ -1,4 +1,7 @@
-import { useEffect, useState } from "react";
+// Compat layer — as alíquotas vivem agora no módulo Fiscal (`fiscal-store`).
+// Mantemos o shape antigo (CBS/IBS/IS/IRRF/CSLL) para não quebrar `vendas.tsx`.
+
+import { useAliquotasPadrao, type AliquotasPadrao } from "./fiscal-store";
 
 export type TaxRates = {
   cbs: number;
@@ -12,11 +15,6 @@ export type TipoOperacao = "produto" | "servico";
 
 export type TaxConfig = Record<TipoOperacao, TaxRates>;
 
-export const taxConfigDefault: TaxConfig = {
-  produto: { cbs: 0.9, ibs: 0.1, is: 0.0, irrf: 1.5, csll: 1.0 },
-  servico: { cbs: 0.9, ibs: 0.1, is: 0.0, irrf: 1.5, csll: 1.0 },
-};
-
 export const taxDescriptions: Record<keyof TaxRates, { label: string; descricao: string }> = {
   cbs: { label: "CBS", descricao: "Contribuição sobre Bens e Serviços (federal) — Reforma Tributária" },
   ibs: { label: "IBS", descricao: "Imposto sobre Bens e Serviços (estadual/municipal) — Reforma Tributária" },
@@ -25,40 +23,22 @@ export const taxDescriptions: Record<keyof TaxRates, { label: string; descricao:
   csll: { label: "CSLL", descricao: "Contribuição Social sobre o Lucro Líquido" },
 };
 
-const KEY = "erp:tax-config";
-
-function read(): TaxConfig {
-  if (typeof window === "undefined") return taxConfigDefault;
-  try {
-    const raw = window.localStorage.getItem(KEY);
-    return raw ? { ...taxConfigDefault, ...JSON.parse(raw) } : taxConfigDefault;
-  } catch {
-    return taxConfigDefault;
-  }
-}
-
-function write(value: TaxConfig) {
-  if (typeof window === "undefined") return;
-  window.localStorage.setItem(KEY, JSON.stringify(value));
-  window.dispatchEvent(new CustomEvent("erp:store", { detail: { key: KEY } }));
+function toTaxConfig(a: AliquotasPadrao): TaxConfig {
+  return {
+    produto: { cbs: a.produto.cbs, ibs: a.produto.ibs, is: a.produto.is, irrf: a.produto.irrf, csll: a.produto.csll },
+    servico: { cbs: a.servico.cbs, ibs: a.servico.ibs, is: a.servico.is, irrf: a.servico.irrf, csll: a.servico.csll },
+  };
 }
 
 export function useTaxConfig() {
-  const [state, setState] = useState<TaxConfig>(read);
-  useEffect(() => {
-    const onStore = (e: Event) => {
-      const d = (e as CustomEvent).detail as { key?: string } | undefined;
-      if (d?.key === KEY) setState(read());
-    };
-    window.addEventListener("erp:store", onStore);
-    return () => window.removeEventListener("erp:store", onStore);
-  }, []);
+  const [aliquotas, setAliquotas] = useAliquotasPadrao();
+  const config = toTaxConfig(aliquotas);
   const update = (next: TaxConfig | ((prev: TaxConfig) => TaxConfig)) => {
-    setState((prev) => {
-      const v = typeof next === "function" ? (next as (p: TaxConfig) => TaxConfig)(prev) : next;
-      write(v);
-      return v;
-    });
+    const v = typeof next === "function" ? (next as (p: TaxConfig) => TaxConfig)(config) : next;
+    setAliquotas((prev) => ({
+      produto: { ...prev.produto, ...v.produto },
+      servico: { ...prev.servico, ...v.servico },
+    }));
   };
-  return [state, update] as const;
+  return [config, update] as const;
 }
