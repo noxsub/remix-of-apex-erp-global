@@ -30,8 +30,11 @@ import {
   useClientes,
   useFornecedores,
   type Cliente,
+  type ClienteFiscal,
   type Fornecedor,
 } from "@/lib/erp-store";
+import { usePerfisFiscaisCliente } from "@/lib/fiscal-store";
+import { Link } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/cadastros")({
   head: () => ({
@@ -86,6 +89,16 @@ function CadastrosPage() {
     { key: "telefone", header: "Telefone" },
     { key: "email", header: "E-mail" },
     { key: "tipo", header: "Tipo" },
+    {
+      key: "fiscal",
+      header: "Fiscal",
+      render: (r) =>
+        r.fiscal?.perfilFiscalId ? (
+          <span className="text-xs text-emerald-600 dark:text-emerald-400">Configurado</span>
+        ) : (
+          <span className="text-xs text-amber-600 dark:text-amber-400">Pendente</span>
+        ),
+    },
     { key: "status", header: "Status", render: (r) => <StatusBadge value={r.status} /> },
   ];
   const colFornecedores: Column<Fornecedor>[] = [
