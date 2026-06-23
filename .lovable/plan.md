@@ -1,81 +1,57 @@
-## Plano de implementação
+## Módulo Fiscal — escopo desta entrega
 
-### Parte 1 — Alíquotas configuráveis (CBS / IBS / IS / IRRF / CSLL)
+Novo módulo central de tributação. Vira a fonte da verdade para alíquotas, perfis e numeração de NF. Cadastros e Vendas passam a consumir dele.
 
-**Arquivos novos:**
-- `src/lib/tax-config.ts` — store persistido (`localStorage` chave `erp:tax-config`) com hook `useTaxConfig()` retornando alíquotas padrão + por tipo de operação (`produto` | `servico`):
-  ```
-  { produto: { cbs, ibs, is, irrf, csll }, servico: { ... } }
-  ```
-  Padrões iniciais: CBS 0,9 / IBS 0,1 / IS 0,0 / IRRF 1,5 / CSLL 1,0.
+### 1. Nova rota `/fiscal` (`src/routes/fiscal.tsx`)
 
-**Arquivos alterados:**
-- `src/routes/vendas.tsx` — na `ConferenciaView` ler alíquotas via `useTaxConfig()` em vez de constantes; adicionar toggle Produto/Serviço e botão "Configurar alíquotas" que abre um `Dialog` com inputs editáveis (salva no store).
-- `src/routes/configuracoes.tsx` (se existir) ou nova aba "Tributário" — espelha o mesmo editor. *Se não existir rota de configurações, deixa só dentro do dialog de Vendas.*
+Layout em abas, padrão dos outros módulos:
 
----
+- **Empresa** — regime (Simples Nacional / Lucro Presumido / Lucro Real / MEI), CNAE principal + secundários, IE, IM, CRT, regime de apuração (caixa/competência).
+- **Escopo Tributário (Clientes)** — biblioteca de **Perfis Fiscais de Cliente** reutilizáveis: contribuinte ICMS (sim/não/isento), Suframa, indicador de IE, CFOP padrão dentro/fora UF, retenções aplicáveis (IRRF, CSLL, PIS, COFINS, ISS, INSS), observações da nota.
+- **Itens / Serviços** — cadastro completo: tipo (produto/serviço), NCM, CEST, código de serviço LC 116, origem (0–8), unidade, CST/CSOSN, alíquotas próprias (ICMS, IPI, PIS, COFINS, ISS, **CBS, IBS, IS**), benefício fiscal, peso/volume. Vira a base de produtos/serviços para Estoque e Vendas.
+- **Alíquotas padrão** — CBS/IBS/IS + IRRF/CSLL/PIS/COFINS/ISS por tipo de operação (produto/serviço). Migra o que hoje está no diálogo de Vendas para cá; o diálogo de Vendas vira só leitura/atalho.
+- **NF-e / NFS-e** — ambiente (homologação/produção), série, próximo número, modelo (55/65/NFS-e), CSC (placeholder), regime de emissão.
 
-### Parte 2 — Dashboard multi-módulo com Widgets contextuais
+Tudo persistido em `localStorage` seguindo o padrão de `erp-store.ts`.
 
-**Arquitetura:**
-- Novo seletor de **módulo** (chips/tabs no topo: Financeiro · Estoque · Vendas · Cadastros) que troca o conjunto de KPIs, gráficos e o conteúdo do popover "Configurar Widgets".
-- Estado do módulo ativo + visibilidade de widgets persistido em `localStorage` (`erp:dashboard-prefs`).
-- Toggle global **Tipo de negócio**: `Revenda` | `Serviço` | `Ambos` — controla disponibilidade dos widgets condicionais (Estoque só em Revenda; Churn só em Serviço; Vendas muda opções).
+### 2. Novos stores em `src/lib/`
 
-**Fonte de dados — integração real com módulos:**
-- Estender `src/lib/erp-store.ts`:
-  - Tipos `Produto` (com `categoria`, `precoCusto`, `precoVenda`, `estoque`, `estoqueMin`, `ultimaMov`) e hook `useProdutos()`.
-  - Tipo `MovimentacaoEstoque` (entrada/saída/data/qtd/sku) + hook `useMovimentacoes()`.
-  - Já existem `useFaturados`, `useOrcamentos`, `useClientes`, `useFornecedores` — reutilizar.
-- `src/routes/estoque.tsx` e `src/routes/cadastros.tsx` passam a ler/escrever via esses hooks para que o Dashboard reflita movimentos reais.
+- `fiscal-store.ts` — `useEmpresaFiscal`, `usePerfisFiscaisCliente`, `useItensFiscais`, `useNFConfig`.
+- Refator `tax-config.ts` → passa a viver dentro do Fiscal (chave/`hook` mantidos para não quebrar Vendas).
 
-**Arquivo novo:**
-- `src/lib/dashboard-metrics.ts` — funções puras que agregam os hooks acima em séries para os gráficos (giro, curva ABC, top produtos, ticket médio, funil, ativos vs inativos, distribuição por UF, novos clientes/mês, churn).
+### 3. Integração com Cadastros (`src/routes/cadastros.tsx`)
 
-**Refactor `src/routes/index.tsx`:**
+Aba **Clientes** ganha uma seção/aba **"Escopo Tributário"** no formulário de novo/editar cliente:
 
-```text
-┌─ Header: [Módulo: Financeiro|Estoque|Vendas|Cadastros] [Tipo: Revenda/Serviço] [Período] [Configurar Widgets] ─┐
-│                                                                                                                │
-│  Conteúdo varia por módulo ativo (mesma shell, blocos diferentes)                                              │
-└────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
-```
+- Seleciona um **Perfil Fiscal** da biblioteca **ou** preenche inline (contribuinte ICMS, IE, Suframa, regime presumido do cliente, retenções específicas, CFOP override).
+- Campos ficam salvos junto do cliente (`Cliente.fiscal`).
+- Aviso visual se faltar escopo tributário (não bloqueia o cadastro, mas alerta no faturamento).
 
-**Módulo FINANCEIRO** (default — mantém o atual):
-- KPIs: Faturamento, Conciliação, A Receber, A Pagar (do `useFaturados`)
-- Widgets: Faturamento vs Conciliado · Fluxo de Caixa Previsto vs Realizado · Inadimplência Recente · Contas a Pagar do Dia
+Aba **Produtos/Serviços** passa a refletir os itens cadastrados no Fiscal (single source of truth).
 
-**Módulo ESTOQUE** (só Revenda):
-- KPIs: Valor total do estoque, Nº itens abaixo do mínimo
-- Widgets: Giro de Estoque (linha) · Curva ABC (Pareto) · Alertas de Reposição (barras horizontais) · Parados +90 dias · Valoração por Categoria (donut)
+### 4. Integração com Vendas (`src/routes/vendas.tsx`)
 
-**Módulo VENDAS:**
-- KPIs: Evolução mensal, Ticket médio
-- Widgets Revenda: Top Produtos · Desempenho por Canal
-- Widgets Serviço: Serviços Mais Prestados (rosca) · Horas Faturadas vs Disponíveis (gauge)
-- Comum: Funil de Orçamentos (orçamentos → em negociação → aprovados → faturados, usando `useOrcamentos` + `useFaturados`)
+Na tela **Conferência / Enviar ao Fiscal**:
 
-**Módulo CADASTROS:**
-- KPIs: Total de clientes, taxa de crescimento
-- Widgets: Ativos vs Inativos (parâmetro X dias configurável) · Distribuição por UF (barras) · Novos Clientes/mês · Churn (só Serviço)
+- Calcula CBS/IBS/IS/retenções a partir do **perfil fiscal do cliente** + **item fiscal**.
+- Se cliente ou item não tem perfil → mostra alerta "Cadastro fiscal incompleto" com link direto para o Fiscal.
+- Mantém o botão "Configurar alíquotas" só como atalho para o módulo (em vez de editar inline).
+- Número da NF passa a vir do contador em `NFConfig` (incrementa de verdade).
 
-**Componentes auxiliares:**
-- `src/components/dashboard/module-switcher.tsx`
-- `src/components/dashboard/widget-popover.tsx` — recebe lista contextual de widgets do módulo ativo
-- `src/components/dashboard/charts/` — `FunnelChart.tsx`, `GaugeChart.tsx`, `ParetoChart.tsx` (os outros reaproveitam Recharts já em uso)
+### 5. Navegação
 
-**Recharts:** já instalado; `Funnel` e `RadialBar` (para gauge) vêm no pacote.
+- Adiciona item **"Fiscal"** na sidebar (`src/components/app-sidebar.tsx`), entre Vendas e Financeiro.
+- Ícone `Receipt` ou `Scale` do lucide.
 
----
+### Detalhes técnicos
 
-### Ordem de execução
+- Sem backend ainda — tudo `localStorage` (`erp:fiscal:*`).
+- `Cliente` e `ItemFiscal` ganham campo opcional `perfilFiscalId` para apontar para a biblioteca.
+- Mantém compat: `useTaxConfig` continua exportado de `tax-config.ts`, mas agora lê de `useNFAliquotasPadrao` por baixo.
+- Sem migração destrutiva: clientes existentes ficam sem escopo tributário e aparecem com badge "Pendente fiscal".
 
-1. Criar `tax-config.ts` + integrar em `vendas.tsx` (com dialog de edição).
-2. Estender `erp-store.ts` com produtos/movimentações; ajustar `estoque.tsx` minimamente para popular dados reais.
-3. Criar `dashboard-metrics.ts`.
-4. Refazer `index.tsx` com switcher de módulo e widgets contextuais.
-5. Criar componentes de gráfico novos (Funnel, Gauge, Pareto).
+### Fora do escopo desta entrega
 
-### Pergunta antes de implementar
-
-O tipo de negócio (Revenda / Serviço / Ambos) deve ser **global do ERP** (escolhido uma vez nas configurações) ou **alternável no próprio Dashboard** como um toggle?
+- Integração real com SEFAZ / emissão de XML.
+- Cálculo de DIFAL, ICMS-ST por UF, partilha — fica como TODO comentado.
+- Importação de tabela NCM oficial — campo livre por enquanto.
