@@ -151,7 +151,7 @@ function VendasPage() {
   function resetForm() {
     setClienteNome("");
     setCondicao("30");
-    setItems([{ sku: "SKU-10042", qtd: 1 }]);
+    setItems(firstSku ? [{ sku: firstSku, qtd: 1 }] : []);
     setOrcamentoEditandoId(null);
   }
 
@@ -277,16 +277,16 @@ function VendasPage() {
             </div>
             <div className="space-y-2">
               {items.map((it, i) => {
-                const p = produtosEstoque.find((p) => p.sku === it.sku)!;
+                const p = catalogo.find((p) => p.sku === it.sku);
                 return (
                   <div key={i} className="grid grid-cols-12 items-center gap-2 rounded-md border border-border bg-secondary/30 p-2">
                     <div className="col-span-6">
                       <Select value={it.sku} onValueChange={(v) => updateItem(i, { sku: v })}>
                         <SelectTrigger className="h-9 bg-background"><SelectValue /></SelectTrigger>
                         <SelectContent>
-                          {produtosEstoque.map((pr) => (
+                          {catalogo.map((pr) => (
                             <SelectItem key={pr.sku} value={pr.sku}>
-                              {pr.nome} · {pr.sku}
+                              {pr.nome} · {pr.sku} {pr.tipo === "servico" ? "· serviço" : ""}
                             </SelectItem>
                           ))}
                         </SelectContent>
