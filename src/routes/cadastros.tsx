@@ -264,6 +264,7 @@ function CadastrosPage() {
 }
 
 function NovoClienteDialog({ onSave }: { onSave: (c: Cliente) => void }) {
+  const [perfis] = usePerfisFiscaisCliente();
   const [form, setForm] = useState<Cliente>({
     nome: "",
     documento: "",
@@ -271,50 +272,148 @@ function NovoClienteDialog({ onSave }: { onSave: (c: Cliente) => void }) {
     email: "",
     tipo: "Consumidor Final",
     status: "Ativo",
+    fiscal: {
+      perfilFiscalId: undefined,
+      ie: "",
+      im: "",
+      uf: "",
+      municipio: "",
+      contribuinteIcms: "nao",
+      suframa: "",
+      observacoes: "",
+    },
   });
+
+  const setFiscal = (patch: Partial<ClienteFiscal>) =>
+    setForm((p) => ({ ...p, fiscal: { ...(p.fiscal ?? {}), ...patch } }));
+  const fiscal = form.fiscal ?? {};
+
   return (
-    <DialogContent className="sm:max-w-lg">
+    <DialogContent className="sm:max-w-2xl">
       <DialogHeader>
         <DialogTitle>Novo Cliente</DialogTitle>
-        <DialogDescription>Preencha os dados do cliente.</DialogDescription>
+        <DialogDescription>
+          Dados cadastrais e escopo tributário — o escopo alimenta o cálculo de impostos na venda.
+        </DialogDescription>
       </DialogHeader>
-      <div className="grid grid-cols-2 gap-3">
-        <div className="col-span-2 space-y-1.5">
-          <Label className="text-xs">Nome / Razão Social</Label>
-          <Input value={form.nome} onChange={(e) => setForm({ ...form, nome: e.target.value })} />
-        </div>
-        <div className="space-y-1.5">
-          <Label className="text-xs">CPF / CNPJ</Label>
-          <Input
-            value={form.documento}
-            onChange={(e) => setForm({ ...form, documento: e.target.value })}
-          />
-        </div>
-        <div className="space-y-1.5">
-          <Label className="text-xs">Telefone</Label>
-          <Input value={form.telefone} onChange={(e) => setForm({ ...form, telefone: e.target.value })} />
-        </div>
-        <div className="col-span-2 space-y-1.5">
-          <Label className="text-xs">E-mail</Label>
-          <Input
-            type="email"
-            value={form.email}
-            onChange={(e) => setForm({ ...form, email: e.target.value })}
-          />
-        </div>
-        <div className="col-span-2 space-y-1.5">
-          <Label className="text-xs">Tipo</Label>
-          <Select value={form.tipo} onValueChange={(v) => setForm({ ...form, tipo: v })}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="Consumidor Final">Consumidor Final</SelectItem>
-              <SelectItem value="Revendedor">Revendedor</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
+      <Tabs defaultValue="dados">
+        <TabsList className="bg-secondary/40">
+          <TabsTrigger value="dados">Dados</TabsTrigger>
+          <TabsTrigger value="fiscal">Escopo Tributário</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="dados" className="mt-3">
+          <div className="grid grid-cols-2 gap-3">
+            <div className="col-span-2 space-y-1.5">
+              <Label className="text-xs">Nome / Razão Social</Label>
+              <Input value={form.nome} onChange={(e) => setForm({ ...form, nome: e.target.value })} />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs">CPF / CNPJ</Label>
+              <Input
+                value={form.documento}
+                onChange={(e) => setForm({ ...form, documento: e.target.value })}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs">Telefone</Label>
+              <Input value={form.telefone} onChange={(e) => setForm({ ...form, telefone: e.target.value })} />
+            </div>
+            <div className="col-span-2 space-y-1.5">
+              <Label className="text-xs">E-mail</Label>
+              <Input
+                type="email"
+                value={form.email}
+                onChange={(e) => setForm({ ...form, email: e.target.value })}
+              />
+            </div>
+            <div className="col-span-2 space-y-1.5">
+              <Label className="text-xs">Tipo</Label>
+              <Select value={form.tipo} onValueChange={(v) => setForm({ ...form, tipo: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Consumidor Final">Consumidor Final</SelectItem>
+                  <SelectItem value="Revendedor">Revendedor</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="fiscal" className="mt-3">
+          <div className="mb-3 rounded-md border border-dashed border-border bg-secondary/30 px-3 py-2 text-[11px] text-muted-foreground">
+            Selecione um perfil da biblioteca ou preencha os campos manualmente.{" "}
+            <Link to="/fiscal" className="font-medium text-foreground underline-offset-4 hover:underline">
+              Gerenciar perfis →
+            </Link>
+          </div>
+          <div className="grid grid-cols-6 gap-3">
+            <div className="col-span-6 space-y-1.5">
+              <Label className="text-xs">Perfil Fiscal</Label>
+              <Select
+                value={fiscal.perfilFiscalId ?? "none"}
+                onValueChange={(v) => setFiscal({ perfilFiscalId: v === "none" ? undefined : v })}
+              >
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">— Sem perfil (preenchimento manual) —</SelectItem>
+                  {perfis.map((p) => (
+                    <SelectItem key={p.id} value={p.id}>{p.nome}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="col-span-3 space-y-1.5 sm:col-span-2">
+              <Label className="text-xs">Contribuinte ICMS</Label>
+              <Select
+                value={fiscal.contribuinteIcms ?? "nao"}
+                onValueChange={(v) => setFiscal({ contribuinteIcms: v as ClienteFiscal["contribuinteIcms"] })}
+              >
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="sim">Sim</SelectItem>
+                  <SelectItem value="nao">Não</SelectItem>
+                  <SelectItem value="isento">Isento</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="col-span-3 space-y-1.5 sm:col-span-2">
+              <Label className="text-xs">Inscrição Estadual</Label>
+              <Input value={fiscal.ie ?? ""} onChange={(e) => setFiscal({ ie: e.target.value })} />
+            </div>
+            <div className="col-span-3 space-y-1.5 sm:col-span-2">
+              <Label className="text-xs">Inscrição Municipal</Label>
+              <Input value={fiscal.im ?? ""} onChange={(e) => setFiscal({ im: e.target.value })} />
+            </div>
+            <div className="col-span-2 space-y-1.5 sm:col-span-1">
+              <Label className="text-xs">UF</Label>
+              <Input
+                value={fiscal.uf ?? ""}
+                onChange={(e) => setFiscal({ uf: e.target.value.toUpperCase().slice(0, 2) })}
+              />
+            </div>
+            <div className="col-span-4 space-y-1.5 sm:col-span-3">
+              <Label className="text-xs">Município</Label>
+              <Input value={fiscal.municipio ?? ""} onChange={(e) => setFiscal({ municipio: e.target.value })} />
+            </div>
+            <div className="col-span-6 space-y-1.5 sm:col-span-2">
+              <Label className="text-xs">Suframa</Label>
+              <Input
+                placeholder="Opcional"
+                value={fiscal.suframa ?? ""}
+                onChange={(e) => setFiscal({ suframa: e.target.value })}
+              />
+            </div>
+            <div className="col-span-6 space-y-1.5">
+              <Label className="text-xs">Observações da NF</Label>
+              <Input
+                value={fiscal.observacoes ?? ""}
+                onChange={(e) => setFiscal({ observacoes: e.target.value })}
+              />
+            </div>
+          </div>
+        </TabsContent>
+      </Tabs>
       <DialogFooter>
         <Button
           size="sm"
