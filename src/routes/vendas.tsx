@@ -98,20 +98,35 @@ function VendasPage() {
   const [fornecedores] = useFornecedores();
   const [orcamentos, setOrcamentos] = useOrcamentos();
   const [faturados, setFaturados] = useFaturados();
+  const [itensFiscais] = useItensFiscais();
+
+  // Catálogo único de produtos/serviços vindo do módulo Fiscal.
+  const catalogo = useMemo(
+    () => itensFiscais.map((i) => ({
+      sku: i.sku,
+      nome: i.nome,
+      preco: i.preco,
+      estoque: i.estoqueAtual ?? 0,
+      tipo: i.tipo,
+      item: i,
+    })),
+    [itensFiscais],
+  );
+  const firstSku = catalogo[0]?.sku ?? "";
 
   const [clienteNome, setClienteNome] = useState<string>("");
   const [condicao, setCondicao] = useState<string>("30");
-  const [items, setItems] = useState<Item[]>([{ sku: "SKU-10042", qtd: 1 }]);
+  const [items, setItems] = useState<Item[]>(() => firstSku ? [{ sku: firstSku, qtd: 1 }] : []);
   const [orcamentoEditandoId, setOrcamentoEditandoId] = useState<string | null>(null);
   const [conferencia, setConferencia] = useState<ConferenciaState | null>(null);
 
-  const addItem = () => setItems([...items, { sku: produtosEstoque[0].sku, qtd: 1 }]);
+  const addItem = () => firstSku && setItems([...items, { sku: firstSku, qtd: 1 }]);
   const removeItem = (i: number) => setItems(items.filter((_, idx) => idx !== i));
   const updateItem = (i: number, patch: Partial<Item>) =>
     setItems(items.map((it, idx) => (idx === i ? { ...it, ...patch } : it)));
 
   const total = items.reduce((acc, it) => {
-    const p = produtosEstoque.find((p) => p.sku === it.sku);
+    const p = catalogo.find((p) => p.sku === it.sku);
     return acc + (p ? p.preco * it.qtd : 0);
   }, 0);
 
