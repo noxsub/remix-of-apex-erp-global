@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { LayoutDashboard, Package, ShoppingCart, Wallet, Users, Receipt } from "lucide-react";
+import { LayoutDashboard, Package, ShoppingCart, Wallet, Users, Receipt, Network } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -19,6 +19,7 @@ const items = [
   { title: "Vendas / Faturamento", url: "/vendas", icon: ShoppingCart },
   { title: "Fiscal", url: "/fiscal", icon: Receipt },
   { title: "Financeiro", url: "/financeiro", icon: Wallet },
+  { title: "Omnilink", url: "/omnilink", icon: Network },
   { title: "Cadastros", url: "/cadastros", icon: Users },
 ];
 
@@ -30,12 +31,12 @@ export function AppSidebar() {
       <SidebarHeader className="border-b border-sidebar-border px-4 py-5">
         <div className="flex items-center gap-2">
           <div className="flex h-8 w-8 items-center justify-center rounded-md bg-gold text-primary-foreground font-semibold tracking-tight">
-            G
+            S
           </div>
           <div className="flex flex-col leading-tight group-data-[collapsible=icon]:hidden">
-            <span className="text-sm font-semibold tracking-tight">Global ERP</span>
+            <span className="text-sm font-semibold tracking-tight">Syntera ERP</span>
             <span className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
-              Premium Suite
+              powered by Floki
             </span>
           </div>
         </div>
