@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as VendasRouteImport } from './routes/vendas'
+import { Route as OmnilinkRouteImport } from './routes/omnilink'
 import { Route as FiscalRouteImport } from './routes/fiscal'
 import { Route as FinanceiroRouteImport } from './routes/financeiro'
 import { Route as EstoqueRouteImport } from './routes/estoque'
@@ -19,6 +20,11 @@ import { Route as IndexRouteImport } from './routes/index'
 const VendasRoute = VendasRouteImport.update({
   id: '/vendas',
   path: '/vendas',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OmnilinkRoute = OmnilinkRouteImport.update({
+  id: '/omnilink',
+  path: '/omnilink',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FiscalRoute = FiscalRouteImport.update({
@@ -53,6 +59,7 @@ export interface FileRoutesByFullPath {
   '/estoque': typeof EstoqueRoute
   '/financeiro': typeof FinanceiroRoute
   '/fiscal': typeof FiscalRoute
+  '/omnilink': typeof OmnilinkRoute
   '/vendas': typeof VendasRoute
 }
 export interface FileRoutesByTo {
@@ -61,6 +68,7 @@ export interface FileRoutesByTo {
   '/estoque': typeof EstoqueRoute
   '/financeiro': typeof FinanceiroRoute
   '/fiscal': typeof FiscalRoute
+  '/omnilink': typeof OmnilinkRoute
   '/vendas': typeof VendasRoute
 }
 export interface FileRoutesById {
@@ -70,6 +78,7 @@ export interface FileRoutesById {
   '/estoque': typeof EstoqueRoute
   '/financeiro': typeof FinanceiroRoute
   '/fiscal': typeof FiscalRoute
+  '/omnilink': typeof OmnilinkRoute
   '/vendas': typeof VendasRoute
 }
 export interface FileRouteTypes {
@@ -80,9 +89,17 @@ export interface FileRouteTypes {
     | '/estoque'
     | '/financeiro'
     | '/fiscal'
+    | '/omnilink'
     | '/vendas'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/cadastros' | '/estoque' | '/financeiro' | '/fiscal' | '/vendas'
+  to:
+    | '/'
+    | '/cadastros'
+    | '/estoque'
+    | '/financeiro'
+    | '/fiscal'
+    | '/omnilink'
+    | '/vendas'
   id:
     | '__root__'
     | '/'
@@ -90,6 +107,7 @@ export interface FileRouteTypes {
     | '/estoque'
     | '/financeiro'
     | '/fiscal'
+    | '/omnilink'
     | '/vendas'
   fileRoutesById: FileRoutesById
 }
@@ -99,6 +117,7 @@ export interface RootRouteChildren {
   EstoqueRoute: typeof EstoqueRoute
   FinanceiroRoute: typeof FinanceiroRoute
   FiscalRoute: typeof FiscalRoute
+  OmnilinkRoute: typeof OmnilinkRoute
   VendasRoute: typeof VendasRoute
 }
 
@@ -109,6 +128,13 @@ declare module '@tanstack/react-router' {
       path: '/vendas'
       fullPath: '/vendas'
       preLoaderRoute: typeof VendasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/omnilink': {
+      id: '/omnilink'
+      path: '/omnilink'
+      fullPath: '/omnilink'
+      preLoaderRoute: typeof OmnilinkRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/fiscal': {
@@ -155,6 +181,7 @@ const rootRouteChildren: RootRouteChildren = {
   EstoqueRoute: EstoqueRoute,
   FinanceiroRoute: FinanceiroRoute,
   FiscalRoute: FiscalRoute,
+  OmnilinkRoute: OmnilinkRoute,
   VendasRoute: VendasRoute,
 }
 export const routeTree = rootRouteImport
