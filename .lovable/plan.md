@@ -1,53 +1,101 @@
-## Expansão do módulo Fiscal — escopo desta entrega
+# Plano — Módulo Omnilink + Floki (ERP Syntera)
 
-Tudo continua em `localStorage` (sem backend). Single source of truth = `fiscal-store`.
+Escopo grande: vou entregar em **fases**, mantendo o padrão atual (localStorage + hooks `usePersisted`, sem backend). A ativação de Lovable Cloud + IA real fica reservada para a Fase 4, quando passarmos do mock determinístico da Floki para o gateway de IA.
 
-### 1. Vendas amarrado ao catálogo fiscal
-**`src/routes/vendas.tsx`**
-- O seletor de produtos do orçamento passa a ler de `useItensFiscais()` (não mais lista mock interna).
-- Cada linha do orçamento guarda `itemFiscalId`; tipo (produto/serviço) sai do item.
-- `ConferenciaView` calcula CBS/IBS/IS/PIS/COFINS/ICMS/ISS por linha = `alíquota do ItemFiscal` (com fallback para alíquotas padrão do Fiscal), e retenções (IRRF/CSLL/PIS/COFINS/ISS/INSS) a partir do **perfil fiscal do cliente**.
-- Aviso "Cadastro fiscal incompleto" com botão "Abrir no Fiscal" se o item ou o cliente não tiver perfil.
+---
 
-### 2. Apuração IRPJ e CSLL
-**`src/lib/fiscal-store.ts`**
-- Nova entidade `ApuracaoConfig`: regime (Presumido/Real), periodicidade (trimestral/anual), % presunção IRPJ e CSLL por atividade (comércio 8%/12%, serviços 32%/32%, etc.), adicional IRPJ (10% acima de R$ 20k/mês), alíquota IRPJ (15%) e CSLL (9%).
-- Hook `useApuracaoConfig`.
+## Fase 1 — Identidade Syntera + Fundação Omnilink
 
-**`src/routes/fiscal.tsx`** — nova aba **"IRPJ / CSLL"**:
-- Edita os percentuais de presunção e alíquotas.
-- Tabela de apuração por período lendo `useFaturados()`: receita bruta → base IRPJ/CSLL (presumido) → IRPJ devido + adicional + CSLL devido, separando produto vs. serviço.
-- Mostra também total de retenções IRRF/CSLL (compensáveis) sobre o período.
+**Branding**
+- Renomear app para **Syntera** em `app-sidebar.tsx`, `__root.tsx` (título/meta), README de rotas e dashboard inicial.
+- Criar componente `<FlokiBadge />` reutilizável (avatar + nome) usado em alertas e cards de insight.
 
-### 3. CNAE — modal flutuante de cadastro
-Na aba **Empresa**, botão "+" abre `Dialog` para cadastrar CNAE (código, descrição, principal/secundário, atividade preponderante = produto|serviço|ambos, % presunção IRPJ/CSLL sugerido). Lista de CNAEs já cadastrados com remover/editar.
+**Novo store `src/lib/omnilink-store.ts`** (mesma pattern de `fiscal-store.ts`):
+- `CanalVenda` { id, nome, tipo: "mercadolivre"|"shopee"|"amazon"|"shopify"|"woocommerce"|"outro", ativo, configuracoesJson, estoqueSegurancaPct, prazoRecebimentoDias, taxaComissaoPadrao, taxaGatewayPadrao }
+- `AnuncioMarketplace` { id, canalId, itemFiscalId, skuExterno, tituloExterno, precoExterno, estoqueExposto, status: "ativo"|"pausado"|"erro", variacao? }
+- `PedidoMarketplace` (Objeto de Pedido Padrão) { id, canalId, numeroExterno, data, cliente, itens[{itemFiscalId, qtd, precoUnit}], valorBruto, taxaComissao, taxaFrete, taxaPagamento, valorLiquido, status, codigoRastreio?, etiquetaUrl?, nfId? }
+- `FilaSincronizacao` { id, tipo: "estoque"|"preco"|"anuncio"|"rastreio", canalId, payload, status: "pendente"|"processando"|"ok"|"erro", tentativas, criadoEm }
+- `LancamentoFinanceiroOmni` (extensão tagueada do financeiro) com `origemCanalId, meioPagamentoId, produtoId, pedidoOrigemId`
 
-### 4. Códigos de serviço LC 116 sugeridos por IA a partir dos CNAEs
-- Ativar **Lovable Cloud** + AI Gateway (Gemini Flash) para a sugestão.
-- Botão **"Sugerir códigos de serviço (IA)"** na aba **Itens/Serviços** → chama edge/server fn `suggest-service-codes` com os CNAEs cadastrados → retorna lista `{ codigo LC116, descricao, cnaeRelacionado, issSugerido }`.
-- Resultado vai para uma **biblioteca de códigos de serviço** (`useCodigosServico`) usada como autocomplete ao cadastrar item tipo serviço.
-- Cache local; usuário pode aceitar/rejeitar item por item antes de gravar.
+Hooks: `useCanais`, `useAnuncios`, `usePedidosMarketplace`, `useFilaSync`.
 
-### 5. Importação de estoque (planilha padrão)
-- Novo botão **"Importar estoque (XLSX/CSV)"** na aba **Itens/Serviços**.
-- Botão **"Baixar modelo"** gera XLSX com colunas: `sku, nome, unidade, preco, ncm, cest, origem, cstCsosn, icms, ipi, pis, cofins, cbs, ibs, is, beneficioFiscal, peso, volume, cfopSaidaDentroUF, cfopSaidaForaUF, cfopEntrada, custoMedio, estoqueAtual, estoqueMinimo`.
-- Parser via `xlsx` (SheetJS) → valida → preview com erros por linha → confirma → grava em `useItensFiscais` (+ cria/atualiza saldos em `estoque-store`).
-- Lib: `bun add xlsx`.
+**Adapter pattern**
+- `src/lib/omnilink/adapters/types.ts` — interface `MarketplaceAdapter { sincronizarEstoque, sincronizarPreco, importarAnuncios, traduzirPedido, gerarEtiqueta, atualizarRastreio }`
+- Mocks: `mercadolivre.adapter.ts`, `shopee.adapter.ts`, `amazon.adapter.ts` (simulados — retornam dados fake mas respeitam a interface).
+- Registry `adapters/index.ts` resolve por `canal.tipo`.
 
-### 6. Base para Módulo de Entradas (preparação, não implementação completa)
-- Nova entidade `ConfigEntradaSaidaItem` em `ItemFiscal`: CFOP entrada, CFOP saída UF/fora UF, CST entrada, alíquotas de crédito (ICMS/PIS/COFINS), origem do custo (média/última entrada).
-- Aba **Itens/Serviços** ganha sub-aba por item: "Dados fiscais", "Entrada", "Saída".
-- TODO comentado: ao importar XML NF-e modelo 55 (futuro módulo Entradas), abrir mesma tela com os campos pré-preenchidos pelo XML; se SKU não existir, cria item fiscal automaticamente.
+---
 
-### Arquivos
-- editar `src/lib/fiscal-store.ts` (CNAE, ApuracaoConfig, CodigosServico, ConfigEntradaSaida)
-- editar `src/routes/fiscal.tsx` (modal CNAE, aba IRPJ/CSLL, botão IA, import XLSX, sub-abas por item)
-- editar `src/routes/vendas.tsx` (seletor lê de itens fiscais, cálculo via perfis)
-- novo `src/lib/xlsx-template.ts` (gera/parseia modelo)
-- novo `src/lib/api/suggest-service-codes.functions.ts` (server fn → AI Gateway)
-- ativar Lovable Cloud
+## Fase 2 — UI Omnilink (rota `/omnilink`)
 
-### Fora do escopo
-- Emissão real de NF, SPED, ECD/ECF.
-- Parser real de XML NF-e (vem com o módulo Entradas).
-- DIFAL e ICMS-ST.
+Nova rota `src/routes/omnilink.tsx` com tabs:
+1. **Canais** — CRUD de marketplaces, modal de configuração (chaves API, webhook URL gerada, estoque de segurança, prazo de recebimento).
+2. **Anúncios** — lista com filtros por canal, ação "Vincular SKU" (combobox de `useItensFiscais`), ação "Importar anúncios existentes" (mock).
+3. **Pedidos** — tabela de pedidos recebidos, status, ações: Faturar (usa `consumirProximoNumeroNF` do fiscal-store), Gerar etiqueta, Atualizar rastreio. Botão "Simular webhook" para testes.
+4. **Fila de sincronização** — monitor com retry manual.
+5. **Logística** — picking & packing em lote, impressão de etiquetas selecionadas.
+
+Adicionar item "Omnilink" ao `app-sidebar.tsx` (ícone `Plug` ou `Network`).
+
+---
+
+## Fase 3 — Motor Financeiro Composto
+
+- Estender `erp-store.ts` (ou novo `financeiro-store.ts` se não existir) com `LancamentoFinanceiro` desmembrado.
+- Ao faturar um `PedidoMarketplace`, gerar **5 lançamentos** atômicos com as tags de rastreabilidade obrigatórias:
+  - `+ Valor Bruto` (receita, base fiscal)
+  - `- Comissão Plataforma`
+  - `- Frete`
+  - `- Meio de Pagamento`
+  - `= Valor Líquido` (data prevista = data + `prazoRecebimentoDias` do canal)
+- Integração com Fiscal: ao faturar, dispara `consumirProximoNumeroNF` e calcula impostos a partir do `ItemFiscal` (já existente).
+- Tags ficam em `metadata: { origemCanalId, meioPagamentoId, produtoId, pedidoOrigemId }`.
+
+---
+
+## Fase 4 — Floki (Inteligência Comercial)
+
+**Fase 4a — Determinístico (sem backend):**
+- `src/lib/floki/insights.ts` calcula:
+  - Margem Contribuição Líquida = Bruto − Taxas − Frete − Impostos − CMV
+  - Ranking de rentabilidade por canal
+  - Detecção de produtos com margem negativa por canal → gera `FlokiAlert`
+  - Impacto de taxas de gateway/antecipação
+- Componente `<FlokiAlerts />` na home (`routes/index.tsx`) listando alertas proativos.
+- Aba "Floki Insights" dentro do Omnilink com gráficos (recharts já disponível).
+
+**Fase 4b — IA real (opcional, requer Lovable Cloud):**
+- Server function `analyze-channel-profitability.functions.ts` chamando Lovable AI Gateway (`google/gemini-3-flash-preview`) com os dados agregados para gerar narrativas mais ricas.
+- Só ativar se o usuário confirmar — perguntarei antes de habilitar Cloud.
+
+---
+
+## Arquivos a criar/editar
+
+**Criar**
+- `src/lib/omnilink-store.ts`
+- `src/lib/omnilink/adapters/{types,mercadolivre,shopee,amazon,index}.ts`
+- `src/lib/floki/insights.ts`
+- `src/components/floki-badge.tsx`, `src/components/floki-alerts.tsx`
+- `src/routes/omnilink.tsx`
+- `src/routes/api/public/webhooks.$canalId.ts` (rota pública para webhooks reais — stub que enfileira)
+
+**Editar**
+- `src/components/app-sidebar.tsx` (Syntera + item Omnilink)
+- `src/routes/__root.tsx` (título)
+- `src/routes/index.tsx` (Floki alerts + branding)
+- `src/lib/erp-store.ts` (lançamentos financeiros tagueados)
+- `src/routes/financeiro.tsx` (exibir tags de origem)
+- `src/routes/vendas.tsx` (mostrar pedidos do Omnilink na conferência)
+
+---
+
+## Fora de escopo nesta entrega
+- Chamadas reais às APIs de ML/Shopee/Amazon (adapters retornam mock — pronto para plugar credenciais depois).
+- Emissão real de NF-e e etiquetas (continua simulado, como hoje).
+- Persistência server-side (mantém localStorage até ativar Cloud).
+
+---
+
+## Pergunta antes de executar
+Quer que eu já entregue **as 4 fases juntas** ou prefere começar pela **Fase 1 + 2** (fundação + UI Omnilink funcional com mock) e depois iterar Financeiro + Floki?
