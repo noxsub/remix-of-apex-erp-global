@@ -16,6 +16,7 @@ import { Route as FinanceiroRouteImport } from './routes/financeiro'
 import { Route as EstoqueRouteImport } from './routes/estoque'
 import { Route as CadastrosRouteImport } from './routes/cadastros'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ApiPublicWebhooksCanalIdRouteImport } from './routes/api/public/webhooks.$canalId'
 
 const VendasRoute = VendasRouteImport.update({
   id: '/vendas',
@@ -52,6 +53,12 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicWebhooksCanalIdRoute =
+  ApiPublicWebhooksCanalIdRouteImport.update({
+    id: '/api/public/webhooks/$canalId',
+    path: '/api/public/webhooks/$canalId',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -61,6 +68,7 @@ export interface FileRoutesByFullPath {
   '/fiscal': typeof FiscalRoute
   '/omnilink': typeof OmnilinkRoute
   '/vendas': typeof VendasRoute
+  '/api/public/webhooks/$canalId': typeof ApiPublicWebhooksCanalIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -70,6 +78,7 @@ export interface FileRoutesByTo {
   '/fiscal': typeof FiscalRoute
   '/omnilink': typeof OmnilinkRoute
   '/vendas': typeof VendasRoute
+  '/api/public/webhooks/$canalId': typeof ApiPublicWebhooksCanalIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -80,6 +89,7 @@ export interface FileRoutesById {
   '/fiscal': typeof FiscalRoute
   '/omnilink': typeof OmnilinkRoute
   '/vendas': typeof VendasRoute
+  '/api/public/webhooks/$canalId': typeof ApiPublicWebhooksCanalIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -91,6 +101,7 @@ export interface FileRouteTypes {
     | '/fiscal'
     | '/omnilink'
     | '/vendas'
+    | '/api/public/webhooks/$canalId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -100,6 +111,7 @@ export interface FileRouteTypes {
     | '/fiscal'
     | '/omnilink'
     | '/vendas'
+    | '/api/public/webhooks/$canalId'
   id:
     | '__root__'
     | '/'
@@ -109,6 +121,7 @@ export interface FileRouteTypes {
     | '/fiscal'
     | '/omnilink'
     | '/vendas'
+    | '/api/public/webhooks/$canalId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -119,6 +132,7 @@ export interface RootRouteChildren {
   FiscalRoute: typeof FiscalRoute
   OmnilinkRoute: typeof OmnilinkRoute
   VendasRoute: typeof VendasRoute
+  ApiPublicWebhooksCanalIdRoute: typeof ApiPublicWebhooksCanalIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -172,6 +186,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/webhooks/$canalId': {
+      id: '/api/public/webhooks/$canalId'
+      path: '/api/public/webhooks/$canalId'
+      fullPath: '/api/public/webhooks/$canalId'
+      preLoaderRoute: typeof ApiPublicWebhooksCanalIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -183,6 +204,7 @@ const rootRouteChildren: RootRouteChildren = {
   FiscalRoute: FiscalRoute,
   OmnilinkRoute: OmnilinkRoute,
   VendasRoute: VendasRoute,
+  ApiPublicWebhooksCanalIdRoute: ApiPublicWebhooksCanalIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -371,7 +371,7 @@ function gerarPedidoSimulado(canal: CanalVenda, itens: ReturnType<typeof useIten
   const imposto = +(valorBruto * 0.09).toFixed(2);
   const cmv = +itensPedido.reduce((s, i) => {
     const item = itens.find((x) => x.id === i.itemFiscalId);
-    const custo = item?.custoMedio ?? item?.preco ? item.preco * 0.6 : 0;
+    const custo = item?.custoMedio ?? (item ? item.preco * 0.6 : 0);
     return s + i.qtd * custo;
   }, 0).toFixed(2);
   const valorLiquido = +(valorBruto - taxaComissao - taxaFrete - taxaPagamento).toFixed(2);
