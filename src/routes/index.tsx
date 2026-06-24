@@ -73,14 +73,15 @@ import {
   useModoNegocio,
   valorPorCategoria,
 } from "@/lib/dashboard-metrics";
+import { FlokiAlerts } from "@/components/floki-alerts";
 
 export { StatusBadge };
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Dashboard — Global ERP" },
-      { name: "description", content: "Visão consolidada do ERP por módulo." },
+      { title: "Dashboard — Syntera ERP" },
+      { name: "description", content: "Visão consolidada do Syntera por módulo, com insights da Floki." },
     ],
   }),
   component: Dashboard,
@@ -136,6 +137,9 @@ function Dashboard() {
         </>
       }
     >
+      <div className="mb-4">
+        <FlokiAlerts />
+      </div>
       <ModuleSwitcher value={modulo} onChange={setModulo} modoNegocio={modoNegocio} />
 
       {modulo === "financeiro" && <FinanceiroView faturados={faturados} />}
