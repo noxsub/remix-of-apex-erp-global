@@ -98,7 +98,7 @@ function VendasPage() {
   const [fornecedores] = useFornecedores();
   const [orcamentos, setOrcamentos] = useOrcamentos();
   const [faturados, setFaturados] = useFaturados();
-  const [itensFiscais] = useItensFiscais();
+  const [itensFiscais, setItensFiscais] = useItensFiscais();
 
   // Catálogo único de produtos/serviços vindo do módulo Fiscal.
   const catalogo = useMemo(
@@ -207,6 +207,15 @@ function VendasPage() {
         data={conferencia}
         onVoltar={() => setConferencia(null)}
         onConfirmar={() => {
+          // Baixa de estoque (integração com módulo fiscal/estoque)
+          setItensFiscais((prev) =>
+            prev.map((it) => {
+              const linha = conferencia.items.find((i) => i.sku === it.sku);
+              if (!linha || it.tipo !== "produto") return it;
+              const atual = it.estoqueAtual ?? 0;
+              return { ...it, estoqueAtual: Math.max(0, atual - linha.qtd) };
+            }),
+          );
           if (orcamentoEditandoId) {
             setOrcamentos((prev) => prev.filter((o) => o.id !== orcamentoEditandoId));
           }
@@ -219,7 +228,7 @@ function VendasPage() {
             total: conferencia.total,
             status: "Faturado",
           };
-          setFaturados((prev) => [novo, ...prev]);
+          setFaturados((prev) => (prev.some((p) => p.nf === nf) ? prev : [novo, ...prev]));
           toast.success("Pedido faturado", {
             description: `${nf} gerada e enviada ao módulo fiscal.`,
           });

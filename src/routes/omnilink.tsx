@@ -22,6 +22,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -48,6 +49,7 @@ import {
 import { FlokiBadge } from "@/components/floki-badge";
 import { FlokiAlerts } from "@/components/floki-alerts";
 import { useItensFiscais } from "@/lib/fiscal-store";
+import { useFaturados, type PedidoFaturado } from "@/lib/erp-store";
 import {
   type CanalTipo,
   type CanalVenda,
@@ -408,21 +410,63 @@ function gerarPedidoSimulado(canal: CanalVenda, itens: ReturnType<typeof useIten
 
 function PedidosTab() {
   const [canais] = useCanais();
-  const [itens] = useItensFiscais();
+  const [itens, setItens] = useItensFiscais();
   const [pedidos, setPedidos] = usePedidosMarketplace();
+  const [, setFaturados] = useFaturados();
+  const [busyCanal, setBusyCanal] = useState<string | null>(null);
+  const [busyFaturar, setBusyFaturar] = useState<string | null>(null);
 
   function simularWebhook(canalId: string) {
+    if (busyCanal) return;
+    setBusyCanal(canalId);
     const canal = canais.find((c) => c.id === canalId);
-    if (!canal) return;
+    if (!canal) {
+      setBusyCanal(null);
+      return;
+    }
     const novo = gerarPedidoSimulado(canal, itens);
-    setPedidos((prev) => [novo, ...prev]);
+    setPedidos((prev) =>
+      prev.some((p) => p.id === novo.id || p.numeroExterno === novo.numeroExterno)
+        ? prev
+        : [novo, ...prev],
+    );
     toast.success(`Pedido ${novo.numeroExterno} recebido de ${canal.nome}`);
+    setTimeout(() => setBusyCanal(null), 400);
   }
 
   function faturar(pedidoId: string) {
+    if (busyFaturar) return;
+    setBusyFaturar(pedidoId);
+    const ped = pedidos.find((p) => p.id === pedidoId);
+    if (!ped || ped.status !== "novo") {
+      setBusyFaturar(null);
+      return;
+    }
     const nf = consumirProximoNumeroNF();
-    setPedidos((prev) => prev.map((p) => (p.id === pedidoId ? { ...p, status: "faturado", nfNumero: nf.formatado } : p)));
+    // Baixa de estoque
+    setItens((prev) =>
+      prev.map((it) => {
+        const linha = ped.itens.find((i) => i.itemFiscalId === it.id);
+        if (!linha || it.tipo !== "produto") return it;
+        return { ...it, estoqueAtual: Math.max(0, (it.estoqueAtual ?? 0) - linha.qtd) };
+      }),
+    );
+    setPedidos((prev) =>
+      prev.map((p) => (p.id === pedidoId ? { ...p, status: "faturado", nfNumero: nf.formatado } : p)),
+    );
+    // Espelha no consolidado de faturados da empresa
+    const canal = canais.find((c) => c.id === ped.canalId);
+    const reg: PedidoFaturado = {
+      nf: nf.formatado,
+      data: new Date().toLocaleDateString("pt-BR"),
+      clienteNome: `${canal?.nome ?? "Marketplace"} · ${ped.clienteNome}`,
+      itens: ped.itens.length,
+      total: ped.valorBruto,
+      status: "Faturado",
+    };
+    setFaturados((prev) => (prev.some((p) => p.nf === reg.nf) ? prev : [reg, ...prev]));
     toast.success(`NF ${nf.formatado} emitida`);
+    setTimeout(() => setBusyFaturar(null), 300);
   }
 
   return (
@@ -431,7 +475,13 @@ function PedidosTab() {
         <div className="text-sm text-muted-foreground">{pedidos.length} pedido(s) recebido(s)</div>
         <div className="flex flex-wrap gap-2">
           {canais.filter((c) => c.ativo).map((c) => (
-            <Button key={c.id} size="sm" variant="outline" onClick={() => simularWebhook(c.id)}>
+            <Button
+              key={c.id}
+              size="sm"
+              variant="outline"
+              disabled={busyCanal === c.id}
+              onClick={() => simularWebhook(c.id)}
+            >
               <Plus className="mr-1 h-3.5 w-3.5" />Simular pedido {c.nome}
             </Button>
           ))}
@@ -472,7 +522,14 @@ function PedidosTab() {
                   <TableCell><Badge variant={p.status === "faturado" ? "default" : "secondary"}>{p.status}</Badge></TableCell>
                   <TableCell>
                     {p.status === "novo" && (
-                      <Button size="sm" variant="ghost" onClick={() => faturar(p.id)}><FileText className="mr-1 h-3.5 w-3.5" />Faturar</Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        disabled={busyFaturar === p.id}
+                        onClick={() => faturar(p.id)}
+                      >
+                        <FileText className="mr-1 h-3.5 w-3.5" />Faturar
+                      </Button>
                     )}
                   </TableCell>
                 </TableRow>
@@ -571,7 +628,12 @@ function LogisticaTab() {
               return (
                 <TableRow key={p.id}>
                   <TableCell>
-                    <input type="checkbox" checked={selecionados.has(p.id)} onChange={() => toggle(p.id)} />
+                    <Checkbox
+                      checked={selecionados.has(p.id)}
+                      onCheckedChange={() => toggle(p.id)}
+                      aria-label={`Selecionar pedido ${p.numeroExterno}`}
+                    />
+
                   </TableCell>
                   <TableCell className="font-mono text-xs">{p.numeroExterno}</TableCell>
                   <TableCell>{canal?.nome}</TableCell>
