@@ -1,5 +1,16 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { LayoutDashboard, Package, ShoppingCart, Wallet, Users, Receipt, Network } from "lucide-react";
+import { useMemo } from "react";
+import {
+  LayoutDashboard,
+  PackageCheck,
+  Send,
+  Wallet,
+  Users,
+  Receipt,
+  Network,
+  Sparkles,
+  Plus,
+} from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -9,32 +20,70 @@ import {
   SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
+  SidebarMenuBadge,
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
+import { useCanais, usePedidosMarketplace } from "@/lib/omnilink-store";
+import { gerarAlertas } from "@/lib/floki/insights";
 
-const items = [
-  { title: "Dashboard", url: "/", icon: LayoutDashboard },
-  { title: "Estoque", url: "/estoque", icon: Package },
-  { title: "Vendas / Faturamento", url: "/vendas", icon: ShoppingCart },
-  { title: "Fiscal", url: "/fiscal", icon: Receipt },
-  { title: "Financeiro", url: "/financeiro", icon: Wallet },
-  { title: "Omnilink", url: "/omnilink", icon: Network },
-  { title: "Cadastros", url: "/cadastros", icon: Users },
+/* ────────────────────────────────────────────
+ * Navegação organizada em macro-seções
+ * ──────────────────────────────────────────── */
+const sections = [
+  {
+    label: "Visão Geral",
+    items: [
+      { title: "Dashboard", url: "/", icon: LayoutDashboard },
+    ],
+  },
+  {
+    label: "Operacional",
+    items: [
+      { title: "Entradas", url: "/estoque", icon: PackageCheck },
+      { title: "Saídas", url: "/vendas", icon: Send },
+    ],
+  },
+  {
+    label: "Gestão",
+    items: [
+      { title: "Financeiro", url: "/financeiro", icon: Wallet },
+      { title: "Cadastros", url: "/cadastros", icon: Users },
+    ],
+  },
+  {
+    label: "Inteligência",
+    items: [
+      { title: "Fiscal", url: "/fiscal", icon: Receipt },
+      { title: "Omnilink", url: "/omnilink", icon: Network },
+    ],
+  },
 ];
 
 export function AppSidebar() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
+  /* dados reais do Floki — o sidebar reflete o pulso do sistema */
+  const [canais] = useCanais();
+  const [pedidos] = usePedidosMarketplace();
+  const alertas = useMemo(() => gerarAlertas(pedidos, canais), [pedidos, canais]);
+  const canaisAtivos = useMemo(
+    () => canais.filter((c) => c.ativo).length,
+    [canais],
+  );
+
   return (
     <Sidebar collapsible="icon">
+      {/* ─── Logo ─── */}
       <SidebarHeader className="border-b border-sidebar-border px-4 py-5">
         <div className="flex items-center gap-2">
           <div className="flex h-8 w-8 items-center justify-center rounded-md bg-gold text-primary-foreground font-semibold tracking-tight">
             S
           </div>
           <div className="flex flex-col leading-tight group-data-[collapsible=icon]:hidden">
-            <span className="text-sm font-semibold tracking-tight">Syntera ERP</span>
+            <span className="text-sm font-semibold tracking-tight">
+              Syntera ERP
+            </span>
             <span className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
               powered by Floki
             </span>
@@ -42,41 +91,104 @@ export function AppSidebar() {
         </div>
       </SidebarHeader>
 
-      <SidebarContent className="px-2 py-4">
-        <SidebarGroup>
-          <SidebarGroupLabel className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
-            Módulos
-          </SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {items.map((item) => {
-                const active =
-                  item.url === "/" ? pathname === "/" : pathname.startsWith(item.url);
-                return (
-                  <SidebarMenuItem key={item.url}>
-                    <SidebarMenuButton
-                      asChild
-                      isActive={active}
-                      tooltip={item.title}
-                      className="data-[active=true]:bg-accent data-[active=true]:text-accent-foreground data-[active=true]:border-l-2 data-[active=true]:border-gold"
-                    >
-                      <Link to={item.url} className="flex items-center gap-2.5">
-                        <item.icon className="h-4 w-4" />
-                        <span className="text-sm">{item.title}</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                );
-              })}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+      {/* ─── Floki Intelligence Card (expanded mode) ─── */}
+      <Link
+        to="/"
+        className="mx-3 mt-3 block rounded-lg border border-gold/20 bg-gold/5 p-3 transition-colors hover:bg-gold/10 group-data-[collapsible=icon]:hidden"
+      >
+        <div className="flex items-center gap-2">
+          <span className="inline-flex items-center gap-1 rounded-full border border-gold/40 bg-gold/10 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-gold">
+            <Sparkles className="h-3 w-3" />
+            Floki
+          </span>
+          <span className="ml-auto flex items-center gap-1.5 text-[11px] text-muted-foreground">
+            <span className="relative flex h-2 w-2">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+            </span>
+            Ativa
+          </span>
+        </div>
+        <p className="mt-2 text-[11px] leading-relaxed text-muted-foreground">
+          {alertas.length > 0
+            ? `${alertas.length} alerta${alertas.length !== 1 ? "s" : ""} · ${canaisAtivos} ${canaisAtivos === 1 ? "canal conectado" : "canais conectados"}`
+            : `Monitorando · ${canaisAtivos} ${canaisAtivos === 1 ? "canal ativo" : "canais ativos"}`}
+        </p>
+      </Link>
+
+      {/* ─── Navigation ─── */}
+      <SidebarContent className="px-2 py-3">
+        {sections.map((section) => (
+          <SidebarGroup key={section.label}>
+            <SidebarGroupLabel className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+              {section.label}
+            </SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {section.items.map((item) => {
+                  const active =
+                    item.url === "/"
+                      ? pathname === "/"
+                      : pathname.startsWith(item.url);
+                  return (
+                    <SidebarMenuItem key={item.url}>
+                      <SidebarMenuButton
+                        asChild
+                        isActive={active}
+                        tooltip={item.title}
+                        className="data-[active=true]:bg-accent data-[active=true]:text-accent-foreground data-[active=true]:border-l-2 data-[active=true]:border-gold"
+                      >
+                        <Link
+                          to={item.url}
+                          className="flex items-center gap-2.5"
+                        >
+                          <item.icon className="h-4 w-4" />
+                          <span className="text-sm">{item.title}</span>
+                        </Link>
+                      </SidebarMenuButton>
+
+                      {/* Badge: alertas Floki no Dashboard */}
+                      {item.url === "/" && alertas.length > 0 && (
+                        <SidebarMenuBadge>
+                          <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-gold/15 px-1.5 text-[10px] font-semibold text-gold">
+                            {alertas.length}
+                          </span>
+                        </SidebarMenuBadge>
+                      )}
+
+                      {/* Badge: canais ativos no Omnilink */}
+                      {item.url === "/omnilink" && canaisAtivos > 0 && (
+                        <SidebarMenuBadge>
+                          <span className="flex items-center gap-1 text-[10px] font-medium text-emerald-600">
+                            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                            {canaisAtivos}
+                          </span>
+                        </SidebarMenuBadge>
+                      )}
+                    </SidebarMenuItem>
+                  );
+                })}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        ))}
       </SidebarContent>
 
+      {/* ─── Quick Action CTA ─── */}
+      <div className="px-3 pb-3 group-data-[collapsible=icon]:px-2">
+        <button className="flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-b from-[oklch(0.82_0.1_85)] to-[oklch(0.72_0.11_85)] px-3 py-2.5 text-xs font-medium text-primary-foreground border border-[oklch(0.62_0.1_85)] shadow-sm transition-all hover:brightness-110 active:scale-[0.98]">
+          <Plus className="h-3.5 w-3.5" />
+          <span className="group-data-[collapsible=icon]:hidden">
+            Nova Operação
+          </span>
+        </button>
+      </div>
+
+      {/* ─── Footer ─── */}
       <SidebarFooter className="border-t border-sidebar-border px-4 py-3 group-data-[collapsible=icon]:hidden">
         <div className="flex items-center justify-between text-[11px] text-muted-foreground">
           <span>v1.0.0</span>
-          <span className="tracking-wider">EN · PT · ES</span>
+          <span className="tracking-wider">PT · EN · ES</span>
         </div>
       </SidebarFooter>
     </Sidebar>
