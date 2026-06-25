@@ -475,7 +475,13 @@ function PedidosTab() {
         <div className="text-sm text-muted-foreground">{pedidos.length} pedido(s) recebido(s)</div>
         <div className="flex flex-wrap gap-2">
           {canais.filter((c) => c.ativo).map((c) => (
-            <Button key={c.id} size="sm" variant="outline" onClick={() => simularWebhook(c.id)}>
+            <Button
+              key={c.id}
+              size="sm"
+              variant="outline"
+              disabled={busyCanal === c.id}
+              onClick={() => simularWebhook(c.id)}
+            >
               <Plus className="mr-1 h-3.5 w-3.5" />Simular pedido {c.nome}
             </Button>
           ))}
