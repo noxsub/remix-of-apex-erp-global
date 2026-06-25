@@ -150,6 +150,8 @@ export function AppSidebar() {
                     item.url === "/"
                       ? pathname === "/"
                       : pathname.startsWith(item.url);
+                  const hasChildren = !!item.children?.length;
+                  const expanded = hasChildren && active;
                   return (
                     <SidebarMenuItem key={item.url}>
                       <SidebarMenuButton
@@ -163,7 +165,14 @@ export function AppSidebar() {
                           className="flex items-center gap-2.5"
                         >
                           <item.icon className="h-4 w-4" />
-                          <span className="text-sm">{item.title}</span>
+                          <span className="text-sm flex-1">{item.title}</span>
+                          {hasChildren && (
+                            <ChevronRight
+                              className={`h-3.5 w-3.5 text-muted-foreground transition-transform group-data-[collapsible=icon]:hidden ${
+                                expanded ? "rotate-90" : ""
+                              }`}
+                            />
+                          )}
                         </Link>
                       </SidebarMenuButton>
 
@@ -184,6 +193,28 @@ export function AppSidebar() {
                             {canaisAtivos}
                           </span>
                         </SidebarMenuBadge>
+                      )}
+
+                      {/* Sub-itens (renderizados quando o pai está ativo) */}
+                      {hasChildren && expanded && (
+                        <SidebarMenuSub>
+                          {item.children!.map((sub) => {
+                            const subActive =
+                              sub.url === item.url
+                                ? pathname === sub.url
+                                : pathname === sub.url || pathname.startsWith(sub.url + "/");
+                            return (
+                              <SidebarMenuSubItem key={sub.url}>
+                                <SidebarMenuSubButton asChild isActive={subActive}>
+                                  <Link to={sub.url} className="flex items-center gap-2">
+                                    <sub.icon className="h-3.5 w-3.5" />
+                                    <span>{sub.title}</span>
+                                  </Link>
+                                </SidebarMenuSubButton>
+                              </SidebarMenuSubItem>
+                            );
+                          })}
+                        </SidebarMenuSub>
                       )}
                     </SidebarMenuItem>
                   );
