@@ -98,7 +98,7 @@ function VendasPage() {
   const [fornecedores] = useFornecedores();
   const [orcamentos, setOrcamentos] = useOrcamentos();
   const [faturados, setFaturados] = useFaturados();
-  const [itensFiscais] = useItensFiscais();
+  const [itensFiscais, setItensFiscais] = useItensFiscais();
 
   // Catálogo único de produtos/serviços vindo do módulo Fiscal.
   const catalogo = useMemo(
