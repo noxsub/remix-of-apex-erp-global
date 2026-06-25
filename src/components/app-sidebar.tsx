@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import {
   LayoutDashboard,
   ArrowDownToLine,
@@ -10,6 +10,11 @@ import {
   Network,
   Sparkles,
   Plus,
+  ChevronRight,
+  LayoutGrid,
+  ShoppingCart,
+  Boxes,
+  FileBarChart2,
 } from "lucide-react";
 import {
   Sidebar,
@@ -23,24 +28,39 @@ import {
   SidebarMenuBadge,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarMenuSub,
+  SidebarMenuSubButton,
+  SidebarMenuSubItem,
 } from "@/components/ui/sidebar";
 import { useCanais, usePedidosMarketplace } from "@/lib/omnilink-store";
 import { gerarAlertas } from "@/lib/floki/insights";
 
-/* ────────────────────────────────────────────
- * Navegação organizada em macro-seções
- * ──────────────────────────────────────────── */
-const sections = [
+type NavItem = {
+  title: string;
+  url: string;
+  icon: typeof LayoutDashboard;
+  children?: { title: string; url: string; icon: typeof LayoutDashboard }[];
+};
+
+const sections: { label: string; items: NavItem[] }[] = [
   {
     label: "Visão Geral",
-    items: [
-      { title: "Dashboard", url: "/", icon: LayoutDashboard },
-    ],
+    items: [{ title: "Dashboard", url: "/", icon: LayoutDashboard }],
   },
   {
     label: "Operacional",
     items: [
-      { title: "Entradas", url: "/estoque", icon: ArrowDownToLine },
+      {
+        title: "Entradas",
+        url: "/entradas",
+        icon: ArrowDownToLine,
+        children: [
+          { title: "Visão geral", url: "/entradas", icon: LayoutGrid },
+          { title: "Compras (NF-e)", url: "/entradas/compras", icon: ShoppingCart },
+          { title: "Estoque", url: "/entradas/estoque", icon: Boxes },
+          { title: "Relatórios fiscais", url: "/entradas/relatorios", icon: FileBarChart2 },
+        ],
+      },
       { title: "Saídas", url: "/vendas", icon: ArrowUpFromLine },
     ],
   },
