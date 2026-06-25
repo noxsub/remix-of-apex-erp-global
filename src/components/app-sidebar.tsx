@@ -2,8 +2,8 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import { useMemo } from "react";
 import {
   LayoutDashboard,
-  PackageCheck,
-  Send,
+  ArrowDownToLine,
+  ArrowUpFromLine,
   Wallet,
   Users,
   Receipt,
@@ -40,8 +40,8 @@ const sections = [
   {
     label: "Operacional",
     items: [
-      { title: "Entradas", url: "/estoque", icon: PackageCheck },
-      { title: "Saídas", url: "/vendas", icon: Send },
+      { title: "Entradas", url: "/estoque", icon: ArrowDownToLine },
+      { title: "Saídas", url: "/vendas", icon: ArrowUpFromLine },
     ],
   },
   {
