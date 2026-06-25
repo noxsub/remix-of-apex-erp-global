@@ -522,7 +522,14 @@ function PedidosTab() {
                   <TableCell><Badge variant={p.status === "faturado" ? "default" : "secondary"}>{p.status}</Badge></TableCell>
                   <TableCell>
                     {p.status === "novo" && (
-                      <Button size="sm" variant="ghost" onClick={() => faturar(p.id)}><FileText className="mr-1 h-3.5 w-3.5" />Faturar</Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        disabled={busyFaturar === p.id}
+                        onClick={() => faturar(p.id)}
+                      >
+                        <FileText className="mr-1 h-3.5 w-3.5" />Faturar
+                      </Button>
                     )}
                   </TableCell>
                 </TableRow>
