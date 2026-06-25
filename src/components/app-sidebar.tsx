@@ -10,6 +10,11 @@ import {
   Network,
   Sparkles,
   Plus,
+  ChevronRight,
+  LayoutGrid,
+  ShoppingCart,
+  Boxes,
+  FileBarChart2,
 } from "lucide-react";
 import {
   Sidebar,
@@ -23,24 +28,39 @@ import {
   SidebarMenuBadge,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarMenuSub,
+  SidebarMenuSubButton,
+  SidebarMenuSubItem,
 } from "@/components/ui/sidebar";
 import { useCanais, usePedidosMarketplace } from "@/lib/omnilink-store";
 import { gerarAlertas } from "@/lib/floki/insights";
 
-/* ────────────────────────────────────────────
- * Navegação organizada em macro-seções
- * ──────────────────────────────────────────── */
-const sections = [
+type NavItem = {
+  title: string;
+  url: string;
+  icon: typeof LayoutDashboard;
+  children?: { title: string; url: string; icon: typeof LayoutDashboard }[];
+};
+
+const sections: { label: string; items: NavItem[] }[] = [
   {
     label: "Visão Geral",
-    items: [
-      { title: "Dashboard", url: "/", icon: LayoutDashboard },
-    ],
+    items: [{ title: "Dashboard", url: "/", icon: LayoutDashboard }],
   },
   {
     label: "Operacional",
     items: [
-      { title: "Entradas", url: "/estoque", icon: ArrowDownToLine },
+      {
+        title: "Entradas",
+        url: "/entradas",
+        icon: ArrowDownToLine,
+        children: [
+          { title: "Visão geral", url: "/entradas", icon: LayoutGrid },
+          { title: "Compras (NF-e)", url: "/entradas/compras", icon: ShoppingCart },
+          { title: "Estoque", url: "/entradas/estoque", icon: Boxes },
+          { title: "Relatórios fiscais", url: "/entradas/relatorios", icon: FileBarChart2 },
+        ],
+      },
       { title: "Saídas", url: "/vendas", icon: ArrowUpFromLine },
     ],
   },
@@ -130,6 +150,8 @@ export function AppSidebar() {
                     item.url === "/"
                       ? pathname === "/"
                       : pathname.startsWith(item.url);
+                  const hasChildren = !!item.children?.length;
+                  const expanded = hasChildren && active;
                   return (
                     <SidebarMenuItem key={item.url}>
                       <SidebarMenuButton
@@ -143,7 +165,14 @@ export function AppSidebar() {
                           className="flex items-center gap-2.5"
                         >
                           <item.icon className="h-4 w-4" />
-                          <span className="text-sm">{item.title}</span>
+                          <span className="text-sm flex-1">{item.title}</span>
+                          {hasChildren && (
+                            <ChevronRight
+                              className={`h-3.5 w-3.5 text-muted-foreground transition-transform group-data-[collapsible=icon]:hidden ${
+                                expanded ? "rotate-90" : ""
+                              }`}
+                            />
+                          )}
                         </Link>
                       </SidebarMenuButton>
 
@@ -164,6 +193,28 @@ export function AppSidebar() {
                             {canaisAtivos}
                           </span>
                         </SidebarMenuBadge>
+                      )}
+
+                      {/* Sub-itens (renderizados quando o pai está ativo) */}
+                      {hasChildren && expanded && (
+                        <SidebarMenuSub>
+                          {item.children!.map((sub) => {
+                            const subActive =
+                              sub.url === item.url
+                                ? pathname === sub.url
+                                : pathname === sub.url || pathname.startsWith(sub.url + "/");
+                            return (
+                              <SidebarMenuSubItem key={sub.url}>
+                                <SidebarMenuSubButton asChild isActive={subActive}>
+                                  <Link to={sub.url} className="flex items-center gap-2">
+                                    <sub.icon className="h-3.5 w-3.5" />
+                                    <span>{sub.title}</span>
+                                  </Link>
+                                </SidebarMenuSubButton>
+                              </SidebarMenuSubItem>
+                            );
+                          })}
+                        </SidebarMenuSub>
                       )}
                     </SidebarMenuItem>
                   );
