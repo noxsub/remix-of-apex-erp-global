@@ -14,8 +14,13 @@ import { Route as OmnilinkRouteImport } from './routes/omnilink'
 import { Route as FiscalRouteImport } from './routes/fiscal'
 import { Route as FinanceiroRouteImport } from './routes/financeiro'
 import { Route as EstoqueRouteImport } from './routes/estoque'
+import { Route as EntradasRouteImport } from './routes/entradas'
 import { Route as CadastrosRouteImport } from './routes/cadastros'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as EntradasIndexRouteImport } from './routes/entradas.index'
+import { Route as EntradasRelatoriosRouteImport } from './routes/entradas.relatorios'
+import { Route as EntradasEstoqueRouteImport } from './routes/entradas.estoque'
+import { Route as EntradasComprasRouteImport } from './routes/entradas.compras'
 import { Route as ApiPublicWebhooksCanalIdRouteImport } from './routes/api/public/webhooks.$canalId'
 
 const VendasRoute = VendasRouteImport.update({
@@ -43,6 +48,11 @@ const EstoqueRoute = EstoqueRouteImport.update({
   path: '/estoque',
   getParentRoute: () => rootRouteImport,
 } as any)
+const EntradasRoute = EntradasRouteImport.update({
+  id: '/entradas',
+  path: '/entradas',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CadastrosRoute = CadastrosRouteImport.update({
   id: '/cadastros',
   path: '/cadastros',
@@ -52,6 +62,26 @@ const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const EntradasIndexRoute = EntradasIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => EntradasRoute,
+} as any)
+const EntradasRelatoriosRoute = EntradasRelatoriosRouteImport.update({
+  id: '/relatorios',
+  path: '/relatorios',
+  getParentRoute: () => EntradasRoute,
+} as any)
+const EntradasEstoqueRoute = EntradasEstoqueRouteImport.update({
+  id: '/estoque',
+  path: '/estoque',
+  getParentRoute: () => EntradasRoute,
+} as any)
+const EntradasComprasRoute = EntradasComprasRouteImport.update({
+  id: '/compras',
+  path: '/compras',
+  getParentRoute: () => EntradasRoute,
 } as any)
 const ApiPublicWebhooksCanalIdRoute =
   ApiPublicWebhooksCanalIdRouteImport.update({
@@ -63,11 +93,16 @@ const ApiPublicWebhooksCanalIdRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/cadastros': typeof CadastrosRoute
+  '/entradas': typeof EntradasRouteWithChildren
   '/estoque': typeof EstoqueRoute
   '/financeiro': typeof FinanceiroRoute
   '/fiscal': typeof FiscalRoute
   '/omnilink': typeof OmnilinkRoute
   '/vendas': typeof VendasRoute
+  '/entradas/compras': typeof EntradasComprasRoute
+  '/entradas/estoque': typeof EntradasEstoqueRoute
+  '/entradas/relatorios': typeof EntradasRelatoriosRoute
+  '/entradas/': typeof EntradasIndexRoute
   '/api/public/webhooks/$canalId': typeof ApiPublicWebhooksCanalIdRoute
 }
 export interface FileRoutesByTo {
@@ -78,17 +113,26 @@ export interface FileRoutesByTo {
   '/fiscal': typeof FiscalRoute
   '/omnilink': typeof OmnilinkRoute
   '/vendas': typeof VendasRoute
+  '/entradas/compras': typeof EntradasComprasRoute
+  '/entradas/estoque': typeof EntradasEstoqueRoute
+  '/entradas/relatorios': typeof EntradasRelatoriosRoute
+  '/entradas': typeof EntradasIndexRoute
   '/api/public/webhooks/$canalId': typeof ApiPublicWebhooksCanalIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/cadastros': typeof CadastrosRoute
+  '/entradas': typeof EntradasRouteWithChildren
   '/estoque': typeof EstoqueRoute
   '/financeiro': typeof FinanceiroRoute
   '/fiscal': typeof FiscalRoute
   '/omnilink': typeof OmnilinkRoute
   '/vendas': typeof VendasRoute
+  '/entradas/compras': typeof EntradasComprasRoute
+  '/entradas/estoque': typeof EntradasEstoqueRoute
+  '/entradas/relatorios': typeof EntradasRelatoriosRoute
+  '/entradas/': typeof EntradasIndexRoute
   '/api/public/webhooks/$canalId': typeof ApiPublicWebhooksCanalIdRoute
 }
 export interface FileRouteTypes {
@@ -96,11 +140,16 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/cadastros'
+    | '/entradas'
     | '/estoque'
     | '/financeiro'
     | '/fiscal'
     | '/omnilink'
     | '/vendas'
+    | '/entradas/compras'
+    | '/entradas/estoque'
+    | '/entradas/relatorios'
+    | '/entradas/'
     | '/api/public/webhooks/$canalId'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -111,22 +160,32 @@ export interface FileRouteTypes {
     | '/fiscal'
     | '/omnilink'
     | '/vendas'
+    | '/entradas/compras'
+    | '/entradas/estoque'
+    | '/entradas/relatorios'
+    | '/entradas'
     | '/api/public/webhooks/$canalId'
   id:
     | '__root__'
     | '/'
     | '/cadastros'
+    | '/entradas'
     | '/estoque'
     | '/financeiro'
     | '/fiscal'
     | '/omnilink'
     | '/vendas'
+    | '/entradas/compras'
+    | '/entradas/estoque'
+    | '/entradas/relatorios'
+    | '/entradas/'
     | '/api/public/webhooks/$canalId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CadastrosRoute: typeof CadastrosRoute
+  EntradasRoute: typeof EntradasRouteWithChildren
   EstoqueRoute: typeof EstoqueRoute
   FinanceiroRoute: typeof FinanceiroRoute
   FiscalRoute: typeof FiscalRoute
@@ -172,6 +231,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EstoqueRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/entradas': {
+      id: '/entradas'
+      path: '/entradas'
+      fullPath: '/entradas'
+      preLoaderRoute: typeof EntradasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/cadastros': {
       id: '/cadastros'
       path: '/cadastros'
@@ -186,6 +252,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/entradas/': {
+      id: '/entradas/'
+      path: '/'
+      fullPath: '/entradas/'
+      preLoaderRoute: typeof EntradasIndexRouteImport
+      parentRoute: typeof EntradasRoute
+    }
+    '/entradas/relatorios': {
+      id: '/entradas/relatorios'
+      path: '/relatorios'
+      fullPath: '/entradas/relatorios'
+      preLoaderRoute: typeof EntradasRelatoriosRouteImport
+      parentRoute: typeof EntradasRoute
+    }
+    '/entradas/estoque': {
+      id: '/entradas/estoque'
+      path: '/estoque'
+      fullPath: '/entradas/estoque'
+      preLoaderRoute: typeof EntradasEstoqueRouteImport
+      parentRoute: typeof EntradasRoute
+    }
+    '/entradas/compras': {
+      id: '/entradas/compras'
+      path: '/compras'
+      fullPath: '/entradas/compras'
+      preLoaderRoute: typeof EntradasComprasRouteImport
+      parentRoute: typeof EntradasRoute
+    }
     '/api/public/webhooks/$canalId': {
       id: '/api/public/webhooks/$canalId'
       path: '/api/public/webhooks/$canalId'
@@ -196,9 +290,28 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface EntradasRouteChildren {
+  EntradasComprasRoute: typeof EntradasComprasRoute
+  EntradasEstoqueRoute: typeof EntradasEstoqueRoute
+  EntradasRelatoriosRoute: typeof EntradasRelatoriosRoute
+  EntradasIndexRoute: typeof EntradasIndexRoute
+}
+
+const EntradasRouteChildren: EntradasRouteChildren = {
+  EntradasComprasRoute: EntradasComprasRoute,
+  EntradasEstoqueRoute: EntradasEstoqueRoute,
+  EntradasRelatoriosRoute: EntradasRelatoriosRoute,
+  EntradasIndexRoute: EntradasIndexRoute,
+}
+
+const EntradasRouteWithChildren = EntradasRoute._addFileChildren(
+  EntradasRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CadastrosRoute: CadastrosRoute,
+  EntradasRoute: EntradasRouteWithChildren,
   EstoqueRoute: EstoqueRoute,
   FinanceiroRoute: FinanceiroRoute,
   FiscalRoute: FiscalRoute,
@@ -209,13 +322,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useNotasEntrada } from "@/lib/entradas-store";
 import { useItensFiscais } from "@/lib/fiscal-store";
 import { DataTable, type Column } from "@/components/data-table";
@@ -78,17 +78,13 @@ function RelView({
 }) {
   if (relKey === "saldo") {
     type R = { sku: string; nome: string; saldo: number; custo: number; valor: number };
-    const data = useMemo<R[]>(
-      () =>
-        itens
-          .filter((i) => i.tipo === "produto")
-          .map((i) => {
-            const custo = i.custoMedio ?? i.preco * 0.6;
-            const saldo = i.estoqueAtual ?? 0;
-            return { sku: i.sku, nome: i.nome, saldo, custo, valor: saldo * custo };
-          }),
-      [itens],
-    );
+    const data: R[] = itens
+      .filter((i) => i.tipo === "produto")
+      .map((i) => {
+        const custo = i.custoMedio ?? i.preco * 0.6;
+        const saldo = i.estoqueAtual ?? 0;
+        return { sku: i.sku, nome: i.nome, saldo, custo, valor: saldo * custo };
+      });
     const cols: Column<R>[] = [
       { key: "sku", header: "SKU" },
       { key: "nome", header: "Produto" },
