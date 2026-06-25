@@ -628,7 +628,12 @@ function LogisticaTab() {
               return (
                 <TableRow key={p.id}>
                   <TableCell>
-                    <input type="checkbox" checked={selecionados.has(p.id)} onChange={() => toggle(p.id)} />
+                    <Checkbox
+                      checked={selecionados.has(p.id)}
+                      onCheckedChange={() => toggle(p.id)}
+                      aria-label={`Selecionar pedido ${p.numeroExterno}`}
+                    />
+
                   </TableCell>
                   <TableCell className="font-mono text-xs">{p.numeroExterno}</TableCell>
                   <TableCell>{canal?.nome}</TableCell>
