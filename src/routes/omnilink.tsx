@@ -49,6 +49,7 @@ import {
 import { FlokiBadge } from "@/components/floki-badge";
 import { FlokiAlerts } from "@/components/floki-alerts";
 import { useItensFiscais } from "@/lib/fiscal-store";
+import { useFaturados, type PedidoFaturado } from "@/lib/erp-store";
 import {
   type CanalTipo,
   type CanalVenda,
