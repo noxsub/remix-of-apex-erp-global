@@ -15,6 +15,8 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { StatusBadge } from "@/components/status-badge";
 import { ArrowDownToLine, FileCode2, Plus, UploadCloud, Eye } from "lucide-react";
 import { toast } from "sonner";
@@ -203,9 +205,7 @@ function ComprasPage() {
           </DialogContent>
         </Dialog>
 
-        <Button size="sm" className="h-8 gap-1.5 bg-foreground text-background hover:bg-foreground/90">
-          <Plus className="h-3.5 w-3.5" /> Lançar manualmente
-        </Button>
+        <LancamentoManualDialog onSave={(n) => setNotas((prev) => [n, ...prev])} />
       </div>
 
       <DataTable
@@ -279,6 +279,147 @@ function Info({ label, value }: { label: string; value: string }) {
         {label}
       </Label>
       <p className="mt-0.5 text-sm font-medium tabular-nums">{value}</p>
+    </div>
+  );
+}
+
+const TIPOS_DOC = [
+  { value: "55", label: "NF-e modelo 55 (mercadorias)" },
+  { value: "65", label: "NFC-e modelo 65 (consumidor)" },
+  { value: "nfse", label: "NFS-e (serviços tomados)" },
+  { value: "cte", label: "CT-e (frete / transporte)" },
+  { value: "cupom", label: "Cupom fiscal / ECF" },
+  { value: "recibo", label: "Recibo / RPA" },
+  { value: "fatura", label: "Fatura / Aluguel" },
+  { value: "boleto", label: "Boleto / Despesa avulsa" },
+  { value: "outros", label: "Outros documentos" },
+] as const;
+
+function LancamentoManualDialog({ onSave }: { onSave: (n: NotaEntrada) => void }) {
+  const [open, setOpen] = useState(false);
+  const [form, setForm] = useState({
+    tipo: "55",
+    numero: "",
+    serie: "1",
+    chave: "",
+    fornecedorRazao: "",
+    fornecedorCnpj: "",
+    dataEmissao: new Date().toISOString().slice(0, 10),
+    dataEntrada: new Date().toISOString().slice(0, 10),
+    natureza: "Compra para revenda",
+    cfop: "1102",
+    valorProdutos: "",
+    valorFrete: "0",
+    valorDesconto: "0",
+    valorIcms: "0",
+    valorIpi: "0",
+    valorPis: "0",
+    valorCofins: "0",
+    observacao: "",
+  });
+  function set<K extends keyof typeof form>(k: K, v: string) {
+    setForm((p) => ({ ...p, [k]: v }));
+  }
+  function num(v: string) {
+    return Number(String(v).replace(",", ".")) || 0;
+  }
+  function salvar() {
+    if (!form.numero || !form.fornecedorRazao || !form.valorProdutos) {
+      toast.error("Campos obrigatórios", { description: "Número, fornecedor e valor são obrigatórios." });
+      return;
+    }
+    const produtos = num(form.valorProdutos);
+    const total = produtos + num(form.valorFrete) - num(form.valorDesconto);
+    const nova: NotaEntrada = {
+      id: `ne-${Date.now()}`,
+      numero: form.numero,
+      serie: form.serie,
+      modelo: form.tipo === "65" ? "65" : "55",
+      chave: form.chave || undefined,
+      fornecedorCnpj: form.fornecedorCnpj || "—",
+      fornecedorRazao: form.fornecedorRazao,
+      dataEmissao: form.dataEmissao,
+      dataEntrada: form.dataEntrada,
+      natureza: form.natureza,
+      cfopPrincipal: form.cfop,
+      valorProdutos: produtos,
+      valorFrete: num(form.valorFrete),
+      valorDesconto: num(form.valorDesconto),
+      valorIcms: num(form.valorIcms),
+      valorIpi: num(form.valorIpi),
+      valorPis: num(form.valorPis),
+      valorCofins: num(form.valorCofins),
+      valorTotal: total,
+      status: "Lançada",
+      origem: "Manual",
+      itens: [],
+    };
+    onSave(nova);
+    toast.success("Documento lançado", {
+      description: `${TIPOS_DOC.find((t) => t.value === form.tipo)?.label.split(" ")[0]} ${form.numero} registrado.`,
+    });
+    setOpen(false);
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button size="sm" className="h-8 gap-1.5 bg-foreground text-background hover:bg-foreground/90">
+          <Plus className="h-3.5 w-3.5" /> Lançamento manual
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-2xl">
+        <DialogHeader>
+          <DialogTitle>Lançamento manual de documento fiscal</DialogTitle>
+          <DialogDescription>
+            Para qualquer documento de entrada: NF-e, NFS-e tomada, CT-e, recibo, fatura, aluguel, despesas avulsas.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="grid grid-cols-2 gap-3 text-xs">
+          <Field label="Tipo de documento" full>
+            <Select value={form.tipo} onValueChange={(v) => set("tipo", v)}>
+              <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {TIPOS_DOC.map((t) => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </Field>
+          <Field label="Número *"><Input value={form.numero} onChange={(e) => set("numero", e.target.value)} /></Field>
+          <Field label="Série"><Input value={form.serie} onChange={(e) => set("serie", e.target.value)} /></Field>
+          <Field label="Chave de acesso" full><Input value={form.chave} onChange={(e) => set("chave", e.target.value)} placeholder="44 dígitos (opcional)" /></Field>
+          <Field label="Fornecedor / Razão Social *" full><Input value={form.fornecedorRazao} onChange={(e) => set("fornecedorRazao", e.target.value)} /></Field>
+          <Field label="CNPJ / CPF"><Input value={form.fornecedorCnpj} onChange={(e) => set("fornecedorCnpj", e.target.value)} /></Field>
+          <Field label="Natureza da operação"><Input value={form.natureza} onChange={(e) => set("natureza", e.target.value)} /></Field>
+          <Field label="Data emissão"><Input type="date" value={form.dataEmissao} onChange={(e) => set("dataEmissao", e.target.value)} /></Field>
+          <Field label="Data entrada"><Input type="date" value={form.dataEntrada} onChange={(e) => set("dataEntrada", e.target.value)} /></Field>
+          <Field label="CFOP"><Input value={form.cfop} onChange={(e) => set("cfop", e.target.value)} /></Field>
+          <Field label="Valor produtos / serviço *"><Input value={form.valorProdutos} onChange={(e) => set("valorProdutos", e.target.value)} /></Field>
+          <Field label="Frete"><Input value={form.valorFrete} onChange={(e) => set("valorFrete", e.target.value)} /></Field>
+          <Field label="Desconto"><Input value={form.valorDesconto} onChange={(e) => set("valorDesconto", e.target.value)} /></Field>
+          <Field label="ICMS"><Input value={form.valorIcms} onChange={(e) => set("valorIcms", e.target.value)} /></Field>
+          <Field label="IPI"><Input value={form.valorIpi} onChange={(e) => set("valorIpi", e.target.value)} /></Field>
+          <Field label="PIS"><Input value={form.valorPis} onChange={(e) => set("valorPis", e.target.value)} /></Field>
+          <Field label="COFINS"><Input value={form.valorCofins} onChange={(e) => set("valorCofins", e.target.value)} /></Field>
+          <Field label="Observações" full>
+            <Textarea rows={2} value={form.observacao} onChange={(e) => set("observacao", e.target.value)} />
+          </Field>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" size="sm" onClick={() => setOpen(false)}>Cancelar</Button>
+          <Button size="sm" className="bg-foreground text-background hover:bg-foreground/90" onClick={salvar}>
+            Lançar documento
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function Field({ label, children, full }: { label: string; children: React.ReactNode; full?: boolean }) {
+  return (
+    <div className={full ? "col-span-2" : ""}>
+      <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</Label>
+      <div className="mt-1">{children}</div>
     </div>
   );
 }
