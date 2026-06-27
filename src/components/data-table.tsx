@@ -29,7 +29,7 @@ interface DataTableProps<T> {
   rowClassName?: (row: T, index: number) => string | undefined;
 }
 
-export function DataTable<T extends Record<string, unknown>>({
+export function DataTable<T>({
   title,
   description,
   columns,
