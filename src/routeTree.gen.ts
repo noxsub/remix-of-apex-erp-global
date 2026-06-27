@@ -10,7 +10,9 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as VendasRouteImport } from './routes/vendas'
+import { Route as ReformaTributariaRouteImport } from './routes/reforma-tributaria'
 import { Route as OmnilinkRouteImport } from './routes/omnilink'
+import { Route as ObrigacoesRouteImport } from './routes/obrigacoes'
 import { Route as FiscalRouteImport } from './routes/fiscal'
 import { Route as FinanceiroRouteImport } from './routes/financeiro'
 import { Route as EstoqueRouteImport } from './routes/estoque'
@@ -28,9 +30,19 @@ const VendasRoute = VendasRouteImport.update({
   path: '/vendas',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ReformaTributariaRoute = ReformaTributariaRouteImport.update({
+  id: '/reforma-tributaria',
+  path: '/reforma-tributaria',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const OmnilinkRoute = OmnilinkRouteImport.update({
   id: '/omnilink',
   path: '/omnilink',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ObrigacoesRoute = ObrigacoesRouteImport.update({
+  id: '/obrigacoes',
+  path: '/obrigacoes',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FiscalRoute = FiscalRouteImport.update({
@@ -97,7 +109,9 @@ export interface FileRoutesByFullPath {
   '/estoque': typeof EstoqueRoute
   '/financeiro': typeof FinanceiroRoute
   '/fiscal': typeof FiscalRoute
+  '/obrigacoes': typeof ObrigacoesRoute
   '/omnilink': typeof OmnilinkRoute
+  '/reforma-tributaria': typeof ReformaTributariaRoute
   '/vendas': typeof VendasRoute
   '/entradas/compras': typeof EntradasComprasRoute
   '/entradas/estoque': typeof EntradasEstoqueRoute
@@ -111,7 +125,9 @@ export interface FileRoutesByTo {
   '/estoque': typeof EstoqueRoute
   '/financeiro': typeof FinanceiroRoute
   '/fiscal': typeof FiscalRoute
+  '/obrigacoes': typeof ObrigacoesRoute
   '/omnilink': typeof OmnilinkRoute
+  '/reforma-tributaria': typeof ReformaTributariaRoute
   '/vendas': typeof VendasRoute
   '/entradas/compras': typeof EntradasComprasRoute
   '/entradas/estoque': typeof EntradasEstoqueRoute
@@ -127,7 +143,9 @@ export interface FileRoutesById {
   '/estoque': typeof EstoqueRoute
   '/financeiro': typeof FinanceiroRoute
   '/fiscal': typeof FiscalRoute
+  '/obrigacoes': typeof ObrigacoesRoute
   '/omnilink': typeof OmnilinkRoute
+  '/reforma-tributaria': typeof ReformaTributariaRoute
   '/vendas': typeof VendasRoute
   '/entradas/compras': typeof EntradasComprasRoute
   '/entradas/estoque': typeof EntradasEstoqueRoute
@@ -144,7 +162,9 @@ export interface FileRouteTypes {
     | '/estoque'
     | '/financeiro'
     | '/fiscal'
+    | '/obrigacoes'
     | '/omnilink'
+    | '/reforma-tributaria'
     | '/vendas'
     | '/entradas/compras'
     | '/entradas/estoque'
@@ -158,7 +178,9 @@ export interface FileRouteTypes {
     | '/estoque'
     | '/financeiro'
     | '/fiscal'
+    | '/obrigacoes'
     | '/omnilink'
+    | '/reforma-tributaria'
     | '/vendas'
     | '/entradas/compras'
     | '/entradas/estoque'
@@ -173,7 +195,9 @@ export interface FileRouteTypes {
     | '/estoque'
     | '/financeiro'
     | '/fiscal'
+    | '/obrigacoes'
     | '/omnilink'
+    | '/reforma-tributaria'
     | '/vendas'
     | '/entradas/compras'
     | '/entradas/estoque'
@@ -189,7 +213,9 @@ export interface RootRouteChildren {
   EstoqueRoute: typeof EstoqueRoute
   FinanceiroRoute: typeof FinanceiroRoute
   FiscalRoute: typeof FiscalRoute
+  ObrigacoesRoute: typeof ObrigacoesRoute
   OmnilinkRoute: typeof OmnilinkRoute
+  ReformaTributariaRoute: typeof ReformaTributariaRoute
   VendasRoute: typeof VendasRoute
   ApiPublicWebhooksCanalIdRoute: typeof ApiPublicWebhooksCanalIdRoute
 }
@@ -203,11 +229,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof VendasRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/reforma-tributaria': {
+      id: '/reforma-tributaria'
+      path: '/reforma-tributaria'
+      fullPath: '/reforma-tributaria'
+      preLoaderRoute: typeof ReformaTributariaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/omnilink': {
       id: '/omnilink'
       path: '/omnilink'
       fullPath: '/omnilink'
       preLoaderRoute: typeof OmnilinkRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/obrigacoes': {
+      id: '/obrigacoes'
+      path: '/obrigacoes'
+      fullPath: '/obrigacoes'
+      preLoaderRoute: typeof ObrigacoesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/fiscal': {
@@ -315,7 +355,9 @@ const rootRouteChildren: RootRouteChildren = {
   EstoqueRoute: EstoqueRoute,
   FinanceiroRoute: FinanceiroRoute,
   FiscalRoute: FiscalRoute,
+  ObrigacoesRoute: ObrigacoesRoute,
   OmnilinkRoute: OmnilinkRoute,
+  ReformaTributariaRoute: ReformaTributariaRoute,
   VendasRoute: VendasRoute,
   ApiPublicWebhooksCanalIdRoute: ApiPublicWebhooksCanalIdRoute,
 }
