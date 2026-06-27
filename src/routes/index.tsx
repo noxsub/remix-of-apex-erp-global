@@ -404,7 +404,7 @@ function FinanceiroView({
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
                 <XAxis dataKey="mes" stroke="var(--muted-foreground)" fontSize={11} tickLine={false} axisLine={false} />
-                <YAxis stroke="var(--muted-foreground)" fontSize={11} tickLine={false} axisLine={false} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
+                <YAxis stroke="var(--muted-foreground)" fontSize={11} tickLine={false} axisLine={false} tickFormatter={formatAxisCompact} />
                 <Tooltip contentStyle={tooltipStyle} />
                 <Area type="monotone" dataKey="receita" stroke={GOLD} strokeWidth={2} fill="url(#gold)" />
                 <Area type="monotone" dataKey="conciliado" stroke="var(--muted-foreground)" strokeWidth={1.5} fill="transparent" strokeDasharray="4 4" />
@@ -418,7 +418,7 @@ function FinanceiroView({
               <ComposedChart data={baseRevenue}>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
                 <XAxis dataKey="mes" stroke="var(--muted-foreground)" fontSize={11} tickLine={false} axisLine={false} />
-                <YAxis stroke="var(--muted-foreground)" fontSize={11} tickLine={false} axisLine={false} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
+                <YAxis stroke="var(--muted-foreground)" fontSize={11} tickLine={false} axisLine={false} tickFormatter={formatAxisCompact} />
                 <Tooltip contentStyle={tooltipStyle} />
                 <Bar dataKey="previsto" fill="var(--muted-foreground)" opacity={0.4} barSize={12} />
                 <Line type="monotone" dataKey="realizado" stroke={GOLD} strokeWidth={2} dot={false} />
@@ -568,7 +568,7 @@ function EstoqueView() {
               <ComposedChart data={abc}>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
                 <XAxis dataKey="nome" stroke="var(--muted-foreground)" fontSize={10} tickLine={false} axisLine={false} interval={0} angle={-20} textAnchor="end" height={60} />
-                <YAxis yAxisId="l" stroke="var(--muted-foreground)" fontSize={11} tickLine={false} axisLine={false} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
+                <YAxis yAxisId="l" stroke="var(--muted-foreground)" fontSize={11} tickLine={false} axisLine={false} tickFormatter={formatAxisCompact} />
                 <YAxis yAxisId="r" orientation="right" stroke="var(--muted-foreground)" fontSize={11} tickLine={false} axisLine={false} domain={[0, 100]} tickFormatter={(v) => `${v}%`} />
                 <Tooltip contentStyle={tooltipStyle} />
                 <Bar yAxisId="l" dataKey="valor" barSize={20}>
@@ -707,7 +707,7 @@ function VendasView({
               <ComposedChart data={evol}>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
                 <XAxis dataKey="mes" stroke="var(--muted-foreground)" fontSize={11} tickLine={false} axisLine={false} />
-                <YAxis yAxisId="l" stroke="var(--muted-foreground)" fontSize={11} tickLine={false} axisLine={false} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
+                <YAxis yAxisId="l" stroke="var(--muted-foreground)" fontSize={11} tickLine={false} axisLine={false} tickFormatter={formatAxisCompact} />
                 <YAxis yAxisId="r" orientation="right" stroke="var(--muted-foreground)" fontSize={11} tickLine={false} axisLine={false} />
                 <Tooltip contentStyle={tooltipStyle} />
                 <Bar yAxisId="l" dataKey="receita" fill={GOLD} radius={[4, 4, 0, 0]} barSize={20} />
@@ -737,7 +737,7 @@ function VendasView({
               <ResponsiveContainer width="100%" height={260}>
                 <BarChart data={top} layout="vertical" margin={{ left: 8 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" horizontal={false} />
-                  <XAxis type="number" stroke="var(--muted-foreground)" fontSize={11} tickLine={false} axisLine={false} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
+                  <XAxis type="number" stroke="var(--muted-foreground)" fontSize={11} tickLine={false} axisLine={false} tickFormatter={formatAxisCompact} />
                   <YAxis dataKey="nome" type="category" stroke="var(--muted-foreground)" fontSize={11} tickLine={false} axisLine={false} width={150} />
                   <Tooltip contentStyle={tooltipStyle} formatter={(v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })} />
                   <Bar dataKey="valor" fill={GOLD} radius={[0, 4, 4, 0]} barSize={16} />
@@ -751,7 +751,7 @@ function VendasView({
                 <BarChart data={desempenhoCanais}>
                   <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
                   <XAxis dataKey="canal" stroke="var(--muted-foreground)" fontSize={11} tickLine={false} axisLine={false} />
-                  <YAxis stroke="var(--muted-foreground)" fontSize={11} tickLine={false} axisLine={false} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
+                  <YAxis stroke="var(--muted-foreground)" fontSize={11} tickLine={false} axisLine={false} tickFormatter={formatAxisCompact} />
                   <Tooltip contentStyle={tooltipStyle} />
                   <Bar dataKey="valor" fill={GOLD} radius={[4, 4, 0, 0]} barSize={28} />
                 </BarChart>

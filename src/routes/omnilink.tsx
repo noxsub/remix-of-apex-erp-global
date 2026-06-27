@@ -723,7 +723,7 @@ function FlokiTab() {
             <BarChart data={rent.filter((r) => r.pedidos > 0)}>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
               <XAxis dataKey="canalNome" stroke="var(--muted-foreground)" fontSize={11} />
-              <YAxis yAxisId="left" stroke="var(--muted-foreground)" fontSize={11} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
+              <YAxis yAxisId="left" stroke="var(--muted-foreground)" fontSize={11} tickFormatter={formatAxisCompact} />
               <YAxis yAxisId="right" orientation="right" stroke="var(--muted-foreground)" fontSize={11} tickFormatter={(v) => `${v.toFixed(0)}%`} />
               <Tooltip />
               <Bar yAxisId="left" dataKey="bruto" name="Bruto" fill="oklch(0.78 0.09 85)" />
