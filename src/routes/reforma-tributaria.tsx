@@ -492,7 +492,7 @@ function ApuracaoTab({
             {sincronizando ? "Sincronizando..." : "Sincronizar"}
           </Button>
         </div>
-        {apuracao.sincronizadoRFB && (
+        {apuracao.syncronizadoRFB && (
           <p className="text-xs text-green-600 mt-4">✓ Sincronizado com sucesso</p>
         )}
       </Card>

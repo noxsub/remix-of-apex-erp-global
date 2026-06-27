@@ -168,7 +168,7 @@ export const useReformaTributaria = create<ReformaTributariaState>((set, get) =>
       parcelamento: 0,
       status: "calculado",
       dataCalculo: new Date().toISOString(),
-      sincronizadoRFB: false,
+      syncronizadoRFB: false,
     };
 
     set((state) => ({
@@ -188,7 +188,7 @@ export const useReformaTributaria = create<ReformaTributariaState>((set, get) =>
         dataSincronizacaoUltima: new Date().toISOString(),
       },
       apuracoes: state.apuracoes.map((a) =>
-        a.periodo === periodo ? { ...a, sincronizadoRFB: true, status: "enviado" as StatusApuracao } : a
+        a.periodo === periodo ? { ...a, syncronizadoRFB: true, status: "enviado" as StatusApuracao } : a
       ),
     }));
     return true;
