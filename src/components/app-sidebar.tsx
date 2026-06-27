@@ -65,7 +65,7 @@ const sections: { label: string; items: NavItem[] }[] = [
         icon: ArrowDownToLine,
         children: [
           { title: "Visão geral", url: "/entradas", icon: LayoutGrid },
-          { title: "Compras (NF-e)", url: "/entradas/compras", icon: ShoppingCart },
+          { title: "Compras", url: "/entradas/compras", icon: ShoppingCart },
           { title: "Estoque", url: "/entradas/estoque", icon: Boxes },
           { title: "Relatórios fiscais", url: "/entradas/relatorios", icon: FileBarChart2 },
         ],
