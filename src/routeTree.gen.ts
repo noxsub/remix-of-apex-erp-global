@@ -10,6 +10,8 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as VendasRouteImport } from './routes/vendas'
+import { Route as SaidasRouteImport } from './routes/saidas'
+import { Route as RhRouteImport } from './routes/rh'
 import { Route as ReformaTributariaRouteImport } from './routes/reforma-tributaria'
 import { Route as OmnilinkRouteImport } from './routes/omnilink'
 import { Route as ObrigacoesRouteImport } from './routes/obrigacoes'
@@ -19,7 +21,20 @@ import { Route as EstoqueRouteImport } from './routes/estoque'
 import { Route as EntradasRouteImport } from './routes/entradas'
 import { Route as CadastrosRouteImport } from './routes/cadastros'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as SaidasIndexRouteImport } from './routes/saidas.index'
+import { Route as RhIndexRouteImport } from './routes/rh.index'
 import { Route as EntradasIndexRouteImport } from './routes/entradas.index'
+import { Route as SaidasRelatoriosRouteImport } from './routes/saidas.relatorios'
+import { Route as SaidasPedidosRouteImport } from './routes/saidas.pedidos'
+import { Route as SaidasOrcamentosRouteImport } from './routes/saidas.orcamentos'
+import { Route as SaidasNotasEmitidasRouteImport } from './routes/saidas.notas-emitidas'
+import { Route as SaidasFaturamentoRouteImport } from './routes/saidas.faturamento'
+import { Route as SaidasDevolucoesRouteImport } from './routes/saidas.devolucoes'
+import { Route as RhPontoRouteImport } from './routes/rh.ponto'
+import { Route as RhFuncionariosRouteImport } from './routes/rh.funcionarios'
+import { Route as RhFolhaRouteImport } from './routes/rh.folha'
+import { Route as RhFeriasRouteImport } from './routes/rh.ferias'
+import { Route as RhBeneficiosRouteImport } from './routes/rh.beneficios'
 import { Route as EntradasRelatoriosRouteImport } from './routes/entradas.relatorios'
 import { Route as EntradasEstoqueRouteImport } from './routes/entradas.estoque'
 import { Route as EntradasComprasRouteImport } from './routes/entradas.compras'
@@ -28,6 +43,16 @@ import { Route as ApiPublicWebhooksCanalIdRouteImport } from './routes/api/publi
 const VendasRoute = VendasRouteImport.update({
   id: '/vendas',
   path: '/vendas',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SaidasRoute = SaidasRouteImport.update({
+  id: '/saidas',
+  path: '/saidas',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RhRoute = RhRouteImport.update({
+  id: '/rh',
+  path: '/rh',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ReformaTributariaRoute = ReformaTributariaRouteImport.update({
@@ -75,10 +100,75 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SaidasIndexRoute = SaidasIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => SaidasRoute,
+} as any)
+const RhIndexRoute = RhIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => RhRoute,
+} as any)
 const EntradasIndexRoute = EntradasIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => EntradasRoute,
+} as any)
+const SaidasRelatoriosRoute = SaidasRelatoriosRouteImport.update({
+  id: '/relatorios',
+  path: '/relatorios',
+  getParentRoute: () => SaidasRoute,
+} as any)
+const SaidasPedidosRoute = SaidasPedidosRouteImport.update({
+  id: '/pedidos',
+  path: '/pedidos',
+  getParentRoute: () => SaidasRoute,
+} as any)
+const SaidasOrcamentosRoute = SaidasOrcamentosRouteImport.update({
+  id: '/orcamentos',
+  path: '/orcamentos',
+  getParentRoute: () => SaidasRoute,
+} as any)
+const SaidasNotasEmitidasRoute = SaidasNotasEmitidasRouteImport.update({
+  id: '/notas-emitidas',
+  path: '/notas-emitidas',
+  getParentRoute: () => SaidasRoute,
+} as any)
+const SaidasFaturamentoRoute = SaidasFaturamentoRouteImport.update({
+  id: '/faturamento',
+  path: '/faturamento',
+  getParentRoute: () => SaidasRoute,
+} as any)
+const SaidasDevolucoesRoute = SaidasDevolucoesRouteImport.update({
+  id: '/devolucoes',
+  path: '/devolucoes',
+  getParentRoute: () => SaidasRoute,
+} as any)
+const RhPontoRoute = RhPontoRouteImport.update({
+  id: '/ponto',
+  path: '/ponto',
+  getParentRoute: () => RhRoute,
+} as any)
+const RhFuncionariosRoute = RhFuncionariosRouteImport.update({
+  id: '/funcionarios',
+  path: '/funcionarios',
+  getParentRoute: () => RhRoute,
+} as any)
+const RhFolhaRoute = RhFolhaRouteImport.update({
+  id: '/folha',
+  path: '/folha',
+  getParentRoute: () => RhRoute,
+} as any)
+const RhFeriasRoute = RhFeriasRouteImport.update({
+  id: '/ferias',
+  path: '/ferias',
+  getParentRoute: () => RhRoute,
+} as any)
+const RhBeneficiosRoute = RhBeneficiosRouteImport.update({
+  id: '/beneficios',
+  path: '/beneficios',
+  getParentRoute: () => RhRoute,
 } as any)
 const EntradasRelatoriosRoute = EntradasRelatoriosRouteImport.update({
   id: '/relatorios',
@@ -112,11 +202,26 @@ export interface FileRoutesByFullPath {
   '/obrigacoes': typeof ObrigacoesRoute
   '/omnilink': typeof OmnilinkRoute
   '/reforma-tributaria': typeof ReformaTributariaRoute
+  '/rh': typeof RhRouteWithChildren
+  '/saidas': typeof SaidasRouteWithChildren
   '/vendas': typeof VendasRoute
   '/entradas/compras': typeof EntradasComprasRoute
   '/entradas/estoque': typeof EntradasEstoqueRoute
   '/entradas/relatorios': typeof EntradasRelatoriosRoute
+  '/rh/beneficios': typeof RhBeneficiosRoute
+  '/rh/ferias': typeof RhFeriasRoute
+  '/rh/folha': typeof RhFolhaRoute
+  '/rh/funcionarios': typeof RhFuncionariosRoute
+  '/rh/ponto': typeof RhPontoRoute
+  '/saidas/devolucoes': typeof SaidasDevolucoesRoute
+  '/saidas/faturamento': typeof SaidasFaturamentoRoute
+  '/saidas/notas-emitidas': typeof SaidasNotasEmitidasRoute
+  '/saidas/orcamentos': typeof SaidasOrcamentosRoute
+  '/saidas/pedidos': typeof SaidasPedidosRoute
+  '/saidas/relatorios': typeof SaidasRelatoriosRoute
   '/entradas/': typeof EntradasIndexRoute
+  '/rh/': typeof RhIndexRoute
+  '/saidas/': typeof SaidasIndexRoute
   '/api/public/webhooks/$canalId': typeof ApiPublicWebhooksCanalIdRoute
 }
 export interface FileRoutesByTo {
@@ -132,7 +237,20 @@ export interface FileRoutesByTo {
   '/entradas/compras': typeof EntradasComprasRoute
   '/entradas/estoque': typeof EntradasEstoqueRoute
   '/entradas/relatorios': typeof EntradasRelatoriosRoute
+  '/rh/beneficios': typeof RhBeneficiosRoute
+  '/rh/ferias': typeof RhFeriasRoute
+  '/rh/folha': typeof RhFolhaRoute
+  '/rh/funcionarios': typeof RhFuncionariosRoute
+  '/rh/ponto': typeof RhPontoRoute
+  '/saidas/devolucoes': typeof SaidasDevolucoesRoute
+  '/saidas/faturamento': typeof SaidasFaturamentoRoute
+  '/saidas/notas-emitidas': typeof SaidasNotasEmitidasRoute
+  '/saidas/orcamentos': typeof SaidasOrcamentosRoute
+  '/saidas/pedidos': typeof SaidasPedidosRoute
+  '/saidas/relatorios': typeof SaidasRelatoriosRoute
   '/entradas': typeof EntradasIndexRoute
+  '/rh': typeof RhIndexRoute
+  '/saidas': typeof SaidasIndexRoute
   '/api/public/webhooks/$canalId': typeof ApiPublicWebhooksCanalIdRoute
 }
 export interface FileRoutesById {
@@ -146,11 +264,26 @@ export interface FileRoutesById {
   '/obrigacoes': typeof ObrigacoesRoute
   '/omnilink': typeof OmnilinkRoute
   '/reforma-tributaria': typeof ReformaTributariaRoute
+  '/rh': typeof RhRouteWithChildren
+  '/saidas': typeof SaidasRouteWithChildren
   '/vendas': typeof VendasRoute
   '/entradas/compras': typeof EntradasComprasRoute
   '/entradas/estoque': typeof EntradasEstoqueRoute
   '/entradas/relatorios': typeof EntradasRelatoriosRoute
+  '/rh/beneficios': typeof RhBeneficiosRoute
+  '/rh/ferias': typeof RhFeriasRoute
+  '/rh/folha': typeof RhFolhaRoute
+  '/rh/funcionarios': typeof RhFuncionariosRoute
+  '/rh/ponto': typeof RhPontoRoute
+  '/saidas/devolucoes': typeof SaidasDevolucoesRoute
+  '/saidas/faturamento': typeof SaidasFaturamentoRoute
+  '/saidas/notas-emitidas': typeof SaidasNotasEmitidasRoute
+  '/saidas/orcamentos': typeof SaidasOrcamentosRoute
+  '/saidas/pedidos': typeof SaidasPedidosRoute
+  '/saidas/relatorios': typeof SaidasRelatoriosRoute
   '/entradas/': typeof EntradasIndexRoute
+  '/rh/': typeof RhIndexRoute
+  '/saidas/': typeof SaidasIndexRoute
   '/api/public/webhooks/$canalId': typeof ApiPublicWebhooksCanalIdRoute
 }
 export interface FileRouteTypes {
@@ -165,11 +298,26 @@ export interface FileRouteTypes {
     | '/obrigacoes'
     | '/omnilink'
     | '/reforma-tributaria'
+    | '/rh'
+    | '/saidas'
     | '/vendas'
     | '/entradas/compras'
     | '/entradas/estoque'
     | '/entradas/relatorios'
+    | '/rh/beneficios'
+    | '/rh/ferias'
+    | '/rh/folha'
+    | '/rh/funcionarios'
+    | '/rh/ponto'
+    | '/saidas/devolucoes'
+    | '/saidas/faturamento'
+    | '/saidas/notas-emitidas'
+    | '/saidas/orcamentos'
+    | '/saidas/pedidos'
+    | '/saidas/relatorios'
     | '/entradas/'
+    | '/rh/'
+    | '/saidas/'
     | '/api/public/webhooks/$canalId'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -185,7 +333,20 @@ export interface FileRouteTypes {
     | '/entradas/compras'
     | '/entradas/estoque'
     | '/entradas/relatorios'
+    | '/rh/beneficios'
+    | '/rh/ferias'
+    | '/rh/folha'
+    | '/rh/funcionarios'
+    | '/rh/ponto'
+    | '/saidas/devolucoes'
+    | '/saidas/faturamento'
+    | '/saidas/notas-emitidas'
+    | '/saidas/orcamentos'
+    | '/saidas/pedidos'
+    | '/saidas/relatorios'
     | '/entradas'
+    | '/rh'
+    | '/saidas'
     | '/api/public/webhooks/$canalId'
   id:
     | '__root__'
@@ -198,11 +359,26 @@ export interface FileRouteTypes {
     | '/obrigacoes'
     | '/omnilink'
     | '/reforma-tributaria'
+    | '/rh'
+    | '/saidas'
     | '/vendas'
     | '/entradas/compras'
     | '/entradas/estoque'
     | '/entradas/relatorios'
+    | '/rh/beneficios'
+    | '/rh/ferias'
+    | '/rh/folha'
+    | '/rh/funcionarios'
+    | '/rh/ponto'
+    | '/saidas/devolucoes'
+    | '/saidas/faturamento'
+    | '/saidas/notas-emitidas'
+    | '/saidas/orcamentos'
+    | '/saidas/pedidos'
+    | '/saidas/relatorios'
     | '/entradas/'
+    | '/rh/'
+    | '/saidas/'
     | '/api/public/webhooks/$canalId'
   fileRoutesById: FileRoutesById
 }
@@ -216,6 +392,8 @@ export interface RootRouteChildren {
   ObrigacoesRoute: typeof ObrigacoesRoute
   OmnilinkRoute: typeof OmnilinkRoute
   ReformaTributariaRoute: typeof ReformaTributariaRoute
+  RhRoute: typeof RhRouteWithChildren
+  SaidasRoute: typeof SaidasRouteWithChildren
   VendasRoute: typeof VendasRoute
   ApiPublicWebhooksCanalIdRoute: typeof ApiPublicWebhooksCanalIdRoute
 }
@@ -227,6 +405,20 @@ declare module '@tanstack/react-router' {
       path: '/vendas'
       fullPath: '/vendas'
       preLoaderRoute: typeof VendasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/saidas': {
+      id: '/saidas'
+      path: '/saidas'
+      fullPath: '/saidas'
+      preLoaderRoute: typeof SaidasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/rh': {
+      id: '/rh'
+      path: '/rh'
+      fullPath: '/rh'
+      preLoaderRoute: typeof RhRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/reforma-tributaria': {
@@ -292,12 +484,103 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/saidas/': {
+      id: '/saidas/'
+      path: '/'
+      fullPath: '/saidas/'
+      preLoaderRoute: typeof SaidasIndexRouteImport
+      parentRoute: typeof SaidasRoute
+    }
+    '/rh/': {
+      id: '/rh/'
+      path: '/'
+      fullPath: '/rh/'
+      preLoaderRoute: typeof RhIndexRouteImport
+      parentRoute: typeof RhRoute
+    }
     '/entradas/': {
       id: '/entradas/'
       path: '/'
       fullPath: '/entradas/'
       preLoaderRoute: typeof EntradasIndexRouteImport
       parentRoute: typeof EntradasRoute
+    }
+    '/saidas/relatorios': {
+      id: '/saidas/relatorios'
+      path: '/relatorios'
+      fullPath: '/saidas/relatorios'
+      preLoaderRoute: typeof SaidasRelatoriosRouteImport
+      parentRoute: typeof SaidasRoute
+    }
+    '/saidas/pedidos': {
+      id: '/saidas/pedidos'
+      path: '/pedidos'
+      fullPath: '/saidas/pedidos'
+      preLoaderRoute: typeof SaidasPedidosRouteImport
+      parentRoute: typeof SaidasRoute
+    }
+    '/saidas/orcamentos': {
+      id: '/saidas/orcamentos'
+      path: '/orcamentos'
+      fullPath: '/saidas/orcamentos'
+      preLoaderRoute: typeof SaidasOrcamentosRouteImport
+      parentRoute: typeof SaidasRoute
+    }
+    '/saidas/notas-emitidas': {
+      id: '/saidas/notas-emitidas'
+      path: '/notas-emitidas'
+      fullPath: '/saidas/notas-emitidas'
+      preLoaderRoute: typeof SaidasNotasEmitidasRouteImport
+      parentRoute: typeof SaidasRoute
+    }
+    '/saidas/faturamento': {
+      id: '/saidas/faturamento'
+      path: '/faturamento'
+      fullPath: '/saidas/faturamento'
+      preLoaderRoute: typeof SaidasFaturamentoRouteImport
+      parentRoute: typeof SaidasRoute
+    }
+    '/saidas/devolucoes': {
+      id: '/saidas/devolucoes'
+      path: '/devolucoes'
+      fullPath: '/saidas/devolucoes'
+      preLoaderRoute: typeof SaidasDevolucoesRouteImport
+      parentRoute: typeof SaidasRoute
+    }
+    '/rh/ponto': {
+      id: '/rh/ponto'
+      path: '/ponto'
+      fullPath: '/rh/ponto'
+      preLoaderRoute: typeof RhPontoRouteImport
+      parentRoute: typeof RhRoute
+    }
+    '/rh/funcionarios': {
+      id: '/rh/funcionarios'
+      path: '/funcionarios'
+      fullPath: '/rh/funcionarios'
+      preLoaderRoute: typeof RhFuncionariosRouteImport
+      parentRoute: typeof RhRoute
+    }
+    '/rh/folha': {
+      id: '/rh/folha'
+      path: '/folha'
+      fullPath: '/rh/folha'
+      preLoaderRoute: typeof RhFolhaRouteImport
+      parentRoute: typeof RhRoute
+    }
+    '/rh/ferias': {
+      id: '/rh/ferias'
+      path: '/ferias'
+      fullPath: '/rh/ferias'
+      preLoaderRoute: typeof RhFeriasRouteImport
+      parentRoute: typeof RhRoute
+    }
+    '/rh/beneficios': {
+      id: '/rh/beneficios'
+      path: '/beneficios'
+      fullPath: '/rh/beneficios'
+      preLoaderRoute: typeof RhBeneficiosRouteImport
+      parentRoute: typeof RhRoute
     }
     '/entradas/relatorios': {
       id: '/entradas/relatorios'
@@ -348,6 +631,49 @@ const EntradasRouteWithChildren = EntradasRoute._addFileChildren(
   EntradasRouteChildren,
 )
 
+interface RhRouteChildren {
+  RhBeneficiosRoute: typeof RhBeneficiosRoute
+  RhFeriasRoute: typeof RhFeriasRoute
+  RhFolhaRoute: typeof RhFolhaRoute
+  RhFuncionariosRoute: typeof RhFuncionariosRoute
+  RhPontoRoute: typeof RhPontoRoute
+  RhIndexRoute: typeof RhIndexRoute
+}
+
+const RhRouteChildren: RhRouteChildren = {
+  RhBeneficiosRoute: RhBeneficiosRoute,
+  RhFeriasRoute: RhFeriasRoute,
+  RhFolhaRoute: RhFolhaRoute,
+  RhFuncionariosRoute: RhFuncionariosRoute,
+  RhPontoRoute: RhPontoRoute,
+  RhIndexRoute: RhIndexRoute,
+}
+
+const RhRouteWithChildren = RhRoute._addFileChildren(RhRouteChildren)
+
+interface SaidasRouteChildren {
+  SaidasDevolucoesRoute: typeof SaidasDevolucoesRoute
+  SaidasFaturamentoRoute: typeof SaidasFaturamentoRoute
+  SaidasNotasEmitidasRoute: typeof SaidasNotasEmitidasRoute
+  SaidasOrcamentosRoute: typeof SaidasOrcamentosRoute
+  SaidasPedidosRoute: typeof SaidasPedidosRoute
+  SaidasRelatoriosRoute: typeof SaidasRelatoriosRoute
+  SaidasIndexRoute: typeof SaidasIndexRoute
+}
+
+const SaidasRouteChildren: SaidasRouteChildren = {
+  SaidasDevolucoesRoute: SaidasDevolucoesRoute,
+  SaidasFaturamentoRoute: SaidasFaturamentoRoute,
+  SaidasNotasEmitidasRoute: SaidasNotasEmitidasRoute,
+  SaidasOrcamentosRoute: SaidasOrcamentosRoute,
+  SaidasPedidosRoute: SaidasPedidosRoute,
+  SaidasRelatoriosRoute: SaidasRelatoriosRoute,
+  SaidasIndexRoute: SaidasIndexRoute,
+}
+
+const SaidasRouteWithChildren =
+  SaidasRoute._addFileChildren(SaidasRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CadastrosRoute: CadastrosRoute,
@@ -358,6 +684,8 @@ const rootRouteChildren: RootRouteChildren = {
   ObrigacoesRoute: ObrigacoesRoute,
   OmnilinkRoute: OmnilinkRoute,
   ReformaTributariaRoute: ReformaTributariaRoute,
+  RhRoute: RhRouteWithChildren,
+  SaidasRoute: SaidasRouteWithChildren,
   VendasRoute: VendasRoute,
   ApiPublicWebhooksCanalIdRoute: ApiPublicWebhooksCanalIdRoute,
 }

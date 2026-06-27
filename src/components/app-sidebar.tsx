@@ -17,6 +17,13 @@ import {
   FileBarChart2,
   TrendingUp,
   FileCheck,
+  UserCog,
+  FileText,
+  Send,
+  RotateCcw,
+  Calendar,
+  Heart,
+  Clock,
 } from "lucide-react";
 import {
   Sidebar,
@@ -63,7 +70,20 @@ const sections: { label: string; items: NavItem[] }[] = [
           { title: "Relatórios fiscais", url: "/entradas/relatorios", icon: FileBarChart2 },
         ],
       },
-      { title: "Saídas", url: "/vendas", icon: ArrowUpFromLine },
+      {
+        title: "Saídas",
+        url: "/saidas",
+        icon: ArrowUpFromLine,
+        children: [
+          { title: "Visão geral", url: "/saidas", icon: LayoutGrid },
+          { title: "Pedidos de Venda", url: "/saidas/pedidos", icon: ShoppingCart },
+          { title: "Orçamentos", url: "/saidas/orcamentos", icon: FileText },
+          { title: "Faturamento", url: "/saidas/faturamento", icon: Receipt },
+          { title: "NFs Emitidas", url: "/saidas/notas-emitidas", icon: Send },
+          { title: "Devoluções", url: "/saidas/devolucoes", icon: RotateCcw },
+          { title: "Relatórios", url: "/saidas/relatorios", icon: FileBarChart2 },
+        ],
+      },
     ],
   },
   {
@@ -71,6 +91,19 @@ const sections: { label: string; items: NavItem[] }[] = [
     items: [
       { title: "Financeiro", url: "/financeiro", icon: Wallet },
       { title: "Cadastros", url: "/cadastros", icon: Users },
+      {
+        title: "RH",
+        url: "/rh",
+        icon: UserCog,
+        children: [
+          { title: "Visão geral", url: "/rh", icon: LayoutGrid },
+          { title: "Funcionários", url: "/rh/funcionarios", icon: Users },
+          { title: "Folha de Pagamento", url: "/rh/folha", icon: Wallet },
+          { title: "Férias / 13º", url: "/rh/ferias", icon: Calendar },
+          { title: "Benefícios", url: "/rh/beneficios", icon: Heart },
+          { title: "Controle de Ponto", url: "/rh/ponto", icon: Clock },
+        ],
+      },
     ],
   },
   {
