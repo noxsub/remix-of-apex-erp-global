@@ -262,14 +262,9 @@ export function AppSidebar() {
         ))}
       </SidebarContent>
 
-      {/* ─── Quick Action CTA ─── */}
+      {/* ─── Quick Action CTA — Nova Operação (atalho global de criação) ─── */}
       <div className="px-3 pb-3 group-data-[collapsible=icon]:px-2">
-        <button className="flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-b from-[oklch(0.82_0.1_85)] to-[oklch(0.72_0.11_85)] px-3 py-2.5 text-xs font-medium text-primary-foreground border border-[oklch(0.62_0.1_85)] shadow-sm transition-all hover:brightness-110 active:scale-[0.98]">
-          <Plus className="h-3.5 w-3.5" />
-          <span className="group-data-[collapsible=icon]:hidden">
-            Nova Operação
-          </span>
-        </button>
+        <NovaOperacaoMenu />
       </div>
 
       {/* ─── Footer ─── */}
