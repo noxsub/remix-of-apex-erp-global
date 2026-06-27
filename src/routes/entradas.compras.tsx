@@ -15,6 +15,8 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { StatusBadge } from "@/components/status-badge";
 import { ArrowDownToLine, FileCode2, Plus, UploadCloud, Eye } from "lucide-react";
 import { toast } from "sonner";
@@ -203,9 +205,7 @@ function ComprasPage() {
           </DialogContent>
         </Dialog>
 
-        <Button size="sm" className="h-8 gap-1.5 bg-foreground text-background hover:bg-foreground/90">
-          <Plus className="h-3.5 w-3.5" /> Lançar manualmente
-        </Button>
+        <LancamentoManualDialog onSave={(n) => setNotas((prev) => [n, ...prev])} />
       </div>
 
       <DataTable
