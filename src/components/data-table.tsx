@@ -12,13 +12,14 @@ import {
 import { exportToExcel } from "@/lib/export-excel";
 
 export interface Column<T> {
-  key: keyof T & string;
+  key: string;
   header: string;
   align?: "left" | "right" | "center";
   render?: (row: T) => ReactNode;
 }
 
-interface DataTableProps<T extends Record<string, unknown>> {
+interface DataTableProps<T> {
+
   title?: string;
   description?: string;
   columns: Column<T>[];
