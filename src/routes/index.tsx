@@ -74,6 +74,7 @@ import {
   valorPorCategoria,
 } from "@/lib/dashboard-metrics";
 import { FlokiAlerts } from "@/components/floki-alerts";
+import { formatAxisCompact, formatBRLCompact } from "@/lib/format";
 
 export { StatusBadge };
 
@@ -364,7 +365,7 @@ function FinanceiroView({
         <MetricCard
           icon={<TrendingUp className="h-4 w-4" />}
           label="Faturamento"
-          value={`R$ ${(receita / 1000).toFixed(0)}k`}
+          value={formatBRLCompact(receita)}
           delta="+12,4%"
           positive
         />
@@ -378,14 +379,14 @@ function FinanceiroView({
         <MetricCard
           icon={<Wallet className="h-4 w-4" />}
           label="A Receber"
-          value={`R$ ${(184920).toLocaleString("pt-BR")}`}
+          value={formatBRLCompact(184920)}
           delta="-3,1%"
           positive={false}
         />
         <MetricCard
           icon={<Banknote className="h-4 w-4" />}
           label="A Pagar"
-          value={`R$ ${(92180).toLocaleString("pt-BR")}`}
+          value={formatBRLCompact(92180)}
           delta="+4,8%"
           positive={false}
         />
