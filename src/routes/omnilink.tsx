@@ -94,6 +94,7 @@ const tipos: { value: CanalTipo; label: string }[] = [
   { value: "outro", label: "Outro" },
 ];
 
+import { formatAxisCompact } from "@/lib/format";
 function formatBRL(v: number) {
   return v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
