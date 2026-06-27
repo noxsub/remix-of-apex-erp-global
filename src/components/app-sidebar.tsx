@@ -15,6 +15,8 @@ import {
   ShoppingCart,
   Boxes,
   FileBarChart2,
+  TrendingUp,
+  FileCheck,
 } from "lucide-react";
 import {
   Sidebar,
@@ -75,6 +77,8 @@ const sections: { label: string; items: NavItem[] }[] = [
     label: "Inteligência",
     items: [
       { title: "Fiscal", url: "/fiscal", icon: Receipt },
+      { title: "Reforma Tributária", url: "/reforma-tributaria", icon: TrendingUp },
+      { title: "Óbrigações", url: "/obrigacoes", icon: FileCheck },
       { title: "Omnilink", url: "/omnilink", icon: Network },
     ],
   },
