@@ -61,7 +61,7 @@ export function DataTable<T>({
               exportToExcel(
                 data.map((r) =>
                   Object.fromEntries(
-                    columns.map((c) => [c.header, r[c.key]]),
+                    columns.map((c) => [c.header, (r as Record<string, unknown>)[c.key]]),
                   ) as Record<string, unknown>,
                 ),
                 filename,
@@ -111,7 +111,7 @@ export function DataTable<T>({
                           : ""
                     }`}
                   >
-                    {c.render ? c.render(row) : String(row[c.key] ?? "")}
+                    {c.render ? c.render(row) : String((row as Record<string, unknown>)[c.key] ?? "")}
                   </TableCell>
                 ))}
               </TableRow>
