@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 export const Route = createFileRoute("/")({
@@ -41,8 +41,6 @@ function SynteraDNA() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const animRef = useRef<number>(0);
-  const navigate = useNavigate();
-
   const [isHovered, setIsHovered] = useState(false);
   const [expandProgress, setExpandProgress] = useState(0);
   const [hoveredModule, setHoveredModule] = useState<string | null>(null);
@@ -254,9 +252,11 @@ function SynteraDNA() {
         }}
       />
 
-      {/* Logo "S" */}
-      <div
-        className="absolute cursor-pointer transition-transform duration-700"
+      {/* Logo "S" — entrada real para o ERP */}
+      <Link
+        to="/dashboard"
+        aria-label="Entrar no Syntera ERP"
+        className="absolute cursor-pointer rounded-xl outline-none transition-transform duration-700 focus-visible:ring-2 focus-visible:ring-[rgba(212,175,55,0.75)]"
         style={{
           left: cx - 48,
           top: cy - 56,
@@ -264,7 +264,6 @@ function SynteraDNA() {
         }}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
-        onClick={() => !isMobile && setIsHovered(!isHovered)}
         onTouchStart={() => setIsHovered(!isHovered)}
       >
         <svg width="96" height="112" viewBox="0 0 96 112" fill="none">
@@ -300,7 +299,7 @@ function SynteraDNA() {
           {/* Reflection line */}
           <ellipse cx="48" cy="108" rx="30" ry="3" fill="url(#goldGrad)" opacity={0.15 + expandProgress * 0.1} />
         </svg>
-      </div>
+      </Link>
 
       {/* "SYNTERA" text */}
       <div
@@ -331,9 +330,10 @@ function SynteraDNA() {
           const isHigh = hoveredModule === mod.id;
 
           return (
-            <div
+            <Link
+              to={mod.url}
               key={mod.id}
-              className="absolute cursor-pointer transition-all duration-500"
+              className="absolute cursor-pointer rounded-md px-2 py-1 outline-none transition-all duration-500 focus-visible:ring-2 focus-visible:ring-[rgba(212,175,55,0.65)]"
               style={{
                 left: mx - 60,
                 top: my - 12,
@@ -345,7 +345,6 @@ function SynteraDNA() {
               }}
               onMouseEnter={() => setHoveredModule(mod.id)}
               onMouseLeave={() => setHoveredModule(null)}
-              onClick={() => navigate({ to: mod.url })}
             >
               <span
                 className="text-[11px] font-medium tracking-wide transition-all duration-300"
@@ -356,9 +355,16 @@ function SynteraDNA() {
               >
                 {mod.label}
               </span>
-            </div>
+            </Link>
           );
         })}
+
+      <Link
+        to="/dashboard"
+        className="absolute left-1/2 top-[calc(50%+112px)] -translate-x-1/2 rounded-full border border-[rgba(212,175,55,0.35)] bg-[rgba(212,175,55,0.08)] px-5 py-2 text-xs font-medium tracking-[0.16em] text-[rgba(255,248,230,0.82)] shadow-[0_0_24px_rgba(212,175,55,0.08)] transition hover:border-[rgba(212,175,55,0.7)] hover:bg-[rgba(212,175,55,0.14)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(212,175,55,0.65)]"
+      >
+        ENTRAR NO ERP
+      </Link>
 
       {/* Mobile hint */}
       {isMobile && expandProgress < 0.1 && (
