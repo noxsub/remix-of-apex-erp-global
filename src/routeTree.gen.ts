@@ -23,6 +23,7 @@ import { Route as CadastrosRouteImport } from './routes/cadastros'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SaidasIndexRouteImport } from './routes/saidas.index'
 import { Route as RhIndexRouteImport } from './routes/rh.index'
+import { Route as FinanceiroIndexRouteImport } from './routes/financeiro.index'
 import { Route as EntradasIndexRouteImport } from './routes/entradas.index'
 import { Route as SaidasRelatoriosRouteImport } from './routes/saidas.relatorios'
 import { Route as SaidasPedidosRouteImport } from './routes/saidas.pedidos'
@@ -35,8 +36,18 @@ import { Route as RhFuncionariosRouteImport } from './routes/rh.funcionarios'
 import { Route as RhFolhaRouteImport } from './routes/rh.folha'
 import { Route as RhFeriasRouteImport } from './routes/rh.ferias'
 import { Route as RhBeneficiosRouteImport } from './routes/rh.beneficios'
+import { Route as FinanceiroReceberRouteImport } from './routes/financeiro.receber'
+import { Route as FinanceiroPagarRouteImport } from './routes/financeiro.pagar'
+import { Route as FinanceiroFluxoRouteImport } from './routes/financeiro.fluxo'
+import { Route as FinanceiroDreRouteImport } from './routes/financeiro.dre'
+import { Route as FinanceiroConciliacaoRouteImport } from './routes/financeiro.conciliacao'
+import { Route as FinanceiroCentrosCustoRouteImport } from './routes/financeiro.centros-custo'
 import { Route as EntradasRelatoriosRouteImport } from './routes/entradas.relatorios'
+import { Route as EntradasFreteCteRouteImport } from './routes/entradas.frete-cte'
+import { Route as EntradasFornecedoresRouteImport } from './routes/entradas.fornecedores'
 import { Route as EntradasEstoqueRouteImport } from './routes/entradas.estoque'
+import { Route as EntradasDevolucoesRouteImport } from './routes/entradas.devolucoes'
+import { Route as EntradasCreditosRouteImport } from './routes/entradas.creditos'
 import { Route as EntradasComprasRouteImport } from './routes/entradas.compras'
 import { Route as ApiPublicWebhooksCanalIdRouteImport } from './routes/api/public/webhooks.$canalId'
 
@@ -110,6 +121,11 @@ const RhIndexRoute = RhIndexRouteImport.update({
   path: '/',
   getParentRoute: () => RhRoute,
 } as any)
+const FinanceiroIndexRoute = FinanceiroIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => FinanceiroRoute,
+} as any)
 const EntradasIndexRoute = EntradasIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -170,14 +186,64 @@ const RhBeneficiosRoute = RhBeneficiosRouteImport.update({
   path: '/beneficios',
   getParentRoute: () => RhRoute,
 } as any)
+const FinanceiroReceberRoute = FinanceiroReceberRouteImport.update({
+  id: '/receber',
+  path: '/receber',
+  getParentRoute: () => FinanceiroRoute,
+} as any)
+const FinanceiroPagarRoute = FinanceiroPagarRouteImport.update({
+  id: '/pagar',
+  path: '/pagar',
+  getParentRoute: () => FinanceiroRoute,
+} as any)
+const FinanceiroFluxoRoute = FinanceiroFluxoRouteImport.update({
+  id: '/fluxo',
+  path: '/fluxo',
+  getParentRoute: () => FinanceiroRoute,
+} as any)
+const FinanceiroDreRoute = FinanceiroDreRouteImport.update({
+  id: '/dre',
+  path: '/dre',
+  getParentRoute: () => FinanceiroRoute,
+} as any)
+const FinanceiroConciliacaoRoute = FinanceiroConciliacaoRouteImport.update({
+  id: '/conciliacao',
+  path: '/conciliacao',
+  getParentRoute: () => FinanceiroRoute,
+} as any)
+const FinanceiroCentrosCustoRoute = FinanceiroCentrosCustoRouteImport.update({
+  id: '/centros-custo',
+  path: '/centros-custo',
+  getParentRoute: () => FinanceiroRoute,
+} as any)
 const EntradasRelatoriosRoute = EntradasRelatoriosRouteImport.update({
   id: '/relatorios',
   path: '/relatorios',
   getParentRoute: () => EntradasRoute,
 } as any)
+const EntradasFreteCteRoute = EntradasFreteCteRouteImport.update({
+  id: '/frete-cte',
+  path: '/frete-cte',
+  getParentRoute: () => EntradasRoute,
+} as any)
+const EntradasFornecedoresRoute = EntradasFornecedoresRouteImport.update({
+  id: '/fornecedores',
+  path: '/fornecedores',
+  getParentRoute: () => EntradasRoute,
+} as any)
 const EntradasEstoqueRoute = EntradasEstoqueRouteImport.update({
   id: '/estoque',
   path: '/estoque',
+  getParentRoute: () => EntradasRoute,
+} as any)
+const EntradasDevolucoesRoute = EntradasDevolucoesRouteImport.update({
+  id: '/devolucoes',
+  path: '/devolucoes',
+  getParentRoute: () => EntradasRoute,
+} as any)
+const EntradasCreditosRoute = EntradasCreditosRouteImport.update({
+  id: '/creditos',
+  path: '/creditos',
   getParentRoute: () => EntradasRoute,
 } as any)
 const EntradasComprasRoute = EntradasComprasRouteImport.update({
@@ -197,7 +263,7 @@ export interface FileRoutesByFullPath {
   '/cadastros': typeof CadastrosRoute
   '/entradas': typeof EntradasRouteWithChildren
   '/estoque': typeof EstoqueRoute
-  '/financeiro': typeof FinanceiroRoute
+  '/financeiro': typeof FinanceiroRouteWithChildren
   '/fiscal': typeof FiscalRoute
   '/obrigacoes': typeof ObrigacoesRoute
   '/omnilink': typeof OmnilinkRoute
@@ -206,8 +272,18 @@ export interface FileRoutesByFullPath {
   '/saidas': typeof SaidasRouteWithChildren
   '/vendas': typeof VendasRoute
   '/entradas/compras': typeof EntradasComprasRoute
+  '/entradas/creditos': typeof EntradasCreditosRoute
+  '/entradas/devolucoes': typeof EntradasDevolucoesRoute
   '/entradas/estoque': typeof EntradasEstoqueRoute
+  '/entradas/fornecedores': typeof EntradasFornecedoresRoute
+  '/entradas/frete-cte': typeof EntradasFreteCteRoute
   '/entradas/relatorios': typeof EntradasRelatoriosRoute
+  '/financeiro/centros-custo': typeof FinanceiroCentrosCustoRoute
+  '/financeiro/conciliacao': typeof FinanceiroConciliacaoRoute
+  '/financeiro/dre': typeof FinanceiroDreRoute
+  '/financeiro/fluxo': typeof FinanceiroFluxoRoute
+  '/financeiro/pagar': typeof FinanceiroPagarRoute
+  '/financeiro/receber': typeof FinanceiroReceberRoute
   '/rh/beneficios': typeof RhBeneficiosRoute
   '/rh/ferias': typeof RhFeriasRoute
   '/rh/folha': typeof RhFolhaRoute
@@ -220,6 +296,7 @@ export interface FileRoutesByFullPath {
   '/saidas/pedidos': typeof SaidasPedidosRoute
   '/saidas/relatorios': typeof SaidasRelatoriosRoute
   '/entradas/': typeof EntradasIndexRoute
+  '/financeiro/': typeof FinanceiroIndexRoute
   '/rh/': typeof RhIndexRoute
   '/saidas/': typeof SaidasIndexRoute
   '/api/public/webhooks/$canalId': typeof ApiPublicWebhooksCanalIdRoute
@@ -228,15 +305,24 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/cadastros': typeof CadastrosRoute
   '/estoque': typeof EstoqueRoute
-  '/financeiro': typeof FinanceiroRoute
   '/fiscal': typeof FiscalRoute
   '/obrigacoes': typeof ObrigacoesRoute
   '/omnilink': typeof OmnilinkRoute
   '/reforma-tributaria': typeof ReformaTributariaRoute
   '/vendas': typeof VendasRoute
   '/entradas/compras': typeof EntradasComprasRoute
+  '/entradas/creditos': typeof EntradasCreditosRoute
+  '/entradas/devolucoes': typeof EntradasDevolucoesRoute
   '/entradas/estoque': typeof EntradasEstoqueRoute
+  '/entradas/fornecedores': typeof EntradasFornecedoresRoute
+  '/entradas/frete-cte': typeof EntradasFreteCteRoute
   '/entradas/relatorios': typeof EntradasRelatoriosRoute
+  '/financeiro/centros-custo': typeof FinanceiroCentrosCustoRoute
+  '/financeiro/conciliacao': typeof FinanceiroConciliacaoRoute
+  '/financeiro/dre': typeof FinanceiroDreRoute
+  '/financeiro/fluxo': typeof FinanceiroFluxoRoute
+  '/financeiro/pagar': typeof FinanceiroPagarRoute
+  '/financeiro/receber': typeof FinanceiroReceberRoute
   '/rh/beneficios': typeof RhBeneficiosRoute
   '/rh/ferias': typeof RhFeriasRoute
   '/rh/folha': typeof RhFolhaRoute
@@ -249,6 +335,7 @@ export interface FileRoutesByTo {
   '/saidas/pedidos': typeof SaidasPedidosRoute
   '/saidas/relatorios': typeof SaidasRelatoriosRoute
   '/entradas': typeof EntradasIndexRoute
+  '/financeiro': typeof FinanceiroIndexRoute
   '/rh': typeof RhIndexRoute
   '/saidas': typeof SaidasIndexRoute
   '/api/public/webhooks/$canalId': typeof ApiPublicWebhooksCanalIdRoute
@@ -259,7 +346,7 @@ export interface FileRoutesById {
   '/cadastros': typeof CadastrosRoute
   '/entradas': typeof EntradasRouteWithChildren
   '/estoque': typeof EstoqueRoute
-  '/financeiro': typeof FinanceiroRoute
+  '/financeiro': typeof FinanceiroRouteWithChildren
   '/fiscal': typeof FiscalRoute
   '/obrigacoes': typeof ObrigacoesRoute
   '/omnilink': typeof OmnilinkRoute
@@ -268,8 +355,18 @@ export interface FileRoutesById {
   '/saidas': typeof SaidasRouteWithChildren
   '/vendas': typeof VendasRoute
   '/entradas/compras': typeof EntradasComprasRoute
+  '/entradas/creditos': typeof EntradasCreditosRoute
+  '/entradas/devolucoes': typeof EntradasDevolucoesRoute
   '/entradas/estoque': typeof EntradasEstoqueRoute
+  '/entradas/fornecedores': typeof EntradasFornecedoresRoute
+  '/entradas/frete-cte': typeof EntradasFreteCteRoute
   '/entradas/relatorios': typeof EntradasRelatoriosRoute
+  '/financeiro/centros-custo': typeof FinanceiroCentrosCustoRoute
+  '/financeiro/conciliacao': typeof FinanceiroConciliacaoRoute
+  '/financeiro/dre': typeof FinanceiroDreRoute
+  '/financeiro/fluxo': typeof FinanceiroFluxoRoute
+  '/financeiro/pagar': typeof FinanceiroPagarRoute
+  '/financeiro/receber': typeof FinanceiroReceberRoute
   '/rh/beneficios': typeof RhBeneficiosRoute
   '/rh/ferias': typeof RhFeriasRoute
   '/rh/folha': typeof RhFolhaRoute
@@ -282,6 +379,7 @@ export interface FileRoutesById {
   '/saidas/pedidos': typeof SaidasPedidosRoute
   '/saidas/relatorios': typeof SaidasRelatoriosRoute
   '/entradas/': typeof EntradasIndexRoute
+  '/financeiro/': typeof FinanceiroIndexRoute
   '/rh/': typeof RhIndexRoute
   '/saidas/': typeof SaidasIndexRoute
   '/api/public/webhooks/$canalId': typeof ApiPublicWebhooksCanalIdRoute
@@ -302,8 +400,18 @@ export interface FileRouteTypes {
     | '/saidas'
     | '/vendas'
     | '/entradas/compras'
+    | '/entradas/creditos'
+    | '/entradas/devolucoes'
     | '/entradas/estoque'
+    | '/entradas/fornecedores'
+    | '/entradas/frete-cte'
     | '/entradas/relatorios'
+    | '/financeiro/centros-custo'
+    | '/financeiro/conciliacao'
+    | '/financeiro/dre'
+    | '/financeiro/fluxo'
+    | '/financeiro/pagar'
+    | '/financeiro/receber'
     | '/rh/beneficios'
     | '/rh/ferias'
     | '/rh/folha'
@@ -316,6 +424,7 @@ export interface FileRouteTypes {
     | '/saidas/pedidos'
     | '/saidas/relatorios'
     | '/entradas/'
+    | '/financeiro/'
     | '/rh/'
     | '/saidas/'
     | '/api/public/webhooks/$canalId'
@@ -324,15 +433,24 @@ export interface FileRouteTypes {
     | '/'
     | '/cadastros'
     | '/estoque'
-    | '/financeiro'
     | '/fiscal'
     | '/obrigacoes'
     | '/omnilink'
     | '/reforma-tributaria'
     | '/vendas'
     | '/entradas/compras'
+    | '/entradas/creditos'
+    | '/entradas/devolucoes'
     | '/entradas/estoque'
+    | '/entradas/fornecedores'
+    | '/entradas/frete-cte'
     | '/entradas/relatorios'
+    | '/financeiro/centros-custo'
+    | '/financeiro/conciliacao'
+    | '/financeiro/dre'
+    | '/financeiro/fluxo'
+    | '/financeiro/pagar'
+    | '/financeiro/receber'
     | '/rh/beneficios'
     | '/rh/ferias'
     | '/rh/folha'
@@ -345,6 +463,7 @@ export interface FileRouteTypes {
     | '/saidas/pedidos'
     | '/saidas/relatorios'
     | '/entradas'
+    | '/financeiro'
     | '/rh'
     | '/saidas'
     | '/api/public/webhooks/$canalId'
@@ -363,8 +482,18 @@ export interface FileRouteTypes {
     | '/saidas'
     | '/vendas'
     | '/entradas/compras'
+    | '/entradas/creditos'
+    | '/entradas/devolucoes'
     | '/entradas/estoque'
+    | '/entradas/fornecedores'
+    | '/entradas/frete-cte'
     | '/entradas/relatorios'
+    | '/financeiro/centros-custo'
+    | '/financeiro/conciliacao'
+    | '/financeiro/dre'
+    | '/financeiro/fluxo'
+    | '/financeiro/pagar'
+    | '/financeiro/receber'
     | '/rh/beneficios'
     | '/rh/ferias'
     | '/rh/folha'
@@ -377,6 +506,7 @@ export interface FileRouteTypes {
     | '/saidas/pedidos'
     | '/saidas/relatorios'
     | '/entradas/'
+    | '/financeiro/'
     | '/rh/'
     | '/saidas/'
     | '/api/public/webhooks/$canalId'
@@ -387,7 +517,7 @@ export interface RootRouteChildren {
   CadastrosRoute: typeof CadastrosRoute
   EntradasRoute: typeof EntradasRouteWithChildren
   EstoqueRoute: typeof EstoqueRoute
-  FinanceiroRoute: typeof FinanceiroRoute
+  FinanceiroRoute: typeof FinanceiroRouteWithChildren
   FiscalRoute: typeof FiscalRoute
   ObrigacoesRoute: typeof ObrigacoesRoute
   OmnilinkRoute: typeof OmnilinkRoute
@@ -498,6 +628,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RhIndexRouteImport
       parentRoute: typeof RhRoute
     }
+    '/financeiro/': {
+      id: '/financeiro/'
+      path: '/'
+      fullPath: '/financeiro/'
+      preLoaderRoute: typeof FinanceiroIndexRouteImport
+      parentRoute: typeof FinanceiroRoute
+    }
     '/entradas/': {
       id: '/entradas/'
       path: '/'
@@ -582,6 +719,48 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RhBeneficiosRouteImport
       parentRoute: typeof RhRoute
     }
+    '/financeiro/receber': {
+      id: '/financeiro/receber'
+      path: '/receber'
+      fullPath: '/financeiro/receber'
+      preLoaderRoute: typeof FinanceiroReceberRouteImport
+      parentRoute: typeof FinanceiroRoute
+    }
+    '/financeiro/pagar': {
+      id: '/financeiro/pagar'
+      path: '/pagar'
+      fullPath: '/financeiro/pagar'
+      preLoaderRoute: typeof FinanceiroPagarRouteImport
+      parentRoute: typeof FinanceiroRoute
+    }
+    '/financeiro/fluxo': {
+      id: '/financeiro/fluxo'
+      path: '/fluxo'
+      fullPath: '/financeiro/fluxo'
+      preLoaderRoute: typeof FinanceiroFluxoRouteImport
+      parentRoute: typeof FinanceiroRoute
+    }
+    '/financeiro/dre': {
+      id: '/financeiro/dre'
+      path: '/dre'
+      fullPath: '/financeiro/dre'
+      preLoaderRoute: typeof FinanceiroDreRouteImport
+      parentRoute: typeof FinanceiroRoute
+    }
+    '/financeiro/conciliacao': {
+      id: '/financeiro/conciliacao'
+      path: '/conciliacao'
+      fullPath: '/financeiro/conciliacao'
+      preLoaderRoute: typeof FinanceiroConciliacaoRouteImport
+      parentRoute: typeof FinanceiroRoute
+    }
+    '/financeiro/centros-custo': {
+      id: '/financeiro/centros-custo'
+      path: '/centros-custo'
+      fullPath: '/financeiro/centros-custo'
+      preLoaderRoute: typeof FinanceiroCentrosCustoRouteImport
+      parentRoute: typeof FinanceiroRoute
+    }
     '/entradas/relatorios': {
       id: '/entradas/relatorios'
       path: '/relatorios'
@@ -589,11 +768,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EntradasRelatoriosRouteImport
       parentRoute: typeof EntradasRoute
     }
+    '/entradas/frete-cte': {
+      id: '/entradas/frete-cte'
+      path: '/frete-cte'
+      fullPath: '/entradas/frete-cte'
+      preLoaderRoute: typeof EntradasFreteCteRouteImport
+      parentRoute: typeof EntradasRoute
+    }
+    '/entradas/fornecedores': {
+      id: '/entradas/fornecedores'
+      path: '/fornecedores'
+      fullPath: '/entradas/fornecedores'
+      preLoaderRoute: typeof EntradasFornecedoresRouteImport
+      parentRoute: typeof EntradasRoute
+    }
     '/entradas/estoque': {
       id: '/entradas/estoque'
       path: '/estoque'
       fullPath: '/entradas/estoque'
       preLoaderRoute: typeof EntradasEstoqueRouteImport
+      parentRoute: typeof EntradasRoute
+    }
+    '/entradas/devolucoes': {
+      id: '/entradas/devolucoes'
+      path: '/devolucoes'
+      fullPath: '/entradas/devolucoes'
+      preLoaderRoute: typeof EntradasDevolucoesRouteImport
+      parentRoute: typeof EntradasRoute
+    }
+    '/entradas/creditos': {
+      id: '/entradas/creditos'
+      path: '/creditos'
+      fullPath: '/entradas/creditos'
+      preLoaderRoute: typeof EntradasCreditosRouteImport
       parentRoute: typeof EntradasRoute
     }
     '/entradas/compras': {
@@ -615,20 +822,52 @@ declare module '@tanstack/react-router' {
 
 interface EntradasRouteChildren {
   EntradasComprasRoute: typeof EntradasComprasRoute
+  EntradasCreditosRoute: typeof EntradasCreditosRoute
+  EntradasDevolucoesRoute: typeof EntradasDevolucoesRoute
   EntradasEstoqueRoute: typeof EntradasEstoqueRoute
+  EntradasFornecedoresRoute: typeof EntradasFornecedoresRoute
+  EntradasFreteCteRoute: typeof EntradasFreteCteRoute
   EntradasRelatoriosRoute: typeof EntradasRelatoriosRoute
   EntradasIndexRoute: typeof EntradasIndexRoute
 }
 
 const EntradasRouteChildren: EntradasRouteChildren = {
   EntradasComprasRoute: EntradasComprasRoute,
+  EntradasCreditosRoute: EntradasCreditosRoute,
+  EntradasDevolucoesRoute: EntradasDevolucoesRoute,
   EntradasEstoqueRoute: EntradasEstoqueRoute,
+  EntradasFornecedoresRoute: EntradasFornecedoresRoute,
+  EntradasFreteCteRoute: EntradasFreteCteRoute,
   EntradasRelatoriosRoute: EntradasRelatoriosRoute,
   EntradasIndexRoute: EntradasIndexRoute,
 }
 
 const EntradasRouteWithChildren = EntradasRoute._addFileChildren(
   EntradasRouteChildren,
+)
+
+interface FinanceiroRouteChildren {
+  FinanceiroCentrosCustoRoute: typeof FinanceiroCentrosCustoRoute
+  FinanceiroConciliacaoRoute: typeof FinanceiroConciliacaoRoute
+  FinanceiroDreRoute: typeof FinanceiroDreRoute
+  FinanceiroFluxoRoute: typeof FinanceiroFluxoRoute
+  FinanceiroPagarRoute: typeof FinanceiroPagarRoute
+  FinanceiroReceberRoute: typeof FinanceiroReceberRoute
+  FinanceiroIndexRoute: typeof FinanceiroIndexRoute
+}
+
+const FinanceiroRouteChildren: FinanceiroRouteChildren = {
+  FinanceiroCentrosCustoRoute: FinanceiroCentrosCustoRoute,
+  FinanceiroConciliacaoRoute: FinanceiroConciliacaoRoute,
+  FinanceiroDreRoute: FinanceiroDreRoute,
+  FinanceiroFluxoRoute: FinanceiroFluxoRoute,
+  FinanceiroPagarRoute: FinanceiroPagarRoute,
+  FinanceiroReceberRoute: FinanceiroReceberRoute,
+  FinanceiroIndexRoute: FinanceiroIndexRoute,
+}
+
+const FinanceiroRouteWithChildren = FinanceiroRoute._addFileChildren(
+  FinanceiroRouteChildren,
 )
 
 interface RhRouteChildren {
@@ -679,7 +918,7 @@ const rootRouteChildren: RootRouteChildren = {
   CadastrosRoute: CadastrosRoute,
   EntradasRoute: EntradasRouteWithChildren,
   EstoqueRoute: EstoqueRoute,
-  FinanceiroRoute: FinanceiroRoute,
+  FinanceiroRoute: FinanceiroRouteWithChildren,
   FiscalRoute: FiscalRoute,
   ObrigacoesRoute: ObrigacoesRoute,
   OmnilinkRoute: OmnilinkRoute,
