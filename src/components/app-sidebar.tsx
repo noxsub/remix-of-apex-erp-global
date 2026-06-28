@@ -1,5 +1,6 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { useMemo } from "react";
+import syntheraLogo from "@/assets/syntera-logo.png.asset.json";
 import {
   LayoutDashboard,
   ArrowDownToLine,
@@ -151,9 +152,18 @@ export function AppSidebar() {
     <Sidebar collapsible="icon">
       {/* ─── Logo ─── */}
       <SidebarHeader className="border-b border-sidebar-border px-4 py-5">
-        <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-md bg-gold text-primary-foreground font-semibold tracking-tight">
-            S
+        <Link
+          to="/"
+          aria-label="Ir para o Dashboard do Syntera ERP"
+          className="flex items-center gap-2 rounded-md outline-none transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-gold/60"
+        >
+          <div className="relative flex h-9 w-9 items-center justify-center rounded-md bg-black ring-1 ring-gold/30 shadow-[0_0_18px_-4px_oklch(0.78_0.13_85/0.55)]">
+            <img
+              src={syntheraLogo.url}
+              alt="Syntera"
+              className="h-8 w-8 object-contain drop-shadow-[0_0_6px_oklch(0.78_0.13_85/0.45)]"
+              draggable={false}
+            />
           </div>
           <div className="flex flex-col leading-tight group-data-[collapsible=icon]:hidden">
             <span className="text-sm font-semibold tracking-tight">
@@ -163,7 +173,7 @@ export function AppSidebar() {
               powered by Floki
             </span>
           </div>
-        </div>
+        </Link>
       </SidebarHeader>
 
       {/* ─── Floki Intelligence Card (expanded mode) ─── */}
