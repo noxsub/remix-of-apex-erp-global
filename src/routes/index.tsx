@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export const Route = createFileRoute("/")({
   head: () => ({ meta: [{ title: "Syntera ERP" }] }),
@@ -22,7 +22,7 @@ const MODULES = [
   { id: "omnilink", label: "Integrações", url: "/omnilink" },
   { id: "bi", label: "BI / Relatórios", url: "/saidas/relatorios" },
   { id: "floki", label: "Floki IA", url: "/omnilink" },
-];
+] as const;
 
 /* ═══════════════════════════════════════════════════════════════
    CONSTANTES DE COR E ESTILO
@@ -326,7 +326,6 @@ function SynteraDNA() {
           const jitter = Math.sin(i * 2.7) * 0.08;
           const mx = cx + Math.cos(angle + jitter) * radius;
           const my = cy + Math.sin(angle + jitter) * radius;
-          const isRight = mx > cx;
           const isHigh = hoveredModule === mod.id;
 
           return (
