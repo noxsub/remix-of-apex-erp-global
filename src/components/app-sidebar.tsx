@@ -1,5 +1,6 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { useMemo } from "react";
+import syntheraLogo from "@/assets/syntera-logo.png.asset.json";
 import {
   LayoutDashboard,
   ArrowDownToLine,
