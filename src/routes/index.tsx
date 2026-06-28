@@ -41,8 +41,8 @@ function SynteraDNA() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const animRef = useRef<number>(0);
-  const [isHovered, setIsHovered] = useState(false);
-  const [expandProgress, setExpandProgress] = useState(0);
+  const [isHovered, setIsHovered] = useState(true);
+  const [expandProgress, setExpandProgress] = useState(1);
   const [hoveredModule, setHoveredModule] = useState<string | null>(null);
   const [dims, setDims] = useState({ w: 0, h: 0 });
   const [prefersReduced, setPrefersReduced] = useState(false);
@@ -263,8 +263,7 @@ function SynteraDNA() {
           transform: `scale(${1 + expandProgress * 0.05})`,
         }}
         onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
-        onTouchStart={() => setIsHovered(!isHovered)}
+        onMouseLeave={() => setIsHovered(true)}
       >
         <svg width="96" height="112" viewBox="0 0 96 112" fill="none">
           <defs>
