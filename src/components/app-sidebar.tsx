@@ -56,7 +56,7 @@ type NavItem = {
 const sections: { label: string; items: NavItem[] }[] = [
   {
     label: "Visão Geral",
-    items: [{ title: "Dashboard", url: "/", icon: LayoutDashboard }],
+    items: [{ title: "Dashboard", url: "/dashboard", icon: LayoutDashboard }],
   },
   {
     label: "Operacional",
@@ -153,7 +153,7 @@ export function AppSidebar() {
       {/* ─── Logo ─── */}
       <SidebarHeader className="border-b border-sidebar-border px-4 py-5">
         <Link
-          to="/"
+          to="/dashboard"
           aria-label="Ir para o Dashboard do Syntera ERP"
           className="flex items-center gap-2 rounded-md outline-none transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-gold/60"
         >
@@ -178,7 +178,7 @@ export function AppSidebar() {
 
       {/* ─── Floki Intelligence Card (expanded mode) ─── */}
       <Link
-        to="/"
+        to="/dashboard"
         className="mx-3 mt-3 block rounded-lg border border-gold/20 bg-gold/5 p-3 transition-colors hover:bg-gold/10 group-data-[collapsible=icon]:hidden"
       >
         <div className="flex items-center gap-2">
@@ -242,7 +242,7 @@ export function AppSidebar() {
                       </SidebarMenuButton>
 
                       {/* Badge: alertas Floki no Dashboard */}
-                      {item.url === "/" && alertas.length > 0 && (
+                      {item.url === "/dashboard" && alertas.length > 0 && (
                         <SidebarMenuBadge>
                           <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-gold/15 px-1.5 text-[10px] font-semibold text-gold">
                             {alertas.length}
