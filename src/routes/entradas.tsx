@@ -1,12 +1,12 @@
 import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
 import { AppShell } from "@/components/app-shell";
-import { LayoutGrid, ShoppingCart, Boxes, FileBarChart2 } from "lucide-react";
+import { LayoutGrid, ShoppingCart, Boxes, FileBarChart2, Truck, RotateCcw, CreditCard, Building2 } from "lucide-react";
 
 export const Route = createFileRoute("/entradas")({
   head: () => ({
     meta: [
       { title: "Entradas — Syntera ERP" },
-      { name: "description", content: "Documentos fiscais de entrada, compras, estoque e obrigações acessórias." },
+      { name: "description", content: "Documentos fiscais de entrada, compras, frete, créditos e obrigações." },
     ],
   }),
   component: EntradasLayout,
@@ -14,9 +14,13 @@ export const Route = createFileRoute("/entradas")({
 
 const tabs = [
   { to: "/entradas", label: "Visão geral", icon: LayoutGrid, exact: true },
-  { to: "/entradas/compras", label: "Compras", icon: ShoppingCart },
+  { to: "/entradas/compras", label: "Compras (NF-e)", icon: ShoppingCart },
+  { to: "/entradas/fornecedores", label: "Fornecedores", icon: Building2 },
+  { to: "/entradas/frete-cte", label: "Frete / CT-e", icon: Truck },
+  { to: "/entradas/devolucoes", label: "Devoluções", icon: RotateCcw },
+  { to: "/entradas/creditos", label: "Apropriação de Crédito", icon: CreditCard },
   { to: "/entradas/estoque", label: "Estoque", icon: Boxes },
-  { to: "/entradas/relatorios", label: "Relatórios fiscais", icon: FileBarChart2 },
+  { to: "/entradas/relatorios", label: "Relatórios", icon: FileBarChart2 },
 ];
 
 function EntradasLayout() {
@@ -24,7 +28,7 @@ function EntradasLayout() {
   return (
     <AppShell
       title="Entradas"
-      subtitle="Documentos fiscais de entrada, compras, estoque e obrigações acessórias."
+      subtitle="Documentos fiscais de entrada, compras, frete, apropriação de crédito e relatórios."
     >
       <nav className="mb-4 flex flex-wrap gap-1 rounded-lg border border-border bg-card p-1">
         {tabs.map((t) => {
