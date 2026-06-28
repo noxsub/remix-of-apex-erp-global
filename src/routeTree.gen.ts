@@ -19,6 +19,7 @@ import { Route as FiscalRouteImport } from './routes/fiscal'
 import { Route as FinanceiroRouteImport } from './routes/financeiro'
 import { Route as EstoqueRouteImport } from './routes/estoque'
 import { Route as EntradasRouteImport } from './routes/entradas'
+import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as CadastrosRouteImport } from './routes/cadastros'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SaidasIndexRouteImport } from './routes/saidas.index'
@@ -99,6 +100,11 @@ const EstoqueRoute = EstoqueRouteImport.update({
 const EntradasRoute = EntradasRouteImport.update({
   id: '/entradas',
   path: '/entradas',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DashboardRoute = DashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CadastrosRoute = CadastrosRouteImport.update({
@@ -261,6 +267,7 @@ const ApiPublicWebhooksCanalIdRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/cadastros': typeof CadastrosRoute
+  '/dashboard': typeof DashboardRoute
   '/entradas': typeof EntradasRouteWithChildren
   '/estoque': typeof EstoqueRoute
   '/financeiro': typeof FinanceiroRouteWithChildren
@@ -304,6 +311,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/cadastros': typeof CadastrosRoute
+  '/dashboard': typeof DashboardRoute
   '/estoque': typeof EstoqueRoute
   '/fiscal': typeof FiscalRoute
   '/obrigacoes': typeof ObrigacoesRoute
@@ -344,6 +352,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/cadastros': typeof CadastrosRoute
+  '/dashboard': typeof DashboardRoute
   '/entradas': typeof EntradasRouteWithChildren
   '/estoque': typeof EstoqueRoute
   '/financeiro': typeof FinanceiroRouteWithChildren
@@ -389,6 +398,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/cadastros'
+    | '/dashboard'
     | '/entradas'
     | '/estoque'
     | '/financeiro'
@@ -432,6 +442,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/cadastros'
+    | '/dashboard'
     | '/estoque'
     | '/fiscal'
     | '/obrigacoes'
@@ -471,6 +482,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/cadastros'
+    | '/dashboard'
     | '/entradas'
     | '/estoque'
     | '/financeiro'
@@ -515,6 +527,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CadastrosRoute: typeof CadastrosRoute
+  DashboardRoute: typeof DashboardRoute
   EntradasRoute: typeof EntradasRouteWithChildren
   EstoqueRoute: typeof EstoqueRoute
   FinanceiroRoute: typeof FinanceiroRouteWithChildren
@@ -598,6 +611,13 @@ declare module '@tanstack/react-router' {
       path: '/entradas'
       fullPath: '/entradas'
       preLoaderRoute: typeof EntradasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dashboard': {
+      id: '/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof DashboardRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/cadastros': {
@@ -916,6 +936,7 @@ const SaidasRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CadastrosRoute: CadastrosRoute,
+  DashboardRoute: DashboardRoute,
   EntradasRoute: EntradasRouteWithChildren,
   EstoqueRoute: EstoqueRoute,
   FinanceiroRoute: FinanceiroRouteWithChildren,
@@ -931,13 +952,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
