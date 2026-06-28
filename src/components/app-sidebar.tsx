@@ -66,9 +66,13 @@ const sections: { label: string; items: NavItem[] }[] = [
         icon: ArrowDownToLine,
         children: [
           { title: "Visão geral", url: "/entradas", icon: LayoutGrid },
-          { title: "Compras", url: "/entradas/compras", icon: ShoppingCart },
+          { title: "Compras (NF-e)", url: "/entradas/compras", icon: ShoppingCart },
+          { title: "Fornecedores", url: "/entradas/fornecedores", icon: LayoutGrid },
+          { title: "Frete / CT-e", url: "/entradas/frete-cte", icon: ShoppingCart },
+          { title: "Devoluções", url: "/entradas/devolucoes", icon: LayoutGrid },
+          { title: "Créditos Fiscais", url: "/entradas/creditos", icon: LayoutGrid },
           { title: "Estoque", url: "/entradas/estoque", icon: Boxes },
-          { title: "Relatórios fiscais", url: "/entradas/relatorios", icon: FileBarChart2 },
+          { title: "Relatórios", url: "/entradas/relatorios", icon: FileBarChart2 },
         ],
       },
       {
@@ -90,7 +94,20 @@ const sections: { label: string; items: NavItem[] }[] = [
   {
     label: "Gestão",
     items: [
-      { title: "Financeiro", url: "/financeiro", icon: Wallet },
+      {
+        title: "Financeiro",
+        url: "/financeiro",
+        icon: Wallet,
+        children: [
+          { title: "Visão geral", url: "/financeiro", icon: LayoutGrid },
+          { title: "Contas a Pagar", url: "/financeiro/pagar", icon: Wallet },
+          { title: "Contas a Receber", url: "/financeiro/receber", icon: Wallet },
+          { title: "Fluxo de Caixa", url: "/financeiro/fluxo", icon: LayoutGrid },
+          { title: "DRE", url: "/financeiro/dre", icon: FileBarChart2 },
+          { title: "Conciliação", url: "/financeiro/conciliacao", icon: LayoutGrid },
+          { title: "Centros de Custo", url: "/financeiro/centros-custo", icon: LayoutGrid },
+        ],
+      },
       { title: "Cadastros", url: "/cadastros", icon: Users },
       {
         title: "RH",
