@@ -235,7 +235,7 @@ function SynteraDNA() {
       {/* Canvas layer */}
       <canvas
         ref={canvasRef}
-        className="absolute inset-0"
+        className="pointer-events-none absolute inset-0"
         style={{ width: dims.w, height: dims.h }}
       />
 
@@ -256,7 +256,7 @@ function SynteraDNA() {
       <Link
         to="/dashboard"
         aria-label="Entrar no Syntera ERP"
-        className="absolute cursor-pointer rounded-xl outline-none transition-transform duration-700 focus-visible:ring-2 focus-visible:ring-[rgba(212,175,55,0.75)]"
+        className="absolute z-10 cursor-pointer rounded-xl outline-none transition-transform duration-700 focus-visible:ring-2 focus-visible:ring-[rgba(212,175,55,0.75)]"
         style={{
           left: cx - 48,
           top: cy - 56,
@@ -332,7 +332,7 @@ function SynteraDNA() {
             <Link
               to={mod.url}
               key={mod.id}
-              className="absolute cursor-pointer rounded-md px-2 py-1 outline-none transition-all duration-500 focus-visible:ring-2 focus-visible:ring-[rgba(212,175,55,0.65)]"
+              className="absolute z-10 cursor-pointer rounded-md px-2 py-1 outline-none transition-all duration-500 focus-visible:ring-2 focus-visible:ring-[rgba(212,175,55,0.65)]"
               style={{
                 left: mx - 60,
                 top: my - 12,
@@ -360,7 +360,7 @@ function SynteraDNA() {
 
       <Link
         to="/dashboard"
-        className="absolute left-1/2 top-[calc(50%+112px)] -translate-x-1/2 rounded-full border border-[rgba(212,175,55,0.35)] bg-[rgba(212,175,55,0.08)] px-5 py-2 text-xs font-medium tracking-[0.16em] text-[rgba(255,248,230,0.82)] shadow-[0_0_24px_rgba(212,175,55,0.08)] transition hover:border-[rgba(212,175,55,0.7)] hover:bg-[rgba(212,175,55,0.14)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(212,175,55,0.65)]"
+        className="absolute left-1/2 top-[calc(50%+112px)] z-10 -translate-x-1/2 rounded-full border border-[rgba(212,175,55,0.35)] bg-[rgba(212,175,55,0.08)] px-5 py-2 text-xs font-medium tracking-[0.16em] text-[rgba(255,248,230,0.82)] shadow-[0_0_24px_rgba(212,175,55,0.08)] transition hover:border-[rgba(212,175,55,0.7)] hover:bg-[rgba(212,175,55,0.14)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(212,175,55,0.65)]"
       >
         ENTRAR NO ERP
       </Link>
