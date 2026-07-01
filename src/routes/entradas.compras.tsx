@@ -3,6 +3,7 @@ import { useRef, useState } from "react";
 import { useNotasEntrada, type NotaEntrada } from "@/lib/entradas-store";
 import { useItensFiscais } from "@/lib/fiscal-store";
 import { DataTable, type Column } from "@/components/data-table";
+import { AnexarDocumento } from "@/components/anexar-documento";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -403,6 +404,9 @@ function LancamentoManualDialog({ onSave }: { onSave: (n: NotaEntrada) => void }
           <Field label="Observações" full>
             <Textarea rows={2} value={form.observacao} onChange={(e) => set("observacao", e.target.value)} />
           </Field>
+          <div className="col-span-2">
+            <AnexarDocumento label="Anexar documento fiscal (PDF)" />
+          </div>
         </div>
         <DialogFooter>
           <Button variant="outline" size="sm" onClick={() => setOpen(false)}>Cancelar</Button>
