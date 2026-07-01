@@ -30,7 +30,6 @@ import {
 import { AppShell } from "@/components/app-shell";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useClientes, useFaturados, useOrcamentos } from "@/lib/erp-store";
 import {
@@ -118,9 +117,6 @@ function DashboardPage() {
               ))}
             </SelectContent>
           </Select>
-          <Button asChild size="sm" className="h-8">
-            <Link to="/saidas/pedidos">Nova venda</Link>
-          </Button>
         </div>
       }
     >
