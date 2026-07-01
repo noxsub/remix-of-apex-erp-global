@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { DataTable, type Column } from "@/components/data-table";
+import { AnexarDocumento } from "@/components/anexar-documento";
 import { Plus, Search, CheckCircle2, Download } from "lucide-react";
 import { toast } from "sonner";
 
@@ -39,6 +40,30 @@ function ContasPagarPage() {
   const [titulos, setTitulos] = useState(titulosIniciais);
   const [filtro, setFiltro] = useState("");
   const [filtroCategoria, setFiltroCategoria] = useState("todos");
+  const [novoOpen, setNovoOpen] = useState(false);
+  const [form, setForm] = useState({
+    documento: "", fornecedor: "", categoria: "fornecedores" as TituloPagar["categoria"],
+    vencimento: "", valor: "", formaPgto: "boleto" as TituloPagar["formaPgto"], centroCusto: "",
+  });
+
+  const criarTitulo = () => {
+    if (!form.documento || !form.fornecedor || !form.vencimento || !form.valor) {
+      toast.error("Preencha documento, fornecedor, vencimento e valor.");
+      return;
+    }
+    const valorNum = Number(form.valor.replace(",", "."));
+    const novo: TituloPagar = {
+      id: `CP-${String(titulos.length + 1).padStart(3, "0")}`,
+      documento: form.documento, fornecedor: form.fornecedor, categoria: form.categoria,
+      emissao: new Date().toLocaleDateString("pt-BR"), vencimento: form.vencimento,
+      valor: valorNum, juros: 0, multa: 0, totalPagar: valorNum,
+      formaPgto: form.formaPgto, centroCusto: form.centroCusto || undefined, status: "aberto",
+    };
+    setTitulos([novo, ...titulos]);
+    setForm({ documento: "", fornecedor: "", categoria: "fornecedores", vencimento: "", valor: "", formaPgto: "boleto", centroCusto: "" });
+    setNovoOpen(false);
+    toast.success("Título lançado com sucesso!");
+  };
 
   const filtrados = titulos
     .filter(t => filtroCategoria === "todos" || t.categoria === filtroCategoria)
@@ -84,7 +109,71 @@ function ContasPagarPage() {
             </SelectContent>
           </Select>
         </div>
-        <Button className="gap-1.5"><Plus className="h-3.5 w-3.5" />Novo Título</Button>
+        <Dialog open={novoOpen} onOpenChange={setNovoOpen}>
+          <DialogTrigger asChild>
+            <Button className="gap-1.5"><Plus className="h-3.5 w-3.5" />Novo Título</Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-lg">
+            <DialogHeader><DialogTitle>Novo Título a Pagar</DialogTitle></DialogHeader>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="col-span-2 space-y-1.5">
+                <Label className="text-xs">Documento *</Label>
+                <Input value={form.documento} onChange={(e) => setForm({ ...form, documento: e.target.value })} placeholder="Ex: NF 45300" />
+              </div>
+              <div className="col-span-2 space-y-1.5">
+                <Label className="text-xs">Fornecedor / Destino *</Label>
+                <Input value={form.fornecedor} onChange={(e) => setForm({ ...form, fornecedor: e.target.value })} />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Categoria</Label>
+                <Select value={form.categoria} onValueChange={(v) => setForm({ ...form, categoria: v as TituloPagar["categoria"] })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="fornecedores">Fornecedores</SelectItem>
+                    <SelectItem value="impostos">Impostos / Retenções</SelectItem>
+                    <SelectItem value="folha">Folha de Pagamento</SelectItem>
+                    <SelectItem value="encargos">Encargos (GPS/FGTS)</SelectItem>
+                    <SelectItem value="utilidades">Utilidades</SelectItem>
+                    <SelectItem value="outros">Outros</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Forma de Pagamento</Label>
+                <Select value={form.formaPgto} onValueChange={(v) => setForm({ ...form, formaPgto: v as TituloPagar["formaPgto"] })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="boleto">Boleto</SelectItem>
+                    <SelectItem value="pix">PIX</SelectItem>
+                    <SelectItem value="ted">TED</SelectItem>
+                    <SelectItem value="debito">Débito</SelectItem>
+                    <SelectItem value="darf">DARF</SelectItem>
+                    <SelectItem value="gps">GPS</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Vencimento *</Label>
+                <Input type="date" value={form.vencimento} onChange={(e) => setForm({ ...form, vencimento: e.target.value })} />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Valor (R$) *</Label>
+                <Input value={form.valor} onChange={(e) => setForm({ ...form, valor: e.target.value })} placeholder="0,00" />
+              </div>
+              <div className="col-span-2 space-y-1.5">
+                <Label className="text-xs">Centro de Custo</Label>
+                <Input value={form.centroCusto} onChange={(e) => setForm({ ...form, centroCusto: e.target.value })} />
+              </div>
+              <div className="col-span-2">
+                <AnexarDocumento label="Anexar boleto / nota fiscal (PDF)" />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" size="sm" onClick={() => setNovoOpen(false)}>Cancelar</Button>
+              <Button size="sm" onClick={criarTitulo}>Lançar Título</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
         <Card className="p-3 border-border"><p className="text-[10px] uppercase text-muted-foreground">Em Aberto</p><p className="text-lg font-bold text-red-600">{fmt(totalAberto)}</p></Card>
