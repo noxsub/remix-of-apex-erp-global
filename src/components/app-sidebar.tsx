@@ -1,6 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { useMemo } from "react";
-import syntheraLogo from "@/assets/syntera-logo.png.asset.json";
 import {
   LayoutDashboard,
   ArrowDownToLine,
@@ -10,7 +9,6 @@ import {
   Receipt,
   Network,
   Sparkles,
-  Plus,
   ChevronRight,
   LayoutGrid,
   ShoppingCart,
@@ -42,7 +40,6 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
 } from "@/components/ui/sidebar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useCanais, usePedidosMarketplace } from "@/lib/omnilink-store";
 import { gerarAlertas } from "@/lib/floki/insights";
 
@@ -158,12 +155,15 @@ export function AppSidebar() {
           className="flex items-center gap-2 rounded-md outline-none transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-gold/60"
         >
           <div className="relative flex h-9 w-9 items-center justify-center rounded-md bg-black ring-1 ring-gold/30 shadow-[0_0_18px_-4px_oklch(0.78_0.13_85/0.55)]">
-            <img
-              src={syntheraLogo.url}
-              alt="Syntera"
-              className="h-8 w-8 object-contain drop-shadow-[0_0_6px_oklch(0.78_0.13_85/0.45)]"
-              draggable={false}
-            />
+            <svg viewBox="0 0 60 84" className="h-6 w-6 drop-shadow-[0_0_6px_oklch(0.78_0.13_85/0.45)]" aria-hidden="true">
+              <path
+                d="M50 14C50 14 41 8 30 8C19 8 11 14 11 22C11 30 18 34 30 38C42 42 51 46 51 58C51 70 42 76 30 76C18 76 9 69 9 69"
+                stroke="oklch(0.78 0.13 85)"
+                strokeWidth="9"
+                strokeLinecap="round"
+                fill="none"
+              />
+            </svg>
           </div>
           <div className="flex flex-col leading-tight group-data-[collapsible=icon]:hidden">
             <span className="text-sm font-semibold tracking-tight">
@@ -290,11 +290,6 @@ export function AppSidebar() {
         ))}
       </SidebarContent>
 
-      {/* ─── Quick Action CTA — Nova Operação (atalho global de criação) ─── */}
-      <div className="px-3 pb-3 group-data-[collapsible=icon]:px-2">
-        <NovaOperacaoMenu />
-      </div>
-
       {/* ─── Footer ─── */}
       <SidebarFooter className="border-t border-sidebar-border px-4 py-3 group-data-[collapsible=icon]:hidden">
         <div className="flex items-center justify-between text-[11px] text-muted-foreground">
@@ -303,48 +298,5 @@ export function AppSidebar() {
         </div>
       </SidebarFooter>
     </Sidebar>
-  );
-}
-
-const quickActions: { title: string; description: string; url: string; icon: typeof LayoutDashboard }[] = [
-  { title: "Nova Venda / Pedido", description: "Abrir o formulário de pedido de venda", url: "/saidas/pedidos", icon: ShoppingCart },
-  { title: "Novo Orçamento", description: "Rascunho sem impacto fiscal", url: "/saidas/orcamentos", icon: FileText },
-  { title: "Importar XML de NF-e", description: "Entrada por compra modelo 55", url: "/entradas/compras", icon: ArrowDownToLine },
-  { title: "Lançamento manual de entrada", description: "Recibos, faturas, CT-e, NFS-e tomada", url: "/entradas/compras", icon: Plus },
-  { title: "Novo Cliente / Fornecedor", description: "Cadastro com escopo tributário", url: "/cadastros", icon: Users },
-  { title: "Conta a Pagar / Receber", description: "Lançar título no Financeiro", url: "/financeiro", icon: Wallet },
-];
-
-function NovaOperacaoMenu() {
-  return (
-    <Popover>
-      <PopoverTrigger asChild>
-        <button
-          className="flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-b from-[oklch(0.82_0.1_85)] to-[oklch(0.72_0.11_85)] px-3 py-2.5 text-xs font-medium text-primary-foreground border border-[oklch(0.62_0.1_85)] shadow-sm transition-all hover:brightness-110 active:scale-[0.98]"
-          title="Atalho global de criação"
-        >
-          <Plus className="h-3.5 w-3.5" />
-          <span className="group-data-[collapsible=icon]:hidden">Nova Operação</span>
-        </button>
-      </PopoverTrigger>
-      <PopoverContent side="right" align="end" className="w-72 p-1">
-        <div className="px-2 pb-1 pt-2 text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
-          Atalhos rápidos
-        </div>
-        {quickActions.map((q) => (
-          <Link
-            key={q.title}
-            to={q.url}
-            className="flex items-start gap-2.5 rounded-md px-2 py-2 text-xs hover:bg-secondary"
-          >
-            <q.icon className="mt-0.5 h-3.5 w-3.5 text-gold" />
-            <div className="flex-1">
-              <div className="font-medium">{q.title}</div>
-              <div className="text-[11px] text-muted-foreground">{q.description}</div>
-            </div>
-          </Link>
-        ))}
-      </PopoverContent>
-    </Popover>
   );
 }
