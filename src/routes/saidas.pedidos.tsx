@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/dialog";
 import { DataTable, type Column } from "@/components/data-table";
 import { StatusBadge } from "@/components/status-badge";
+import { AnexarDocumento } from "@/components/anexar-documento";
 import { Plus, Search, Eye, Printer, Trash2, Copy, Send } from "lucide-react";
 import { toast } from "sonner";
 
@@ -159,6 +160,9 @@ function PedidosVendaPage() {
               <div className="space-y-1.5"><Label className="text-xs">Desconto (R$)</Label><Input type="number" value={form.desconto} onChange={(e) => setForm({ ...form, desconto: +e.target.value })} /></div>
               <div className="space-y-1.5"><Label className="text-xs">Frete (R$)</Label><Input type="number" value={form.frete} onChange={(e) => setForm({ ...form, frete: +e.target.value })} /></div>
               <div className="col-span-2 space-y-1.5"><Label className="text-xs">Observações</Label><Textarea value={form.observacoes} onChange={(e) => setForm({ ...form, observacoes: e.target.value })} /></div>
+              <div className="col-span-2">
+                <AnexarDocumento label="Anexar orçamento / condição comercial (PDF)" />
+              </div>
             </div>
             <DialogFooter><Button onClick={handleCriar}>Criar Pedido</Button></DialogFooter>
           </DialogContent>
