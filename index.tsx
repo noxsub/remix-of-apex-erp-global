@@ -1,342 +1,310 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useState } from "react";
 
 export const Route = createFileRoute("/")({
-  head: () => ({ meta: [{ title: "Syntera ERP" }] }),
-  component: SynteraDNA,
+  head: () => ({
+    meta: [
+      { title: "Syntera ERP — Enterprise Platform" },
+      { name: "description", content: "Syntera ERP: plataforma corporativa integrada com IA Floki para gestão fiscal, financeira, vendas, estoque e RH." },
+      { property: "og:title", content: "Syntera ERP — Enterprise Platform" },
+      { property: "og:description", content: "ERP corporativo com IA Floki. Fiscal, financeiro, vendas, estoque, RH e mais." },
+    ],
+  }),
+  component: SynteraLanding,
 });
 
-/* ═══ MÓDULOS ═══════════════════════════════════════════════════════════════ */
-const MODULES = [
-  { id: "financeiro", label: "Financeiro", url: "/financeiro", pitch: { title: "Financeiro", hook: "Visibilidade total do seu caixa", desc: "Fluxo de caixa em tempo real, DRE automático, conciliação bancária e gestão de contas. Tome decisões com dados, não com intuição.", kpis: ["DRE em 1 clique", "Conciliação automática", "Multi-empresa"] } },
-  { id: "fiscal", label: "Fiscal", url: "/fiscal", pitch: { title: "Módulo Fiscal", hook: "Zero multas, zero retrabalho", desc: "NF-e, NFS-e e CT-e automáticos. SPED Fiscal, DCTF e ECF integrados. Conformidade permanente com a Receita Federal.", kpis: ["NF-e automática", "SPED integrado", "Alertas de prazo"] } },
-  { id: "entradas", label: "Compras", url: "/entradas", pitch: { title: "Entradas & Compras", hook: "Elimine erros de entrada para sempre", desc: "Validação automática de NFs, pedidos de compra e cotações. Integrado ao estoque em tempo real com rastreabilidade completa.", kpis: ["Validação automática", "Cotações integradas", "Rastreabilidade"] } },
-  { id: "saidas", label: "Vendas", url: "/saidas", pitch: { title: "Módulo de Vendas", hook: "Do orçamento à nota em segundos", desc: "Orçamentos, pedidos e faturamento em um único fluxo. Impostos automáticos e estoque atualizado em tempo real.", kpis: ["Orçamento rápido", "Faturamento automático", "Pipeline visual"] } },
-  { id: "estoque", label: "Estoque", url: "/estoque", pitch: { title: "Controle de Estoque", hook: "Nunca mais perca produto", desc: "Saldo em tempo real, múltiplos depósitos, PEPS/custo médio e inventário com código de barras.", kpis: ["Multi-depósito", "PEPS / Custo Médio", "Inventário mobile"] } },
-  { id: "rh", label: "RH", url: "/rh", pitch: { title: "Recursos Humanos", hook: "Folha sem dores de cabeça", desc: "Folha de pagamento, ponto eletrônico, férias e benefícios integrados. eSocial e CAGED automáticos.", kpis: ["eSocial integrado", "Ponto eletrônico", "Férias automáticas"] } },
-  { id: "cadastros", label: "Cadastros", url: "/cadastros", pitch: { title: "Gestão de Cadastros", hook: "Dados precisos, processos impecáveis", desc: "Clientes, fornecedores e produtos com validação CNPJ/CPF via Receita Federal e consulta de CEP integrada.", kpis: ["Validação CNPJ/CPF", "Consulta Receita", "Histórico completo"] } },
-  { id: "obrigacoes", label: "Obrigações", url: "/obrigacoes", pitch: { title: "Obrigações Fiscais", hook: "Nunca mais perca um prazo", desc: "Calendário fiscal inteligente com alertas automáticos, DARF, GPS e guias estaduais.", kpis: ["Alertas automáticos", "Geração de guias", "Dashboard fiscal"] } },
-  { id: "reforma", label: "Reforma Tributária", url: "/reforma-tributaria", pitch: { title: "Reforma Tributária 2026", hook: "Pronto para o novo modelo fiscal", desc: "IBS/CBS automáticos, split payment nativo e transição gradual até 2033.", kpis: ["IBS / CBS nativo", "Split payment", "Transição automática"] } },
-  { id: "omnilink", label: "Integrações", url: "/omnilink", pitch: { title: "Omnilink — Integrações", hook: "Conecte tudo ao seu ERP", desc: "API REST para marketplaces, PDV, bancos e sistemas legados. Webhooks em tempo real.", kpis: ["API REST nativa", "Webhooks em tempo real", "Marketplace connect"] } },
-  { id: "bi", label: "BI / Relatórios", url: "/saidas/relatorios", pitch: { title: "Business Intelligence", hook: "Decisões baseadas em dados", desc: "Dashboards com KPIs em tempo real, exportação Excel e relatórios customizados.", kpis: ["Dashboards em tempo real", "Export Excel / PDF", "KPIs customizados"] } },
-  { id: "floki", label: "Floki IA", url: "/omnilink", pitch: { title: "Floki — Inteligência Artificial", hook: "A IA que gerencia seu ERP", desc: "Analisa anomalias, prevê fluxo de caixa, alerta sobre riscos fiscais e sugere otimizações em toda a operação.", kpis: ["Análise preditiva", "Alertas de risco", "Sugestões automáticas"] } },
-] as const;
+/* ═══════════════════════════════════════════════════════════════
+   MÓDULOS — conteúdo de marketing preservado
+   ═══════════════════════════════════════════════════════════════ */
+type ModuleId =
+  | "financeiro" | "fiscal" | "entradas" | "saidas" | "estoque" | "rh"
+  | "cadastros" | "obrigacoes" | "reforma" | "omnilink" | "bi" | "floki";
 
-type Phase = "idle" | "exploding" | "login" | "success";
-interface Particle { x: number; y: number; vx: number; vy: number; size: number; life: number; r: number; g: number; b: number }
+interface ModuleDef {
+  id: ModuleId;
+  label: string;
+  route: string;
+  pitch: { title: string; hook: string; desc: string; kpis: string[] };
+}
 
-/* ═══ COMPONENT ══════════════════════════════════════════════════════════════ */
-function SynteraDNA() {
+const MODULES: ModuleDef[] = [
+  { id: "financeiro", label: "Financeiro", route: "/financeiro", pitch: { title: "Financeiro", hook: "Visibilidade total do seu caixa", desc: "Fluxo de caixa em tempo real, DRE automático, conciliação bancária e gestão de contas. Tome decisões com dados, não com intuição.", kpis: ["DRE em 1 clique", "Conciliação automática", "Multi-empresa"] } },
+  { id: "fiscal", label: "Fiscal", route: "/fiscal", pitch: { title: "Módulo Fiscal", hook: "Zero multas, zero retrabalho", desc: "NF-e, NFS-e e CT-e automáticos. SPED Fiscal, DCTF e ECF integrados. Conformidade permanente com a Receita Federal.", kpis: ["NF-e automática", "SPED integrado", "Alertas de prazo"] } },
+  { id: "entradas", label: "Compras", route: "/entradas", pitch: { title: "Entradas & Compras", hook: "Elimine erros de entrada para sempre", desc: "Validação automática de NFs, pedidos de compra e cotações. Integrado ao estoque em tempo real com rastreabilidade completa.", kpis: ["Validação automática", "Cotações integradas", "Rastreabilidade"] } },
+  { id: "saidas", label: "Vendas", route: "/saidas", pitch: { title: "Módulo de Vendas", hook: "Do orçamento à nota em segundos", desc: "Orçamentos, pedidos e faturamento em um único fluxo. Impostos automáticos e estoque atualizado em tempo real.", kpis: ["Orçamento rápido", "Faturamento automático", "Pipeline visual"] } },
+  { id: "estoque", label: "Estoque", route: "/entradas/estoque", pitch: { title: "Controle de Estoque", hook: "Nunca mais perca produto", desc: "Saldo em tempo real, múltiplos depósitos, PEPS/custo médio e inventário com código de barras.", kpis: ["Multi-depósito", "PEPS / Custo Médio", "Inventário mobile"] } },
+  { id: "rh", label: "RH", route: "/rh", pitch: { title: "Recursos Humanos", hook: "Folha sem dores de cabeça", desc: "Folha de pagamento, ponto eletrônico, férias e benefícios integrados. eSocial e CAGED automáticos.", kpis: ["eSocial integrado", "Ponto eletrônico", "Férias automáticas"] } },
+  { id: "cadastros", label: "Cadastros", route: "/cadastros", pitch: { title: "Gestão de Cadastros", hook: "Dados precisos, processos impecáveis", desc: "Clientes, fornecedores e produtos com validação CNPJ/CPF via Receita Federal e consulta de CEP integrada.", kpis: ["Validação CNPJ/CPF", "Consulta Receita", "Histórico completo"] } },
+  { id: "obrigacoes", label: "Obrigações", route: "/obrigacoes", pitch: { title: "Obrigações Fiscais", hook: "Nunca mais perca um prazo", desc: "Calendário fiscal inteligente com alertas automáticos, DARF, GPS e guias estaduais.", kpis: ["Alertas automáticos", "Geração de guias", "Dashboard fiscal"] } },
+  { id: "reforma", label: "Reforma Tributária", route: "/reforma-tributaria", pitch: { title: "Reforma Tributária 2026", hook: "Pronto para o novo modelo fiscal", desc: "IBS/CBS automáticos, split payment nativo e transição gradual até 2033.", kpis: ["IBS / CBS nativo", "Split payment", "Transição automática"] } },
+  { id: "omnilink", label: "Integrações", route: "/omnilink", pitch: { title: "Omnilink — Integrações", hook: "Conecte tudo ao seu ERP", desc: "API REST para marketplaces, PDV, bancos e sistemas legados. Webhooks em tempo real.", kpis: ["API REST nativa", "Webhooks em tempo real", "Marketplace connect"] } },
+  { id: "bi", label: "BI / Relatórios", route: "/dashboard", pitch: { title: "Business Intelligence", hook: "Decisões baseadas em dados", desc: "Dashboards com KPIs em tempo real, exportação Excel e relatórios customizados.", kpis: ["Dashboards em tempo real", "Export Excel / PDF", "KPIs customizados"] } },
+  { id: "floki", label: "Floki IA", route: "/dashboard", pitch: { title: "Floki — Inteligência Artificial", hook: "A IA que gerencia seu ERP", desc: "Analisa anomalias, prevê fluxo de caixa, alerta sobre riscos fiscais e sugere otimizações em toda a operação.", kpis: ["Análise preditiva", "Alertas de risco", "Sugestões automáticas"] } },
+];
+
+/* ═══════════════════════════════════════════════════════════════
+   SISTEMA DE COORDENADAS FIXO (0-1000 x 0-600)
+   Tudo é calculado nesse espaço e escalado via viewBox — garante
+   alinhamento perfeito em qualquer tamanho de tela, sem depender
+   de window.innerWidth/innerHeight (causa do desalinhamento anterior).
+   ═══════════════════════════════════════════════════════════════ */
+const VB_W = 1000;
+const VB_H = 600;
+const CX = 500;
+const CY = 300;
+const R = 190;
+const LOGO_R = 62;
+
+type NodePos = { id: ModuleId; x: number; y: number; anchor: "left" | "right" | "top" | "bottom" };
+
+const NODE_POSITIONS: NodePos[] = MODULES.map((mod, idx) => {
+  const N = MODULES.length;
+  const angle = (idx / N) * Math.PI * 2 - Math.PI / 2 + Math.sin(idx * 2.7) * 0.12;
+  const x = CX + Math.cos(angle) * R;
+  const y = CY + Math.sin(angle) * R;
+  const cosA = Math.cos(angle);
+  const sinA = Math.sin(angle);
+  let anchor: NodePos["anchor"] = "right";
+  if (Math.abs(cosA) >= Math.abs(sinA)) {
+    anchor = cosA >= 0 ? "right" : "left";
+  } else {
+    anchor = sinA >= 0 ? "bottom" : "top";
+  }
+  return { id: mod.id, x, y, anchor };
+});
+
+const posOf = (id: ModuleId) => NODE_POSITIONS.find((p) => p.id === id)!;
+
+function SynteraLanding() {
   const navigate = useNavigate();
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const logoImgRef = useRef<HTMLImageElement>(null);
-  const animRef = useRef(0);
-  const particlesRef = useRef<Particle[]>([]);
-  const timeRef = useRef(0);
-
-  const [dims, setDims] = useState({ w: window.innerWidth, h: window.innerHeight });
-  const [phase, setPhase] = useState<Phase>("idle");
-  const [activeModule, setActiveModule] = useState<string | null>(null);
+  const [activeModule, setActiveModule] = useState<ModuleId | null>(null);
+  const [showLogin, setShowLogin] = useState(false);
   const [loginId, setLoginId] = useState("");
   const [loginPw, setLoginPw] = useState("");
   const [loginError, setLoginError] = useState(false);
 
-  /* ── Resize ─────────────────────────────────────────────────────────────── */
-  useEffect(() => {
-    const onResize = () => {
-      const w = window.innerWidth, h = window.innerHeight;
-      setDims({ w, h });
-      const c = canvasRef.current;
-      if (c) { const d = devicePixelRatio || 1; c.width = w * d; c.height = h * d; }
-    };
-    onResize();
-    window.addEventListener("resize", onResize);
-    return () => window.removeEventListener("resize", onResize);
-  }, []);
-
-  /* ── Remove black logo background ───────────────────────────────────────── */
-  useEffect(() => {
-    const img = new Image();
-    img.onload = () => {
-      try {
-        const cv = document.createElement("canvas");
-        cv.width = img.width; cv.height = img.height;
-        const ctx = cv.getContext("2d")!;
-        ctx.drawImage(img, 0, 0);
-        const id = ctx.getImageData(0, 0, cv.width, cv.height);
-        const d = id.data;
-        for (let i = 0; i < d.length; i += 4) {
-          const lum = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
-          d[i + 3] = Math.min(255, Math.round(lum * 2.6));
-        }
-        ctx.putImageData(id, 0, 0);
-        if (logoImgRef.current) logoImgRef.current.src = cv.toDataURL("image/png");
-      } catch { /* tainted canvas fallback */ }
-    };
-    // Adjust path if your logo asset is in a different location
-    img.src = "/src/assets/syntera-logo.png";
-  }, []);
-
-  /* ── Animation loop ──────────────────────────────────────────────────────── */
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const draw = () => {
-      timeRef.current += 0.005;
-      const t = timeRef.current;
-      const ctx = canvas.getContext("2d")!;
-      const { w, h } = dims;
-      const dpr = devicePixelRatio || 1;
-      ctx.clearRect(0, 0, w * dpr, h * dpr);
-      ctx.save(); ctx.scale(dpr, dpr);
-      const cx = w / 2, cy = h / 2;
-      const R = Math.min(w, h) * 0.3;
-      const N = MODULES.length;
-      const logoR = 80;
-
-      if (phase !== "success") {
-        // ── Dot grid ─────────────────────────────────────────────────────────
-        const gs = 56;
-        ctx.fillStyle = "rgba(212,175,55,0.045)";
-        for (let gx = gs / 2; gx < w; gx += gs)
-          for (let gy = gs / 2; gy < h; gy += gs) {
-            ctx.beginPath(); ctx.arc(gx, gy, 0.85, 0, Math.PI * 2); ctx.fill();
-          }
-
-        // ── Center glow ───────────────────────────────────────────────────────
-        const cg = ctx.createRadialGradient(cx, cy, 0, cx, cy, 100);
-        cg.addColorStop(0, "rgba(212,175,55,0.1)"); cg.addColorStop(1, "rgba(212,175,55,0)");
-        ctx.beginPath(); ctx.arc(cx, cy, 100, 0, Math.PI * 2); ctx.fillStyle = cg; ctx.fill();
-
-        // ── Circuit traces ────────────────────────────────────────────────────
-        MODULES.forEach((mod, idx) => {
-          const baseA = (idx / N) * Math.PI * 2 - Math.PI / 2;
-          const jitter = Math.sin(idx * 2.7) * 0.1;
-          const angle = baseA + jitter;
-          const mx = cx + Math.cos(angle) * R;
-          const my = cy + Math.sin(angle) * R;
-          const act = activeModule === mod.id;
-          const pulse = (Math.sin(t * 1.1 + idx * 0.6) + 1) / 2;
-
-          // Start from clearance ring
-          const sx = cx + Math.cos(angle) * logoR;
-          const sy = cy + Math.sin(angle) * logoR;
-          // L-shaped routing
-          const horizontal = Math.abs(mx - sx) >= Math.abs(my - sy);
-          const cX = horizontal ? mx : sx;
-          const cY = horizontal ? sy : my;
-
-          const lineA = act ? 0.85 : 0.3 + pulse * 0.12;
-          ctx.strokeStyle = `rgba(212,175,55,${lineA})`;
-          ctx.lineWidth = act ? 1.8 : 1.1;
-          ctx.lineCap = "square"; ctx.lineJoin = "miter";
-          ctx.beginPath(); ctx.moveTo(sx, sy); ctx.lineTo(cX, cY); ctx.lineTo(mx, my); ctx.stroke();
-
-          // Corner pad
-          ctx.beginPath(); ctx.arc(cX, cY, 3, 0, Math.PI * 2);
-          ctx.fillStyle = `rgba(212,175,55,${lineA * 0.85})`; ctx.fill();
-
-          // Traveling pulse
-          const seg1 = Math.abs(cX - sx) + Math.abs(cY - sy);
-          const seg2 = Math.abs(mx - cX) + Math.abs(my - cY);
-          const total = seg1 + seg2;
-          if (total > 1) {
-            const pf = ((t * 0.32 + idx * 0.14) % 1);
-            const pd = pf * total;
-            let px, py;
-            if (pd <= seg1 && seg1 > 0) {
-              const tf = pd / seg1; px = sx + (cX - sx) * tf; py = sy + (cY - sy) * tf;
-            } else if (seg2 > 0) {
-              const tf = (pd - seg1) / seg2; px = cX + (mx - cX) * tf; py = cY + (my - cY) * tf;
-            } else { px = mx; py = my; }
-            const pg = ctx.createRadialGradient(px, py, 0, px, py, 10);
-            pg.addColorStop(0, "rgba(240,200,70,0.9)"); pg.addColorStop(1, "rgba(212,175,55,0)");
-            ctx.beginPath(); ctx.arc(px, py, 10, 0, Math.PI * 2); ctx.fillStyle = pg; ctx.fill();
-            ctx.beginPath(); ctx.arc(px, py, 2.2, 0, Math.PI * 2); ctx.fillStyle = "rgba(255,235,100,0.95)"; ctx.fill();
-          }
-
-          // Module node
-          ctx.beginPath(); ctx.arc(mx, my, act ? 13 : 8, 0, Math.PI * 2);
-          ctx.strokeStyle = act ? `rgba(212,175,55,${0.9 + pulse * 0.1})` : `rgba(212,175,55,${0.38 + pulse * 0.18})`;
-          ctx.lineWidth = act ? 1.8 : 1.1; ctx.stroke();
-          ctx.beginPath(); ctx.arc(mx, my, act ? 5 : 2.8, 0, Math.PI * 2);
-          ctx.fillStyle = act ? "#D4AF37" : `rgba(212,175,55,${0.65 + pulse * 0.25})`; ctx.fill();
-          if (act) {
-            const ng = ctx.createRadialGradient(mx, my, 0, mx, my, 30);
-            ng.addColorStop(0, "rgba(212,175,55,0.28)"); ng.addColorStop(1, "rgba(212,175,55,0)");
-            ctx.beginPath(); ctx.arc(mx, my, 30, 0, Math.PI * 2); ctx.fillStyle = ng; ctx.fill();
-          }
-        });
-      }
-
-      // ── Particles ─────────────────────────────────────────────────────────
-      if (phase === "exploding") {
-        particlesRef.current = particlesRef.current.filter(p => p.life > 0);
-        particlesRef.current.forEach(p => {
-          p.x += p.vx; p.y += p.vy; p.vx *= 0.968; p.vy *= 0.968; p.life -= 0.013;
-          const a = Math.max(0, p.life), r = Math.max(0.1, p.size * a);
-          ctx.beginPath(); ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
-          ctx.fillStyle = `rgba(${p.r},${p.g},${p.b},${a * 0.88})`; ctx.fill();
-        });
-      }
-      ctx.restore();
-      animRef.current = requestAnimationFrame(draw);
-    };
-    animRef.current = requestAnimationFrame(draw);
-    return () => cancelAnimationFrame(animRef.current);
-  }, [dims, phase, activeModule]);
-
-  /* ── Logo explosion ──────────────────────────────────────────────────────── */
-  const handleLogoClick = () => {
-    if (phase !== "idle") return;
-    setPhase("exploding");
-    const cx = dims.w / 2, cy = dims.h / 2;
-    for (let i = 0; i < 300; i++) {
-      const angle = Math.random() * Math.PI * 2, spd = 0.5 + Math.random() * 10;
-      const gold = Math.random() > 0.28;
-      particlesRef.current.push({ x: cx + (Math.random() - 0.5) * 90, y: cy + (Math.random() - 0.5) * 90, vx: Math.cos(angle) * spd, vy: Math.sin(angle) * spd, size: 0.8 + Math.random() * 4.2, life: 0.6 + Math.random() * 0.4, r: gold ? 210 + Math.floor(Math.random() * 45) : 255, g: gold ? 140 + Math.floor(Math.random() * 70) : 210 + Math.floor(Math.random() * 45), b: gold ? 10 + Math.floor(Math.random() * 42) : 120 + Math.floor(Math.random() * 100) });
-    }
-    setTimeout(() => setPhase("login"), 1900);
-  };
-
-  /* ── Login ───────────────────────────────────────────────────────────────── */
   const handleLogin = () => {
-    if (loginId.toUpperCase() === "ADM" && loginPw === "123") {
-      setPhase("success");
-      setTimeout(() => navigate({ to: "/dashboard" }), 1200);
+    if (loginId.trim().toUpperCase() === "ADM" && loginPw === "123") {
+      navigate({ to: "/dashboard" });
     } else {
       setLoginError(true);
       setTimeout(() => setLoginError(false), 2000);
     }
   };
-
   const handleKey = (e: React.KeyboardEvent) => { if (e.key === "Enter") handleLogin(); };
 
-  /* ── Module positions ────────────────────────────────────────────────────── */
-  const R = Math.min(dims.w, dims.h) * 0.3;
-  const cx = dims.w / 2, cy = dims.h / 2;
-  const isMobile = dims.w < 680;
-
-  const inputStyle: React.CSSProperties = {
-    background: "rgba(212,175,55,0.04)", border: "1px solid rgba(212,175,55,0.18)",
-    borderRadius: 6, color: "rgba(255,248,230,0.82)", padding: "13px 16px",
-    fontSize: 13.5, width: "100%", fontFamily: "inherit", letterSpacing: "0.04em",
-    outline: "none",
-  };
+  const activePitch = activeModule ? MODULES.find((m) => m.id === activeModule) : null;
 
   return (
-    <div style={{ position: "fixed", inset: 0, overflow: "hidden", background: "#070d1a", fontFamily: "'Helvetica Neue',Helvetica,system-ui,sans-serif", userSelect: "none" }}>
-
-      {/* Canvas */}
-      <canvas ref={canvasRef} style={{ position: "absolute", inset: 0, pointerEvents: "none", width: dims.w, height: dims.h }} />
-
-      {/* Top bar */}
-      <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 1, background: "linear-gradient(90deg,transparent,rgba(212,175,55,0.4),transparent)", pointerEvents: "none" }} />
-      <div style={{ position: "absolute", top: 18, left: 28, pointerEvents: "none" }}>
-        <span style={{ fontSize: 10, letterSpacing: "0.35em", color: "rgba(212,175,55,0.28)", fontWeight: 400 }}>SYNTERA ERP</span>
-      </div>
-      <div style={{ position: "absolute", top: 18, right: 28, pointerEvents: "none" }}>
-        <span style={{ fontSize: 10, letterSpacing: "0.2em", color: "rgba(255,248,230,0.12)" }}>ENTERPRISE PLATFORM</span>
+    <div className="fixed inset-0 overflow-hidden select-none" style={{ background: "#04070e", fontFamily: "'Inter', system-ui, sans-serif" }}>
+      {/* ── Top brand ── */}
+      <div className="absolute top-6 left-1/2 -translate-x-1/2 z-20 text-center pointer-events-none">
+        <div style={{ fontSize: 12, letterSpacing: "0.42em", color: "rgba(212,175,55,0.85)", fontWeight: 600 }}>SYNTERA ERP</div>
+        <div style={{ fontSize: 9, letterSpacing: "0.32em", color: "rgba(212,175,55,0.4)", marginTop: 4 }}>ENTERPRISE PLATFORM</div>
       </div>
 
-      {/* Module labels */}
-      {!isMobile && MODULES.map((mod, idx) => {
-        const baseA = (idx / MODULES.length) * Math.PI * 2 - Math.PI / 2;
-        const jitter = Math.sin(idx * 2.7) * 0.1;
-        const angle = baseA + jitter;
-        const mx = cx + Math.cos(angle) * R, my = cy + Math.sin(angle) * R;
-        const cosA = Math.cos(angle), sinA = Math.sin(angle);
-        const outD = 20, lx = mx + cosA * outD, ly = my + sinA * outD, LW = 96;
-        const tAlign = cosA > 0.2 ? "left" : cosA < -0.2 ? "right" : "center";
-        const left = tAlign === "left" ? Math.round(lx) : tAlign === "right" ? Math.round(lx - LW) : Math.round(lx - LW / 2);
-        const act = activeModule === mod.id;
-        return (
-          <button key={mod.id} onClick={() => setActiveModule(mod.id)}
-            style={{ position: "absolute", left, top: Math.round(ly - 10), width: LW, background: "none", border: "none", padding: "3px 0", cursor: "pointer", textAlign: tAlign as "left"|"right"|"center", zIndex: 10, pointerEvents: phase === "idle" ? "auto" : "none" }}>
-            <span style={{ fontSize: 10.5, fontWeight: act ? 600 : 400, letterSpacing: "0.1em", color: act ? "#D4AF37" : "rgba(200,195,178,0.4)", textShadow: act ? "0 0 14px rgba(212,175,55,0.55)" : "none", display: "block", textTransform: "uppercase", transition: "color 0.2s,text-shadow 0.2s" }}>
-              {mod.label}
-            </span>
-          </button>
-        );
-      })}
+      {/* ── Diagrama central: container com aspect-ratio travado ──
+          Isso garante que o SVG (coordenadas) e os rótulos (HTML %)
+          fiquem sempre alinhados entre si, em qualquer tela. ── */}
+      <div
+        className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
+        style={{
+          width: "min(96vw, 1400px)",
+          aspectRatio: `${VB_W} / ${VB_H}`,
+          maxHeight: "88vh",
+        }}
+      >
+        <svg viewBox={`0 0 ${VB_W} ${VB_H}`} className="absolute inset-0 h-full w-full" preserveAspectRatio="xMidYMid meet">
+          <defs>
+            <radialGradient id="halo"><stop offset="0%" stopColor="rgba(212,175,55,0.16)" /><stop offset="100%" stopColor="rgba(212,175,55,0)" /></radialGradient>
+            <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#F5D76E" /><stop offset="35%" stopColor="#D4AF37" /><stop offset="70%" stopColor="#C5A028" /><stop offset="100%" stopColor="#AA8B1E" />
+            </linearGradient>
+            <filter id="glow" x="-60%" y="-60%" width="220%" height="220%">
+              <feGaussianBlur stdDeviation="3.2" result="b" /><feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge>
+            </filter>
+          </defs>
 
-      {/* S Logo */}
-      {(phase === "idle" || phase === "exploding") && (
-        <div style={{ position: "absolute", left: "50%", top: "50%", transform: "translate(-50%,-50%)", zIndex: 10, textAlign: "center", pointerEvents: "none" }}>
-          <div onClick={handleLogoClick}
-            style={{ cursor: phase === "idle" ? "pointer" : "default", opacity: phase === "idle" ? 1 : 0, transition: "opacity 0.85s ease", animation: phase === "idle" ? "floatLogo 4s ease-in-out infinite" : "none", display: "inline-block", pointerEvents: "auto" }}>
-            <img ref={logoImgRef} src="/src/assets/syntera-logo.png" alt="Syntera"
-              style={{ width: 148, height: 148, objectFit: "contain", display: "block" }} />
+          {/* dot grid de fundo */}
+          {Array.from({ length: 18 }).flatMap((_, gx) =>
+            Array.from({ length: 11 }).map((_, gy) => (
+              <circle key={`g${gx}-${gy}`} cx={(gx + 0.5) * (VB_W / 18)} cy={(gy + 0.5) * (VB_H / 11)} r="0.9" fill="rgba(212,175,55,0.05)" />
+            )),
+          )}
+
+          <circle cx={CX} cy={CY} r={110} fill="url(#halo)" />
+
+          {/* conexões ortogonais logo → módulo */}
+          {NODE_POSITIONS.map((p) => {
+            const sx = CX + ((p.x - CX) / R) * LOGO_R;
+            const sy = CY + ((p.y - CY) / R) * LOGO_R;
+            const horizontal = Math.abs(p.x - sx) >= Math.abs(p.y - sy);
+            const cx2 = horizontal ? p.x : sx;
+            const cy2 = horizontal ? sy : p.y;
+            const active = activeModule === p.id;
+            return (
+              <g key={`edge-${p.id}`}>
+                <path
+                  d={`M${sx} ${sy} L${cx2} ${cy2} L${p.x} ${p.y}`}
+                  fill="none"
+                  stroke="#D4AF37"
+                  strokeWidth={active ? 1.6 : 1}
+                  opacity={active ? 0.75 : 0.24}
+                />
+                <circle cx={cx2} cy={cy2} r="2.4" fill="rgba(212,175,55,0.5)" />
+              </g>
+            );
+          })}
+
+          {/* nós dos módulos (clicáveis) */}
+          {NODE_POSITIONS.map((p) => {
+            const active = activeModule === p.id;
+            return (
+              <g
+                key={`node-${p.id}`}
+                onClick={() => setActiveModule(p.id)}
+                style={{ cursor: "pointer" }}
+              >
+                <circle cx={p.x} cy={p.y} r={active ? 15 : 20} fill="transparent" />
+                <circle cx={p.x} cy={p.y} r={active ? 12.5 : 9} fill="none" stroke="#D4AF37" strokeWidth={active ? 1.8 : 1.1} opacity={active ? 0.9 : 0.45} />
+                <circle cx={p.x} cy={p.y} r={active ? 5 : 3} fill="#D4AF37" filter="url(#glow)" opacity={active ? 1 : 0.8} />
+              </g>
+            );
+          })}
+
+          {/* logo central "S" — desenhado em SVG, sem dependência externa */}
+          <g
+            transform={`translate(${CX - 34}, ${CY - 42})`}
+            filter="url(#glow)"
+            onClick={() => setShowLogin(true)}
+            style={{ cursor: "pointer" }}
+          >
+            <circle cx="34" cy="42" r="58" fill="rgba(4,7,14,0.9)" stroke="rgba(212,175,55,0.35)" strokeWidth="1" />
+            <path
+              d="M50 14C50 14 41 8 30 8C19 8 11 14 11 22C11 30 18 34 30 38C42 42 51 46 51 58C51 70 42 76 30 76C18 76 9 69 9 69"
+              stroke="url(#goldGrad)"
+              strokeWidth="6.5"
+              strokeLinecap="round"
+              fill="none"
+            />
+          </g>
+          <text x={CX} y={CY + 78} textAnchor="middle" fill="rgba(255,235,180,0.95)" fontSize="19" letterSpacing="7" fontWeight="300" fontFamily="inherit">SYNTERA</text>
+          <text
+            x={CX} y={CY + 100} textAnchor="middle" fill="rgba(212,175,55,0.55)" fontSize="9.5" letterSpacing="3" fontWeight="300" fontFamily="inherit"
+            onClick={() => setShowLogin(true)} style={{ cursor: "pointer" }}
+          >CLIQUE PARA ENTRAR</text>
+
+          {/* rótulos dos módulos — SVG text, garante alinhamento perfeito com os nós */}
+          {NODE_POSITIONS.map((p) => {
+            const mod = MODULES.find((m) => m.id === p.id)!;
+            const active = activeModule === p.id;
+            const off: Record<NodePos["anchor"], { dx: number; dy: number; ta: "start" | "middle" | "end" }> = {
+              left: { dx: -16, dy: 4, ta: "end" },
+              right: { dx: 16, dy: 4, ta: "start" },
+              top: { dx: 0, dy: -14, ta: "middle" },
+              bottom: { dx: 0, dy: 22, ta: "middle" },
+            };
+            const o = off[p.anchor];
+            return (
+              <text
+                key={`lbl-${p.id}`}
+                x={p.x + o.dx}
+                y={p.y + o.dy}
+                textAnchor={o.ta}
+                fill={active ? "rgba(255,235,140,0.95)" : "rgba(212,175,55,0.72)"}
+                fontSize="12.5"
+                fontWeight="600"
+                letterSpacing="1.6"
+                fontFamily="inherit"
+                onClick={() => setActiveModule(p.id)}
+                style={{ cursor: "pointer", textTransform: "uppercase" }}
+              >
+                {mod.label}
+              </text>
+            );
+          })}
+        </svg>
+      </div>
+
+      {/* ── Modal de módulo (pitch) ── */}
+      {activePitch && (
+        <div
+          onClick={() => setActiveModule(null)}
+          className="fixed inset-0 z-50 flex items-center justify-center px-4"
+          style={{ background: "rgba(4,7,14,0.75)", backdropFilter: "blur(10px)" }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: "rgba(9,14,26,0.98)",
+              border: "1px solid rgba(212,175,55,0.22)",
+              borderLeft: "3px solid rgba(212,175,55,0.7)",
+              borderRadius: "4px 14px 14px 4px",
+              padding: "36px 38px",
+              maxWidth: 420,
+              width: "100%",
+            }}
+          >
+            <div style={{ fontSize: 9, letterSpacing: "0.28em", color: "rgba(212,175,55,0.55)", marginBottom: 10 }}>MÓDULO SYNTERA ERP</div>
+            <div style={{ fontSize: 22, color: "rgba(255,235,180,0.95)", fontWeight: 300, marginBottom: 8 }}>{activePitch.pitch.title}</div>
+            <div style={{ fontSize: 13, color: "rgba(212,175,55,0.85)", fontStyle: "italic", marginBottom: 18 }}>{activePitch.pitch.hook}</div>
+            <div style={{ height: 1, background: "linear-gradient(90deg, rgba(212,175,55,0.4), transparent)", marginBottom: 18 }} />
+            <p style={{ fontSize: 13, lineHeight: 1.6, color: "rgba(230,220,190,0.75)", marginBottom: 18 }}>{activePitch.pitch.desc}</p>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 22 }}>
+              {activePitch.pitch.kpis.map((k) => (
+                <span key={k} style={{ fontSize: 10, padding: "5px 10px", background: "rgba(212,175,55,0.08)", border: "1px solid rgba(212,175,55,0.22)", borderRadius: 4, color: "rgba(230,200,120,0.9)", letterSpacing: "0.06em" }}>{k}</span>
+              ))}
+            </div>
+            <button
+              onClick={() => { const target = activePitch.route; setActiveModule(null); navigate({ to: target }); }}
+              style={{ width: "100%", background: "linear-gradient(135deg,#9A7206,#D4AF37,#E8C84A)", border: "none", borderRadius: 8, color: "#04070e", fontWeight: 700, fontSize: 12.5, letterSpacing: "0.18em", padding: 13, cursor: "pointer", fontFamily: "inherit", marginBottom: 8 }}
+            >ACESSAR MÓDULO →</button>
+            <button
+              onClick={() => setActiveModule(null)}
+              style={{ width: "100%", background: "none", border: "none", color: "rgba(212,175,55,0.45)", fontSize: 10, padding: 8, cursor: "pointer", fontFamily: "inherit", letterSpacing: "0.2em" }}
+            >FECHAR</button>
           </div>
-          <div style={{ fontSize: 10.5, letterSpacing: "0.55em", color: "rgba(212,175,55,0.35)", marginTop: 8, fontWeight: 400 }}>SYNTERA</div>
-          <div style={{ fontSize: 8.5, letterSpacing: "0.28em", color: "rgba(212,175,55,0.22)", marginTop: 9, animation: "breathe 3s ease-in-out infinite" }}>clique para entrar</div>
         </div>
       )}
 
-      {/* Module popup */}
-      {activeModule && (() => {
-        const mod = MODULES.find(m => m.id === activeModule);
-        if (!mod) return null;
-        return (
-          <div onClick={() => setActiveModule(null)} style={{ position: "fixed", inset: 0, zIndex: 50, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(4,7,14,0.75)", backdropFilter: "blur(10px)" }}>
-            <div onClick={e => e.stopPropagation()} style={{ background: "rgba(9,14,26,0.98)", border: "1px solid rgba(212,175,55,0.22)", borderLeft: "3px solid rgba(212,175,55,0.7)", borderRadius: "4px 14px 14px 4px", padding: "36px 38px", maxWidth: 400, width: "92%", boxShadow: "0 2px 60px rgba(0,0,0,0.7),0 0 40px rgba(212,175,55,0.06)", animation: "fadeUp 0.28s ease" }}>
-              <div style={{ fontSize: 9, letterSpacing: "0.5em", color: "rgba(212,175,55,0.38)", marginBottom: 14, fontWeight: 500 }}>MÓDULO SYNTERA ERP</div>
-              <div style={{ fontSize: 22, fontWeight: 600, color: "#D4AF37", marginBottom: 6 }}>{mod.pitch.title}</div>
-              <div style={{ fontSize: 13, color: "rgba(255,248,230,0.38)", marginBottom: 22, fontStyle: "italic" }}>{mod.pitch.hook}</div>
-              <div style={{ height: 1, background: "rgba(212,175,55,0.15)", marginBottom: 20 }} />
-              <div style={{ fontSize: 13, color: "rgba(255,248,230,0.6)", lineHeight: 1.75, marginBottom: 26 }}>{mod.pitch.desc}</div>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 7, marginBottom: 30 }}>
-                {mod.pitch.kpis.map(k => (
-                  <span key={k} style={{ background: "rgba(212,175,55,0.08)", border: "1px solid rgba(212,175,55,0.2)", borderRadius: 3, padding: "4px 12px", fontSize: 10.5, color: "rgba(212,175,55,0.7)", letterSpacing: "0.06em", whiteSpace: "nowrap" }}>{k}</span>
-                ))}
-              </div>
-              <button onClick={() => setActiveModule(null)} style={{ width: "100%", background: "linear-gradient(135deg,#9A7206,#D4AF37,#E8C84A)", border: "none", borderRadius: 8, color: "#04070e", fontWeight: 700, fontSize: 12.5, letterSpacing: "0.18em", padding: 13, cursor: "pointer", fontFamily: "inherit", marginBottom: 8 }}>ACESSAR MÓDULO →</button>
-              <button onClick={() => setActiveModule(null)} style={{ width: "100%", background: "none", border: "none", color: "rgba(212,175,55,0.25)", fontSize: 10, padding: 8, cursor: "pointer", fontFamily: "inherit", letterSpacing: "0.1em" }}>FECHAR</button>
+      {/* ── Login ── */}
+      {showLogin && (
+        <div
+          onClick={() => setShowLogin(false)}
+          className="fixed inset-0 z-50 flex items-center justify-center px-4"
+          style={{ background: "rgba(4,7,14,0.75)", backdropFilter: "blur(10px)" }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              width: 360, maxWidth: "100%",
+              background: "rgba(9,14,26,0.96)",
+              border: "1px solid rgba(212,175,55,0.25)",
+              borderRadius: 12, padding: "36px 32px",
+              boxShadow: "0 20px 60px rgba(0,0,0,0.6), 0 0 80px rgba(212,175,55,0.15)",
+            }}
+          >
+            <div style={{ textAlign: "center", marginBottom: 22 }}>
+              <div style={{ fontSize: 18, letterSpacing: "0.32em", color: "rgba(255,235,180,0.95)", fontWeight: 300 }}>SYNTERA ERP</div>
+              <div style={{ fontSize: 10, letterSpacing: "0.24em", color: "rgba(212,175,55,0.5)", marginTop: 6 }}>ENTERPRISE AI PLATFORM</div>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              <input value={loginId} onChange={(e) => { setLoginId(e.target.value); setLoginError(false); }} onKeyDown={handleKey} placeholder="ID do usuário" autoFocus
+                style={{ background: "rgba(212,175,55,0.04)", border: "1px solid rgba(212,175,55,0.18)", borderRadius: 6, color: "rgba(255,248,230,0.82)", padding: "13px 16px", fontSize: 13.5, width: "100%", fontFamily: "inherit", outline: "none" }} />
+              <input type="password" value={loginPw} onChange={(e) => { setLoginPw(e.target.value); setLoginError(false); }} onKeyDown={handleKey} placeholder="Senha"
+                style={{ background: "rgba(212,175,55,0.04)", border: "1px solid rgba(212,175,55,0.18)", borderRadius: 6, color: "rgba(255,248,230,0.82)", padding: "13px 16px", fontSize: 13.5, width: "100%", fontFamily: "inherit", outline: "none" }} />
+              {loginError && <div style={{ fontSize: 11, color: "#ff6b6b", textAlign: "center" }}>Credenciais inválidas</div>}
+              <button onClick={handleLogin} style={{ marginTop: 4, background: "linear-gradient(135deg,#9A7206,#D4AF37,#E8C84A)", border: "none", borderRadius: 8, color: "#04070e", fontWeight: 700, fontSize: 12.5, letterSpacing: "0.22em", padding: 13, cursor: "pointer", fontFamily: "inherit" }}>ENTRAR</button>
+              <div style={{ fontSize: 10, color: "rgba(212,175,55,0.35)", textAlign: "center", marginTop: 6 }}>demo · ADM / 123</div>
             </div>
           </div>
-        );
-      })()}
-
-      {/* Login form */}
-      {phase === "login" && (
-        <div style={{ position: "absolute", left: "50%", top: "50%", transform: "translate(-50%,-50%)", zIndex: 25, textAlign: "center", animation: loginError ? "shake 0.4s ease" : "loginIn 0.9s ease forwards", width: 290 }}>
-          <div style={{ fontSize: 9, letterSpacing: "0.6em", color: "rgba(212,175,55,0.32)", marginBottom: 6, fontWeight: 500 }}>SYNTERA ERP</div>
-          <div style={{ fontSize: 10, color: "rgba(255,248,230,0.14)", marginBottom: 32, letterSpacing: "0.15em" }}>Enterprise AI Platform</div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            <input value={loginId} onChange={e => { setLoginId(e.target.value); setLoginError(false); }} onKeyDown={handleKey} placeholder="ID do usuário" style={inputStyle} />
-            <input type="password" value={loginPw} onChange={e => { setLoginPw(e.target.value); setLoginError(false); }} onKeyDown={handleKey} placeholder="Senha" style={inputStyle} />
-            {loginError && <div style={{ fontSize: 10.5, color: "rgba(220,75,75,0.8)", letterSpacing: "0.06em" }}>Credenciais inválidas</div>}
-            <button onClick={handleLogin} style={{ background: "linear-gradient(135deg,#9A7206,#D4AF37,#E8C84A)", border: "none", borderRadius: 8, color: "#04070e", fontWeight: 700, fontSize: 13, letterSpacing: "0.2em", padding: 14, cursor: "pointer", fontFamily: "inherit", marginTop: 2, boxShadow: "0 4px 24px rgba(212,175,55,0.22)" }}>ENTRAR</button>
-            <a href="#" style={{ color: "rgba(212,175,55,0.25)", fontSize: 10, textDecoration: "none", letterSpacing: "0.08em", display: "block", marginTop: 2 }}>Esqueceu a senha?</a>
-          </div>
         </div>
       )}
 
-      {/* Success */}
-      {phase === "success" && (
-        <div style={{ position: "absolute", left: "50%", top: "50%", zIndex: 30, textAlign: "center", animation: "successIn 0.65s ease forwards" }}>
-          <div style={{ fontSize: 28, fontWeight: 600, color: "#D4AF37", letterSpacing: "0.12em" }}>BEM-VINDO</div>
-          <div style={{ fontSize: 12, color: "rgba(212,175,55,0.45)", marginTop: 10, letterSpacing: "0.35em" }}>ADM</div>
-        </div>
-      )}
-
-      {/* Bottom bar */}
-      <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 1, background: "linear-gradient(90deg,transparent,rgba(212,175,55,0.25),transparent)", pointerEvents: "none" }} />
-      <div style={{ position: "absolute", bottom: 16, right: 24, pointerEvents: "none" }}>
-        <span style={{ fontSize: 8, letterSpacing: "0.22em", color: "rgba(255,248,230,0.08)" }}>v2.6.0 — 2026</span>
+      {/* ── Footer ── */}
+      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10" style={{ fontSize: 10, letterSpacing: "0.24em", color: "rgba(212,175,55,0.3)" }}>
+        v2.6.0 — 2026
       </div>
-
-      <style>{`
-        @keyframes floatLogo { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
-        @keyframes breathe { 0%,100%{opacity:0.2} 50%{opacity:0.5} }
-        @keyframes fadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
-        @keyframes loginIn { from{opacity:0;transform:translate(-50%,calc(-50% + 20px))} to{opacity:1;transform:translate(-50%,-50%)} }
-        @keyframes shake { 0%,100%{transform:translate(-50%,-50%)} 20%{transform:translate(calc(-50% - 8px),-50%)} 40%{transform:translate(calc(-50% + 8px),-50%)} 60%{transform:translate(calc(-50% - 5px),-50%)} 80%{transform:translate(calc(-50% + 5px),-50%)} }
-        @keyframes successIn { 0%{opacity:0;transform:translate(-50%,-50%) scale(0.88)} 70%{opacity:1;transform:translate(-50%,-50%) scale(1.03)} 100%{opacity:1;transform:translate(-50%,-50%) scale(1)} }
-        input::placeholder { color: rgba(212,175,55,0.24); }
-        input:focus { border-color: rgba(212,175,55,0.6) !important; background: rgba(212,175,55,0.06) !important; }
-      `}</style>
     </div>
   );
 }
