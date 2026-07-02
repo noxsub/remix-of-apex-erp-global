@@ -11,33 +11,14 @@ import { DataTable, type Column } from "@/components/data-table";
 import { AnexarDocumento } from "@/components/anexar-documento";
 import { Plus, Search, CheckCircle2, Download } from "lucide-react";
 import { toast } from "sonner";
+import { useContasPagar, proximoId, type TituloPagar } from "@/lib/financeiro-store";
 
 export const Route = createFileRoute("/financeiro/pagar")({ component: ContasPagarPage });
-
-type TituloPagar = {
-  id: string; documento: string; fornecedor: string; categoria: "fornecedores" | "impostos" | "folha" | "encargos" | "utilidades" | "outros";
-  emissao: string; vencimento: string; valor: number; juros: number; multa: number; totalPagar: number;
-  formaPgto: "boleto" | "pix" | "ted" | "debito" | "darf" | "gps";
-  centroCusto?: string; status: "aberto" | "vencido" | "pago" | "parcial" | "cancelado";
-  origemAuto?: string;
-};
-
-const titulosIniciais: TituloPagar[] = [
-  { id: "CP-001", documento: "NF 45210", fornecedor: "BRDrilling Equipamentos", categoria: "fornecedores", emissao: "25/06/2026", vencimento: "25/07/2026", valor: 120000, juros: 0, multa: 0, totalPagar: 120000, formaPgto: "boleto", centroCusto: "Operações", status: "aberto", origemAuto: "Entrada NF" },
-  { id: "CP-002", documento: "INSS-RET Jun/26", fornecedor: "Receita Federal", categoria: "impostos", emissao: "30/06/2026", vencimento: "20/07/2026", valor: 8450, juros: 0, multa: 0, totalPagar: 8450, formaPgto: "darf", centroCusto: "Fiscal", status: "aberto", origemAuto: "Retenção NFS-e" },
-  { id: "CP-003", documento: "CSRF Jun/26", fornecedor: "Receita Federal", categoria: "impostos", emissao: "30/06/2026", vencimento: "20/07/2026", valor: 4230, juros: 0, multa: 0, totalPagar: 4230, formaPgto: "darf", centroCusto: "Fiscal", status: "aberto", origemAuto: "Retenção NFS-e" },
-  { id: "CP-004", documento: "GPS Jun/26", fornecedor: "INSS", categoria: "encargos", emissao: "30/06/2026", vencimento: "20/07/2026", valor: 15800, juros: 0, multa: 0, totalPagar: 15800, formaPgto: "gps", centroCusto: "RH", status: "aberto", origemAuto: "Folha de Pagamento" },
-  { id: "CP-005", documento: "FGTS Jun/26", fornecedor: "Caixa Econômica", categoria: "encargos", emissao: "30/06/2026", vencimento: "07/07/2026", valor: 5280, juros: 0, multa: 0, totalPagar: 5280, formaPgto: "ted", centroCusto: "RH", status: "aberto", origemAuto: "Folha de Pagamento" },
-  { id: "CP-006", documento: "Folha Jun/26", fornecedor: "Funcionários", categoria: "folha", emissao: "30/06/2026", vencimento: "05/07/2026", valor: 21140, juros: 0, multa: 0, totalPagar: 21140, formaPgto: "ted", centroCusto: "RH", status: "aberto", origemAuto: "Folha de Pagamento" },
-  { id: "CP-007", documento: "Fatura Energia", fornecedor: "CPFL Energia", categoria: "utilidades", emissao: "10/06/2026", vencimento: "10/07/2026", valor: 7000, juros: 0, multa: 0, totalPagar: 7000, formaPgto: "boleto", centroCusto: "Administrativo", status: "aberto" },
-  { id: "CP-008", documento: "NF 45190", fornecedor: "Fornecedor ABC", categoria: "fornecedores", emissao: "01/06/2026", vencimento: "01/07/2026", valor: 12000, juros: 0, multa: 0, totalPagar: 12000, formaPgto: "boleto", centroCusto: "Operações", status: "aberto", origemAuto: "Entrada NF" },
-  { id: "CP-009", documento: "ISS-RET Jun/26", fornecedor: "Prefeitura", categoria: "impostos", emissao: "30/06/2026", vencimento: "15/07/2026", valor: 2100, juros: 0, multa: 0, totalPagar: 2100, formaPgto: "darf", centroCusto: "Fiscal", status: "aberto", origemAuto: "Retenção NFS-e" },
-];
 
 const fmt = (n: number) => n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
 function ContasPagarPage() {
-  const [titulos, setTitulos] = useState(titulosIniciais);
+  const [titulos, setTitulos] = useContasPagar();
   const [filtro, setFiltro] = useState("");
   const [filtroCategoria, setFiltroCategoria] = useState("todos");
   const [novoOpen, setNovoOpen] = useState(false);
@@ -53,7 +34,7 @@ function ContasPagarPage() {
     }
     const valorNum = Number(form.valor.replace(",", "."));
     const novo: TituloPagar = {
-      id: `CP-${String(titulos.length + 1).padStart(3, "0")}`,
+      id: proximoId(titulos, "CP"),
       documento: form.documento, fornecedor: form.fornecedor, categoria: form.categoria,
       emissao: new Date().toLocaleDateString("pt-BR"), vencimento: form.vencimento,
       valor: valorNum, juros: 0, multa: 0, totalPagar: valorNum,
