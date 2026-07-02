@@ -11,6 +11,9 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogT
 import { DataTable, type Column } from "@/components/data-table";
 import { Plus, Search, Send, FileText, AlertCircle, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
+import { useFaturados } from "@/lib/erp-store";
+import { useContasReceber, proximoId } from "@/lib/financeiro-store";
+import { useItensFiscais } from "@/lib/fiscal-store";
 
 export const Route = createFileRoute("/saidas/faturamento")({ component: FaturamentoPage });
 
@@ -46,6 +49,9 @@ function FaturamentoPage() {
   const [nfs, setNfs] = useState(nfsIniciais);
   const [novoOpen, setNovoOpen] = useState(false);
   const [filtro, setFiltro] = useState("");
+  const [, setFaturados] = useFaturados();
+  const [, setContasReceber] = useContasReceber();
+  const [, setItens] = useItensFiscais();
   const [form, setForm] = useState({
     pedido: "", cliente: "", cpfCnpj: "", modelo: "55" as const,
     naturezaOp: "Venda de mercadoria", subtotal: 0, desconto: 0, frete: 0,
@@ -54,8 +60,47 @@ function FaturamentoPage() {
   const filtrados = nfs.filter(n => !filtro || n.cliente.toLowerCase().includes(filtro.toLowerCase()) || n.pedido.includes(filtro));
 
   const emitirNf = (id: string) => {
+    const nf = nfs.find((n) => n.id === id);
+    if (!nf) return;
     setNfs(nfs.map(n => n.id === id ? { ...n, status: "autorizada" as const, chaveAcesso: `3526061234567800019955001000${n.numero}1234567890`, protocolo: `13526060000${Date.now().toString().slice(-4)}` } : n));
-    toast.success("NF-e autorizada na SEFAZ!");
+
+    // fecha o ciclo Venda → Financeiro: gera título a receber
+    setContasReceber((prev) => [
+      {
+        id: proximoId(prev, "CR"),
+        documento: `NF ${nf.numero}`,
+        cliente: nf.cliente,
+        emissao: new Date().toLocaleDateString("pt-BR"),
+        vencimento: new Date(Date.now() + 30 * 86400000).toLocaleDateString("pt-BR"),
+        valor: nf.totalNf,
+        juros: 0,
+        multa: 0,
+        totalReceber: nf.totalNf,
+        formaPgto: "boleto",
+        centroCusto: "Comercial",
+        status: "aberto",
+        origemAuto: "Faturamento NF",
+      },
+      ...prev,
+    ]);
+
+    // fecha o ciclo Venda → Dashboard: alimenta o KPI "Receita faturada"
+    setFaturados((prev) => [
+      { nf: `${nf.modelo}-${nf.numero}`, data: new Date().toLocaleDateString("pt-BR"), clienteNome: nf.cliente, itens: nf.itens.length || 1, total: nf.totalNf, status: "Faturado" },
+      ...prev,
+    ]);
+
+    // fecha o ciclo Venda → Estoque: desconta os itens vendidos que possuem SKU cadastrado
+    if (nf.itens.length > 0) {
+      setItens((prev) =>
+        prev.map((it) => {
+          const vendido = nf.itens.find((li) => li.codigo === it.sku);
+          return vendido ? { ...it, estoqueAtual: Math.max(0, (it.estoqueAtual ?? 0) - vendido.qtd) } : it;
+        }),
+      );
+    }
+
+    toast.success("NF-e autorizada na SEFAZ!", { description: "Título a receber gerado em Financeiro." });
   };
 
   const cols: Column<NfEmissao>[] = [
