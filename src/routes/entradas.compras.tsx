@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useRef, useState } from "react";
 import { useNotasEntrada, type NotaEntrada } from "@/lib/entradas-store";
 import { useItensFiscais } from "@/lib/fiscal-store";
+import { useContasPagar, proximoId } from "@/lib/financeiro-store";
 import { DataTable, type Column } from "@/components/data-table";
 import { AnexarDocumento } from "@/components/anexar-documento";
 import { Button } from "@/components/ui/button";
@@ -32,6 +33,7 @@ const brl = (n: number) =>
 function ComprasPage() {
   const [notas, setNotas] = useNotasEntrada();
   const [, setItens] = useItensFiscais();
+  const [, setTitulosPagar] = useContasPagar();
   const [open, setOpen] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [dragging, setDragging] = useState(false);
@@ -87,7 +89,7 @@ function ComprasPage() {
       ],
     };
     setNotas((prev) => [nova, ...prev]);
-    // dá entrada no estoque (simulado)
+    // dá entrada no estoque
     setItens((prev) =>
       prev.map((it) =>
         it.sku === nova.itens[0].sku
@@ -95,8 +97,28 @@ function ComprasPage() {
           : it,
       ),
     );
+    // gera título a pagar automaticamente (fecha o ciclo Compra → Financeiro)
+    setTitulosPagar((prev) => [
+      {
+        id: proximoId(prev, "CP"),
+        documento: `NF ${numero}`,
+        fornecedor: nova.fornecedorRazao,
+        categoria: "fornecedores",
+        emissao: new Date().toLocaleDateString("pt-BR"),
+        vencimento: new Date(Date.now() + 30 * 86400000).toLocaleDateString("pt-BR"),
+        valor: nova.valorTotal,
+        juros: 0,
+        multa: 0,
+        totalPagar: nova.valorTotal,
+        formaPgto: "boleto",
+        centroCusto: "Operações",
+        status: "aberto",
+        origemAuto: "Entrada NF",
+      },
+      ...prev,
+    ]);
     toast.success("NF-e importada", {
-      description: `Nota ${numero} lançada e itens disponibilizados para cadastro.`,
+      description: `Nota ${numero} lançada, estoque atualizado e título a pagar gerado.`,
     });
     setFile(null);
     setOpen(false);
@@ -206,7 +228,31 @@ function ComprasPage() {
           </DialogContent>
         </Dialog>
 
-        <LancamentoManualDialog onSave={(n) => setNotas((prev) => [n, ...prev])} />
+        <LancamentoManualDialog
+          onSave={(n) => {
+            setNotas((prev) => [n, ...prev]);
+            setTitulosPagar((prev) => [
+              {
+                id: proximoId(prev, "CP"),
+                documento: `${n.modelo === "55" ? "NF" : n.modelo} ${n.numero}`,
+                fornecedor: n.fornecedorRazao,
+                categoria: "fornecedores",
+                emissao: new Date().toLocaleDateString("pt-BR"),
+                vencimento: new Date(Date.now() + 30 * 86400000).toLocaleDateString("pt-BR"),
+                valor: n.valorTotal,
+                juros: 0,
+                multa: 0,
+                totalPagar: n.valorTotal,
+                formaPgto: "boleto",
+                centroCusto: "Operações",
+                status: "aberto",
+                origemAuto: "Lançamento manual",
+              },
+              ...prev,
+            ]);
+            toast.success("Título a pagar gerado automaticamente em Financeiro.");
+          }}
+        />
       </div>
 
       <DataTable
