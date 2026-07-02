@@ -27,7 +27,7 @@ interface Particle { x: number; y: number; vx: number; vy: number; size: number;
 function SynteraDNA() {
   const navigate = useNavigate();
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const logoImgRef = useRef<HTMLImageElement>(null);
+  const LOGO_URL = "/syntera-logo.png";
   const animRef = useRef(0);
   const particlesRef = useRef<Particle[]>([]);
   const timeRef = useRef(0);
