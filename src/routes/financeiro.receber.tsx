@@ -4,36 +4,50 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 import { DataTable, type Column } from "@/components/data-table";
+import { AnexarDocumento } from "@/components/anexar-documento";
 import { Plus, Search, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
+import { useContasReceber, proximoId, type TituloReceber } from "@/lib/financeiro-store";
 
 export const Route = createFileRoute("/financeiro/receber")({ component: ContasReceberPage });
-
-type TituloReceber = {
-  id: string; documento: string; cliente: string; emissao: string; vencimento: string;
-  valor: number; juros: number; multa: number; totalReceber: number;
-  formaPgto: "boleto" | "pix" | "ted" | "cartao" | "cheque";
-  centroCusto?: string; status: "aberto" | "vencido" | "recebido" | "parcial";
-  origemAuto?: string;
-};
-
-const titulosIniciais: TituloReceber[] = [
-  { id: "CR-001", documento: "NF 000184", cliente: "Acme Global Ltd.", emissao: "26/06/2026", vencimento: "26/07/2026", valor: 18420, juros: 0, multa: 0, totalReceber: 18420, formaPgto: "boleto", centroCusto: "Comercial", status: "aberto", origemAuto: "Faturamento NF" },
-  { id: "CR-002", documento: "NF 000183", cliente: "Northwind Trading", emissao: "25/06/2026", vencimento: "25/07/2026", valor: 9890.5, juros: 0, multa: 0, totalReceber: 9890.5, formaPgto: "pix", centroCusto: "Comercial", status: "aberto", origemAuto: "Faturamento NF" },
-  { id: "CR-003", documento: "NF 000181", cliente: "Contoso Ltd.", emissao: "23/06/2026", vencimento: "23/07/2026", valor: 27800, juros: 0, multa: 0, totalReceber: 27800, formaPgto: "boleto", centroCusto: "Projetos", status: "aberto", origemAuto: "Faturamento NF" },
-  { id: "CR-004", documento: "NF 000170", cliente: "Initech LLC", emissao: "10/06/2026", vencimento: "10/07/2026", valor: 15150, juros: 0, multa: 0, totalReceber: 15150, formaPgto: "ted", centroCusto: "Projetos", status: "aberto", origemAuto: "Faturamento NF" },
-  { id: "CR-005", documento: "NF 000160", cliente: "Sabesp", emissao: "01/06/2026", vencimento: "01/07/2026", valor: 45000, juros: 495, multa: 900, totalReceber: 46395, formaPgto: "ted", centroCusto: "Projetos", status: "vencido", origemAuto: "Medição Sabesp" },
-];
 
 const fmt = (n: number) => n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
 function ContasReceberPage() {
-  const [titulos, setTitulos] = useState(titulosIniciais);
+  const [titulos, setTitulos] = useContasReceber();
   const [filtro, setFiltro] = useState("");
+  const [novoOpen, setNovoOpen] = useState(false);
+  const [form, setForm] = useState({
+    documento: "", cliente: "", vencimento: "", valor: "",
+    formaPgto: "boleto" as TituloReceber["formaPgto"], centroCusto: "",
+  });
+
   const filtrados = titulos.filter(t => !filtro || t.cliente.toLowerCase().includes(filtro.toLowerCase()));
 
   const baixar = (id: string) => { setTitulos(titulos.map(t => t.id === id ? { ...t, status: "recebido" as const } : t)); toast.success("Recebimento confirmado!"); };
+
+  const criarTitulo = () => {
+    if (!form.documento || !form.cliente || !form.vencimento || !form.valor) {
+      toast.error("Preencha documento, cliente, vencimento e valor.");
+      return;
+    }
+    const valorNum = Number(form.valor.replace(",", "."));
+    const novo: TituloReceber = {
+      id: proximoId(titulos, "CR"),
+      documento: form.documento, cliente: form.cliente,
+      emissao: new Date().toLocaleDateString("pt-BR"), vencimento: form.vencimento,
+      valor: valorNum, juros: 0, multa: 0, totalReceber: valorNum,
+      formaPgto: form.formaPgto, centroCusto: form.centroCusto || undefined, status: "aberto",
+    };
+    setTitulos([novo, ...titulos]);
+    setForm({ documento: "", cliente: "", vencimento: "", valor: "", formaPgto: "boleto", centroCusto: "" });
+    setNovoOpen(false);
+    toast.success("Título lançado com sucesso!");
+  };
 
   const cols: Column<TituloReceber>[] = [
     { key: "documento", header: "Documento" },
@@ -54,7 +68,56 @@ function ContasReceberPage() {
     <div className="space-y-4">
       <div className="flex gap-3 items-end justify-between">
         <div className="relative flex-1 max-w-sm"><Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" /><Input placeholder="Buscar cliente..." value={filtro} onChange={(e) => setFiltro(e.target.value)} className="pl-8" /></div>
-        <Button className="gap-1.5"><Plus className="h-3.5 w-3.5" />Novo Título</Button>
+        <Dialog open={novoOpen} onOpenChange={setNovoOpen}>
+          <DialogTrigger asChild>
+            <Button className="gap-1.5"><Plus className="h-3.5 w-3.5" />Novo Título</Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-lg">
+            <DialogHeader><DialogTitle>Novo Título a Receber</DialogTitle></DialogHeader>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="col-span-2 space-y-1.5">
+                <Label className="text-xs">Documento *</Label>
+                <Input value={form.documento} onChange={(e) => setForm({ ...form, documento: e.target.value })} placeholder="Ex: NF 000200" />
+              </div>
+              <div className="col-span-2 space-y-1.5">
+                <Label className="text-xs">Cliente *</Label>
+                <Input value={form.cliente} onChange={(e) => setForm({ ...form, cliente: e.target.value })} />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Forma de Recebimento</Label>
+                <Select value={form.formaPgto} onValueChange={(v) => setForm({ ...form, formaPgto: v as TituloReceber["formaPgto"] })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="boleto">Boleto</SelectItem>
+                    <SelectItem value="pix">PIX</SelectItem>
+                    <SelectItem value="ted">TED</SelectItem>
+                    <SelectItem value="cartao">Cartão</SelectItem>
+                    <SelectItem value="cheque">Cheque</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Vencimento *</Label>
+                <Input type="date" value={form.vencimento} onChange={(e) => setForm({ ...form, vencimento: e.target.value })} />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Valor (R$) *</Label>
+                <Input value={form.valor} onChange={(e) => setForm({ ...form, valor: e.target.value })} placeholder="0,00" />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Centro de Custo</Label>
+                <Input value={form.centroCusto} onChange={(e) => setForm({ ...form, centroCusto: e.target.value })} />
+              </div>
+              <div className="col-span-2">
+                <AnexarDocumento label="Anexar nota fiscal / contrato (PDF)" />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" size="sm" onClick={() => setNovoOpen(false)}>Cancelar</Button>
+              <Button size="sm" onClick={criarTitulo}>Lançar Título</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <Card className="p-3 border-border"><p className="text-[10px] uppercase text-muted-foreground">Em Aberto</p><p className="text-lg font-bold text-blue-600">{fmt(totalAberto)}</p></Card>
