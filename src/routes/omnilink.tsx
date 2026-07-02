@@ -50,6 +50,7 @@ import { FlokiBadge } from "@/components/floki-badge";
 import { FlokiAlerts } from "@/components/floki-alerts";
 import { useItensFiscais } from "@/lib/fiscal-store";
 import { useFaturados, type PedidoFaturado } from "@/lib/erp-store";
+import { useContasReceber, proximoId } from "@/lib/financeiro-store";
 import {
   type CanalTipo,
   type CanalVenda,
@@ -414,6 +415,7 @@ function PedidosTab() {
   const [itens, setItens] = useItensFiscais();
   const [pedidos, setPedidos] = usePedidosMarketplace();
   const [, setFaturados] = useFaturados();
+  const [, setContasReceber] = useContasReceber();
   const [busyCanal, setBusyCanal] = useState<string | null>(null);
   const [busyFaturar, setBusyFaturar] = useState<string | null>(null);
 
@@ -466,6 +468,25 @@ function PedidosTab() {
       status: "Faturado",
     };
     setFaturados((prev) => (prev.some((p) => p.nf === reg.nf) ? prev : [reg, ...prev]));
+    // fecha o ciclo Omnilink → Financeiro: gera título a receber (marketplace paga em D+X)
+    setContasReceber((prev) => [
+      {
+        id: proximoId(prev, "CR"),
+        documento: reg.nf,
+        cliente: reg.clienteNome,
+        emissao: reg.data,
+        vencimento: new Date(Date.now() + 14 * 86400000).toLocaleDateString("pt-BR"),
+        valor: ped.valorLiquido,
+        juros: 0,
+        multa: 0,
+        totalReceber: ped.valorLiquido,
+        formaPgto: "pix",
+        centroCusto: "Marketplace",
+        status: "aberto",
+        origemAuto: "Venda Marketplace",
+      },
+      ...prev,
+    ]);
     toast.success(`NF ${nf.formatado} emitida`);
     setTimeout(() => setBusyFaturar(null), 300);
   }
