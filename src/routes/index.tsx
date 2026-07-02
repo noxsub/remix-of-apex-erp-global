@@ -1,33 +1,35 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 
 export const Route = createFileRoute("/")({
   head: () => ({ meta: [{ title: "Syntera ERP" }] }),
   component: SynteraDNA,
 });
 
+/* ═══ MÓDULOS ═══════════════════════════════════════════════════════════════ */
 const MODULES = [
-  { id: "financeiro", label: "Financeiro", pitch: { title: "Financeiro", hook: "Visibilidade total do seu caixa", desc: "Fluxo de caixa em tempo real, DRE automático, conciliação bancária e gestão de contas. Tome decisões com dados, não com intuição.", kpis: ["DRE em 1 clique", "Conciliação automática", "Multi-empresa"] } },
-  { id: "fiscal", label: "Fiscal", pitch: { title: "Módulo Fiscal", hook: "Zero multas, zero retrabalho", desc: "NF-e, NFS-e e CT-e automáticos. SPED Fiscal, DCTF e ECF integrados. Conformidade permanente com a Receita Federal.", kpis: ["NF-e automática", "SPED integrado", "Alertas de prazo"] } },
-  { id: "entradas", label: "Compras", pitch: { title: "Entradas & Compras", hook: "Elimine erros de entrada para sempre", desc: "Validação automática de NFs, pedidos de compra e cotações. Integrado ao estoque em tempo real com rastreabilidade completa.", kpis: ["Validação automática", "Cotações integradas", "Rastreabilidade"] } },
-  { id: "saidas", label: "Vendas", pitch: { title: "Módulo de Vendas", hook: "Do orçamento à nota em segundos", desc: "Orçamentos, pedidos e faturamento em um único fluxo. Impostos automáticos e estoque atualizado em tempo real.", kpis: ["Orçamento rápido", "Faturamento automático", "Pipeline visual"] } },
-  { id: "estoque", label: "Estoque", pitch: { title: "Controle de Estoque", hook: "Nunca mais perca produto", desc: "Saldo em tempo real, múltiplos depósitos, PEPS/custo médio e inventário com código de barras.", kpis: ["Multi-depósito", "PEPS / Custo Médio", "Inventário mobile"] } },
-  { id: "rh", label: "RH", pitch: { title: "Recursos Humanos", hook: "Folha sem dores de cabeça", desc: "Folha de pagamento, ponto eletrônico, férias e benefícios integrados. eSocial e CAGED automáticos.", kpis: ["eSocial integrado", "Ponto eletrônico", "Férias automáticas"] } },
-  { id: "cadastros", label: "Cadastros", pitch: { title: "Gestão de Cadastros", hook: "Dados precisos, processos impecáveis", desc: "Clientes, fornecedores e produtos com validação CNPJ/CPF via Receita Federal e consulta de CEP integrada.", kpis: ["Validação CNPJ/CPF", "Consulta Receita", "Histórico completo"] } },
-  { id: "obrigacoes", label: "Obrigações", pitch: { title: "Obrigações Fiscais", hook: "Nunca mais perca um prazo", desc: "Calendário fiscal inteligente com alertas automáticos, DARF, GPS e guias estaduais.", kpis: ["Alertas automáticos", "Geração de guias", "Dashboard fiscal"] } },
-  { id: "reforma", label: "Reforma Tributária", pitch: { title: "Reforma Tributária 2026", hook: "Pronto para o novo modelo fiscal", desc: "IBS/CBS automáticos, split payment nativo e transição gradual até 2033.", kpis: ["IBS / CBS nativo", "Split payment", "Transição automática"] } },
-  { id: "omnilink", label: "Integrações", pitch: { title: "Omnilink — Integrações", hook: "Conecte tudo ao seu ERP", desc: "API REST para marketplaces, PDV, bancos e sistemas legados. Webhooks em tempo real.", kpis: ["API REST nativa", "Webhooks em tempo real", "Marketplace connect"] } },
-  { id: "bi", label: "BI / Relatórios", pitch: { title: "Business Intelligence", hook: "Decisões baseadas em dados", desc: "Dashboards com KPIs em tempo real, exportação Excel e relatórios customizados.", kpis: ["Dashboards em tempo real", "Export Excel / PDF", "KPIs customizados"] } },
-  { id: "floki", label: "Floki IA", pitch: { title: "Floki — Inteligência Artificial", hook: "A IA que gerencia seu ERP", desc: "Analisa anomalias, prevê fluxo de caixa, alerta sobre riscos fiscais e sugere otimizações em toda a operação.", kpis: ["Análise preditiva", "Alertas de risco", "Sugestões automáticas"] } },
+  { id: "financeiro", label: "Financeiro", url: "/financeiro", pitch: { title: "Financeiro", hook: "Visibilidade total do seu caixa", desc: "Fluxo de caixa em tempo real, DRE automático, conciliação bancária e gestão de contas. Tome decisões com dados, não com intuição.", kpis: ["DRE em 1 clique", "Conciliação automática", "Multi-empresa"] } },
+  { id: "fiscal", label: "Fiscal", url: "/fiscal", pitch: { title: "Módulo Fiscal", hook: "Zero multas, zero retrabalho", desc: "NF-e, NFS-e e CT-e automáticos. SPED Fiscal, DCTF e ECF integrados. Conformidade permanente com a Receita Federal.", kpis: ["NF-e automática", "SPED integrado", "Alertas de prazo"] } },
+  { id: "entradas", label: "Compras", url: "/entradas", pitch: { title: "Entradas & Compras", hook: "Elimine erros de entrada para sempre", desc: "Validação automática de NFs, pedidos de compra e cotações. Integrado ao estoque em tempo real com rastreabilidade completa.", kpis: ["Validação automática", "Cotações integradas", "Rastreabilidade"] } },
+  { id: "saidas", label: "Vendas", url: "/saidas", pitch: { title: "Módulo de Vendas", hook: "Do orçamento à nota em segundos", desc: "Orçamentos, pedidos e faturamento em um único fluxo. Impostos automáticos e estoque atualizado em tempo real.", kpis: ["Orçamento rápido", "Faturamento automático", "Pipeline visual"] } },
+  { id: "estoque", label: "Estoque", url: "/estoque", pitch: { title: "Controle de Estoque", hook: "Nunca mais perca produto", desc: "Saldo em tempo real, múltiplos depósitos, PEPS/custo médio e inventário com código de barras.", kpis: ["Multi-depósito", "PEPS / Custo Médio", "Inventário mobile"] } },
+  { id: "rh", label: "RH", url: "/rh", pitch: { title: "Recursos Humanos", hook: "Folha sem dores de cabeça", desc: "Folha de pagamento, ponto eletrônico, férias e benefícios integrados. eSocial e CAGED automáticos.", kpis: ["eSocial integrado", "Ponto eletrônico", "Férias automáticas"] } },
+  { id: "cadastros", label: "Cadastros", url: "/cadastros", pitch: { title: "Gestão de Cadastros", hook: "Dados precisos, processos impecáveis", desc: "Clientes, fornecedores e produtos com validação CNPJ/CPF via Receita Federal e consulta de CEP integrada.", kpis: ["Validação CNPJ/CPF", "Consulta Receita", "Histórico completo"] } },
+  { id: "obrigacoes", label: "Obrigações", url: "/obrigacoes", pitch: { title: "Obrigações Fiscais", hook: "Nunca mais perca um prazo", desc: "Calendário fiscal inteligente com alertas automáticos, DARF, GPS e guias estaduais.", kpis: ["Alertas automáticos", "Geração de guias", "Dashboard fiscal"] } },
+  { id: "reforma", label: "Reforma Tributária", url: "/reforma-tributaria", pitch: { title: "Reforma Tributária 2026", hook: "Pronto para o novo modelo fiscal", desc: "IBS/CBS automáticos, split payment nativo e transição gradual até 2033.", kpis: ["IBS / CBS nativo", "Split payment", "Transição automática"] } },
+  { id: "omnilink", label: "Integrações", url: "/omnilink", pitch: { title: "Omnilink — Integrações", hook: "Conecte tudo ao seu ERP", desc: "API REST para marketplaces, PDV, bancos e sistemas legados. Webhooks em tempo real.", kpis: ["API REST nativa", "Webhooks em tempo real", "Marketplace connect"] } },
+  { id: "bi", label: "BI / Relatórios", url: "/saidas/relatorios", pitch: { title: "Business Intelligence", hook: "Decisões baseadas em dados", desc: "Dashboards com KPIs em tempo real, exportação Excel e relatórios customizados.", kpis: ["Dashboards em tempo real", "Export Excel / PDF", "KPIs customizados"] } },
+  { id: "floki", label: "Floki IA", url: "/omnilink", pitch: { title: "Floki — Inteligência Artificial", hook: "A IA que gerencia seu ERP", desc: "Analisa anomalias, prevê fluxo de caixa, alerta sobre riscos fiscais e sugere otimizações em toda a operação.", kpis: ["Análise preditiva", "Alertas de risco", "Sugestões automáticas"] } },
 ] as const;
 
 type Phase = "idle" | "exploding" | "login" | "success";
 interface Particle { x: number; y: number; vx: number; vy: number; size: number; life: number; r: number; g: number; b: number }
 
+/* ═══ COMPONENT ══════════════════════════════════════════════════════════════ */
 function SynteraDNA() {
   const navigate = useNavigate();
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const LOGO_URL = "/syntera-logo.png";
+  const logoImgRef = useRef<HTMLImageElement>(null);
   const animRef = useRef(0);
   const particlesRef = useRef<Particle[]>([]);
   const timeRef = useRef(0);
@@ -39,6 +41,7 @@ function SynteraDNA() {
   const [loginPw, setLoginPw] = useState("");
   const [loginError, setLoginError] = useState(false);
 
+  /* ── Resize ─────────────────────────────────────────────────────────────── */
   useEffect(() => {
     const onResize = () => {
       const w = window.innerWidth, h = window.innerHeight;
@@ -51,6 +54,7 @@ function SynteraDNA() {
     return () => window.removeEventListener("resize", onResize);
   }, []);
 
+  /* ── Remove black logo background ───────────────────────────────────────── */
   useEffect(() => {
     const img = new Image();
     img.onload = () => {
@@ -69,12 +73,14 @@ function SynteraDNA() {
         if (logoImgRef.current) logoImgRef.current.src = cv.toDataURL("image/png");
       } catch { /* tainted canvas fallback */ }
     };
-    img.src = "/src/assets/syntera-logo.png"; // ⚠️ ajuste para o caminho real do seu logo
+    img.src = "/syntera-logo.png";
   }, []);
 
+  /* ── Animation loop ──────────────────────────────────────────────────────── */
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
+
     const draw = () => {
       timeRef.current += 0.005;
       const t = timeRef.current;
@@ -89,6 +95,7 @@ function SynteraDNA() {
       const logoR = 80;
 
       if (phase !== "success") {
+        // ── Dot grid ─────────────────────────────────────────────────────────
         const gs = 56;
         ctx.fillStyle = "rgba(212,175,55,0.045)";
         for (let gx = gs / 2; gx < w; gx += gs)
@@ -96,34 +103,47 @@ function SynteraDNA() {
             ctx.beginPath(); ctx.arc(gx, gy, 0.85, 0, Math.PI * 2); ctx.fill();
           }
 
+        // ── Center glow ───────────────────────────────────────────────────────
         const cg = ctx.createRadialGradient(cx, cy, 0, cx, cy, 100);
         cg.addColorStop(0, "rgba(212,175,55,0.1)"); cg.addColorStop(1, "rgba(212,175,55,0)");
         ctx.beginPath(); ctx.arc(cx, cy, 100, 0, Math.PI * 2); ctx.fillStyle = cg; ctx.fill();
 
+        // ── Circuit traces ────────────────────────────────────────────────────
         MODULES.forEach((mod, idx) => {
-          const angle = (idx / N) * Math.PI * 2 - Math.PI / 2 + Math.sin(idx * 2.7) * 0.1;
-          const mx = cx + Math.cos(angle) * R, my = cy + Math.sin(angle) * R;
+          const baseA = (idx / N) * Math.PI * 2 - Math.PI / 2;
+          const jitter = Math.sin(idx * 2.7) * 0.1;
+          const angle = baseA + jitter;
+          const mx = cx + Math.cos(angle) * R;
+          const my = cy + Math.sin(angle) * R;
           const act = activeModule === mod.id;
           const pulse = (Math.sin(t * 1.1 + idx * 0.6) + 1) / 2;
-          const sx = cx + Math.cos(angle) * logoR, sy = cy + Math.sin(angle) * logoR;
-          const horizontal = Math.abs(mx - sx) >= Math.abs(my - sy);
-          const cX = horizontal ? mx : sx, cY = horizontal ? sy : my;
-          const lineA = act ? 0.85 : 0.3 + pulse * 0.12;
 
+          // Start from clearance ring
+          const sx = cx + Math.cos(angle) * logoR;
+          const sy = cy + Math.sin(angle) * logoR;
+          // L-shaped routing
+          const horizontal = Math.abs(mx - sx) >= Math.abs(my - sy);
+          const cX = horizontal ? mx : sx;
+          const cY = horizontal ? sy : my;
+
+          const lineA = act ? 0.85 : 0.3 + pulse * 0.12;
           ctx.strokeStyle = `rgba(212,175,55,${lineA})`;
           ctx.lineWidth = act ? 1.8 : 1.1;
           ctx.lineCap = "square"; ctx.lineJoin = "miter";
           ctx.beginPath(); ctx.moveTo(sx, sy); ctx.lineTo(cX, cY); ctx.lineTo(mx, my); ctx.stroke();
 
+          // Corner pad
           ctx.beginPath(); ctx.arc(cX, cY, 3, 0, Math.PI * 2);
           ctx.fillStyle = `rgba(212,175,55,${lineA * 0.85})`; ctx.fill();
 
+          // Traveling pulse
           const seg1 = Math.abs(cX - sx) + Math.abs(cY - sy);
           const seg2 = Math.abs(mx - cX) + Math.abs(my - cY);
           const total = seg1 + seg2;
           if (total > 1) {
-            const pd = ((t * 0.32 + idx * 0.14) % 1) * total;
-            let px: number, py: number;
+            const pf = ((t * 0.32 + idx * 0.14) % 1);
+            const pd = pf * total;
+            let px, py;
             if (pd <= seg1 && seg1 > 0) {
               const tf = pd / seg1; px = sx + (cX - sx) * tf; py = sy + (cY - sy) * tf;
             } else if (seg2 > 0) {
@@ -135,6 +155,7 @@ function SynteraDNA() {
             ctx.beginPath(); ctx.arc(px, py, 2.2, 0, Math.PI * 2); ctx.fillStyle = "rgba(255,235,100,0.95)"; ctx.fill();
           }
 
+          // Module node
           ctx.beginPath(); ctx.arc(mx, my, act ? 13 : 8, 0, Math.PI * 2);
           ctx.strokeStyle = act ? `rgba(212,175,55,${0.9 + pulse * 0.1})` : `rgba(212,175,55,${0.38 + pulse * 0.18})`;
           ctx.lineWidth = act ? 1.8 : 1.1; ctx.stroke();
@@ -148,6 +169,7 @@ function SynteraDNA() {
         });
       }
 
+      // ── Particles ─────────────────────────────────────────────────────────
       if (phase === "exploding") {
         particlesRef.current = particlesRef.current.filter(p => p.life > 0);
         particlesRef.current.forEach(p => {
@@ -164,6 +186,7 @@ function SynteraDNA() {
     return () => cancelAnimationFrame(animRef.current);
   }, [dims, phase, activeModule]);
 
+  /* ── Logo explosion ──────────────────────────────────────────────────────── */
   const handleLogoClick = () => {
     if (phase !== "idle") return;
     setPhase("exploding");
@@ -176,6 +199,7 @@ function SynteraDNA() {
     setTimeout(() => setPhase("login"), 1900);
   };
 
+  /* ── Login ───────────────────────────────────────────────────────────────── */
   const handleLogin = () => {
     if (loginId.toUpperCase() === "ADM" && loginPw === "123") {
       setPhase("success");
@@ -188,6 +212,7 @@ function SynteraDNA() {
 
   const handleKey = (e: React.KeyboardEvent) => { if (e.key === "Enter") handleLogin(); };
 
+  /* ── Module positions ────────────────────────────────────────────────────── */
   const R = Math.min(dims.w, dims.h) * 0.3;
   const cx = dims.w / 2, cy = dims.h / 2;
   const isMobile = dims.w < 680;
@@ -195,26 +220,33 @@ function SynteraDNA() {
   const inputStyle: React.CSSProperties = {
     background: "rgba(212,175,55,0.04)", border: "1px solid rgba(212,175,55,0.18)",
     borderRadius: 6, color: "rgba(255,248,230,0.82)", padding: "13px 16px",
-    fontSize: 13.5, width: "100%", fontFamily: "inherit", letterSpacing: "0.04em", outline: "none",
+    fontSize: 13.5, width: "100%", fontFamily: "inherit", letterSpacing: "0.04em",
+    outline: "none",
   };
 
   return (
     <div style={{ position: "fixed", inset: 0, overflow: "hidden", background: "#070d1a", fontFamily: "'Helvetica Neue',Helvetica,system-ui,sans-serif", userSelect: "none" }}>
+
+      {/* Canvas */}
       <canvas ref={canvasRef} style={{ position: "absolute", inset: 0, pointerEvents: "none", width: dims.w, height: dims.h }} />
 
+      {/* Top bar */}
       <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 1, background: "linear-gradient(90deg,transparent,rgba(212,175,55,0.4),transparent)", pointerEvents: "none" }} />
       <div style={{ position: "absolute", top: 18, left: 28, pointerEvents: "none" }}>
-        <span style={{ fontSize: 10, letterSpacing: "0.35em", color: "rgba(212,175,55,0.28)" }}>SYNTERA ERP</span>
+        <span style={{ fontSize: 10, letterSpacing: "0.35em", color: "rgba(212,175,55,0.28)", fontWeight: 400 }}>SYNTERA ERP</span>
       </div>
       <div style={{ position: "absolute", top: 18, right: 28, pointerEvents: "none" }}>
         <span style={{ fontSize: 10, letterSpacing: "0.2em", color: "rgba(255,248,230,0.12)" }}>ENTERPRISE PLATFORM</span>
       </div>
 
+      {/* Module labels */}
       {!isMobile && MODULES.map((mod, idx) => {
-        const angle = (idx / MODULES.length) * Math.PI * 2 - Math.PI / 2 + Math.sin(idx * 2.7) * 0.1;
+        const baseA = (idx / MODULES.length) * Math.PI * 2 - Math.PI / 2;
+        const jitter = Math.sin(idx * 2.7) * 0.1;
+        const angle = baseA + jitter;
         const mx = cx + Math.cos(angle) * R, my = cy + Math.sin(angle) * R;
         const cosA = Math.cos(angle), sinA = Math.sin(angle);
-        const lx = mx + cosA * 20, ly = my + sinA * 20, LW = 96;
+        const outD = 20, lx = mx + cosA * outD, ly = my + sinA * outD, LW = 96;
         const tAlign = cosA > 0.2 ? "left" : cosA < -0.2 ? "right" : "center";
         const left = tAlign === "left" ? Math.round(lx) : tAlign === "right" ? Math.round(lx - LW) : Math.round(lx - LW / 2);
         const act = activeModule === mod.id;
@@ -228,51 +260,59 @@ function SynteraDNA() {
         );
       })}
 
+      {/* S Logo */}
       {(phase === "idle" || phase === "exploding") && (
         <div style={{ position: "absolute", left: "50%", top: "50%", transform: "translate(-50%,-50%)", zIndex: 10, textAlign: "center", pointerEvents: "none" }}>
-          <div onClick={handleLogoClick} style={{ cursor: phase === "idle" ? "pointer" : "default", opacity: phase === "idle" ? 1 : 0, transition: "opacity 0.85s ease", animation: phase === "idle" ? "floatLogo 4s ease-in-out infinite" : "none", display: "inline-block", pointerEvents: "auto" }}>
-            <img ref={logoImgRef} src="/src/assets/syntera-logo.png" alt="Syntera" style={{ width: 148, height: 148, objectFit: "contain", display: "block" }} />
+          <div onClick={handleLogoClick}
+            style={{ cursor: phase === "idle" ? "pointer" : "default", opacity: phase === "idle" ? 1 : 0, transition: "opacity 0.85s ease", animation: phase === "idle" ? "floatLogo 4s ease-in-out infinite" : "none", display: "inline-block", pointerEvents: "auto" }}>
+            <img ref={logoImgRef} src="/syntera-logo.png" alt="Syntera"
+              style={{ width: 148, height: 148, objectFit: "contain", display: "block" }} />
           </div>
-          <div style={{ fontSize: 10.5, letterSpacing: "0.55em", color: "rgba(212,175,55,0.35)", marginTop: 8 }}>SYNTERA</div>
+          <div style={{ fontSize: 10.5, letterSpacing: "0.55em", color: "rgba(212,175,55,0.35)", marginTop: 8, fontWeight: 400 }}>SYNTERA</div>
           <div style={{ fontSize: 8.5, letterSpacing: "0.28em", color: "rgba(212,175,55,0.22)", marginTop: 9, animation: "breathe 3s ease-in-out infinite" }}>clique para entrar</div>
         </div>
       )}
 
+      {/* Module popup */}
       {activeModule && (() => {
         const mod = MODULES.find(m => m.id === activeModule);
         if (!mod) return null;
         return (
           <div onClick={() => setActiveModule(null)} style={{ position: "fixed", inset: 0, zIndex: 50, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(4,7,14,0.75)", backdropFilter: "blur(10px)" }}>
-            <div onClick={e => e.stopPropagation()} style={{ background: "rgba(9,14,26,0.98)", border: "1px solid rgba(212,175,55,0.22)", borderLeft: "3px solid rgba(212,175,55,0.7)", borderRadius: "4px 14px 14px 4px", padding: "36px 38px", maxWidth: 400, width: "92%", animation: "fadeUp 0.28s ease" }}>
-              <div style={{ fontSize: 9, letterSpacing: "0.5em", color: "rgba(212,175,55,0.38)", marginBottom: 14 }}>MÓDULO SYNTERA ERP</div>
+            <div onClick={e => e.stopPropagation()} style={{ background: "rgba(9,14,26,0.98)", border: "1px solid rgba(212,175,55,0.22)", borderLeft: "3px solid rgba(212,175,55,0.7)", borderRadius: "4px 14px 14px 4px", padding: "36px 38px", maxWidth: 400, width: "92%", boxShadow: "0 2px 60px rgba(0,0,0,0.7),0 0 40px rgba(212,175,55,0.06)", animation: "fadeUp 0.28s ease" }}>
+              <div style={{ fontSize: 9, letterSpacing: "0.5em", color: "rgba(212,175,55,0.38)", marginBottom: 14, fontWeight: 500 }}>MÓDULO SYNTERA ERP</div>
               <div style={{ fontSize: 22, fontWeight: 600, color: "#D4AF37", marginBottom: 6 }}>{mod.pitch.title}</div>
               <div style={{ fontSize: 13, color: "rgba(255,248,230,0.38)", marginBottom: 22, fontStyle: "italic" }}>{mod.pitch.hook}</div>
               <div style={{ height: 1, background: "rgba(212,175,55,0.15)", marginBottom: 20 }} />
               <div style={{ fontSize: 13, color: "rgba(255,248,230,0.6)", lineHeight: 1.75, marginBottom: 26 }}>{mod.pitch.desc}</div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 7, marginBottom: 30 }}>
-                {mod.pitch.kpis.map(k => <span key={k} style={{ background: "rgba(212,175,55,0.08)", border: "1px solid rgba(212,175,55,0.2)", borderRadius: 3, padding: "4px 12px", fontSize: 10.5, color: "rgba(212,175,55,0.7)", whiteSpace: "nowrap" }}>{k}</span>)}
+                {mod.pitch.kpis.map(k => (
+                  <span key={k} style={{ background: "rgba(212,175,55,0.08)", border: "1px solid rgba(212,175,55,0.2)", borderRadius: 3, padding: "4px 12px", fontSize: 10.5, color: "rgba(212,175,55,0.7)", letterSpacing: "0.06em", whiteSpace: "nowrap" }}>{k}</span>
+                ))}
               </div>
               <button onClick={() => setActiveModule(null)} style={{ width: "100%", background: "linear-gradient(135deg,#9A7206,#D4AF37,#E8C84A)", border: "none", borderRadius: 8, color: "#04070e", fontWeight: 700, fontSize: 12.5, letterSpacing: "0.18em", padding: 13, cursor: "pointer", fontFamily: "inherit", marginBottom: 8 }}>ACESSAR MÓDULO →</button>
-              <button onClick={() => setActiveModule(null)} style={{ width: "100%", background: "none", border: "none", color: "rgba(212,175,55,0.25)", fontSize: 10, padding: 8, cursor: "pointer", fontFamily: "inherit" }}>FECHAR</button>
+              <button onClick={() => setActiveModule(null)} style={{ width: "100%", background: "none", border: "none", color: "rgba(212,175,55,0.25)", fontSize: 10, padding: 8, cursor: "pointer", fontFamily: "inherit", letterSpacing: "0.1em" }}>FECHAR</button>
             </div>
           </div>
         );
       })()}
 
+      {/* Login form */}
       {phase === "login" && (
         <div style={{ position: "absolute", left: "50%", top: "50%", transform: "translate(-50%,-50%)", zIndex: 25, textAlign: "center", animation: loginError ? "shake 0.4s ease" : "loginIn 0.9s ease forwards", width: 290 }}>
-          <div style={{ fontSize: 9, letterSpacing: "0.6em", color: "rgba(212,175,55,0.32)", marginBottom: 6 }}>SYNTERA ERP</div>
+          <div style={{ fontSize: 9, letterSpacing: "0.6em", color: "rgba(212,175,55,0.32)", marginBottom: 6, fontWeight: 500 }}>SYNTERA ERP</div>
           <div style={{ fontSize: 10, color: "rgba(255,248,230,0.14)", marginBottom: 32, letterSpacing: "0.15em" }}>Enterprise AI Platform</div>
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             <input value={loginId} onChange={e => { setLoginId(e.target.value); setLoginError(false); }} onKeyDown={handleKey} placeholder="ID do usuário" style={inputStyle} />
             <input type="password" value={loginPw} onChange={e => { setLoginPw(e.target.value); setLoginError(false); }} onKeyDown={handleKey} placeholder="Senha" style={inputStyle} />
-            {loginError && <div style={{ fontSize: 10.5, color: "rgba(220,75,75,0.8)" }}>Credenciais inválidas</div>}
-            <button onClick={handleLogin} style={{ background: "linear-gradient(135deg,#9A7206,#D4AF37,#E8C84A)", border: "none", borderRadius: 8, color: "#04070e", fontWeight: 700, fontSize: 13, letterSpacing: "0.2em", padding: 14, cursor: "pointer", fontFamily: "inherit", marginTop: 2 }}>ENTRAR</button>
+            {loginError && <div style={{ fontSize: 10.5, color: "rgba(220,75,75,0.8)", letterSpacing: "0.06em" }}>Credenciais inválidas</div>}
+            <button onClick={handleLogin} style={{ background: "linear-gradient(135deg,#9A7206,#D4AF37,#E8C84A)", border: "none", borderRadius: 8, color: "#04070e", fontWeight: 700, fontSize: 13, letterSpacing: "0.2em", padding: 14, cursor: "pointer", fontFamily: "inherit", marginTop: 2, boxShadow: "0 4px 24px rgba(212,175,55,0.22)" }}>ENTRAR</button>
             <a href="#" style={{ color: "rgba(212,175,55,0.25)", fontSize: 10, textDecoration: "none", letterSpacing: "0.08em", display: "block", marginTop: 2 }}>Esqueceu a senha?</a>
           </div>
         </div>
       )}
 
+      {/* Success */}
       {phase === "success" && (
         <div style={{ position: "absolute", left: "50%", top: "50%", zIndex: 30, textAlign: "center", animation: "successIn 0.65s ease forwards" }}>
           <div style={{ fontSize: 28, fontWeight: 600, color: "#D4AF37", letterSpacing: "0.12em" }}>BEM-VINDO</div>
@@ -280,6 +320,7 @@ function SynteraDNA() {
         </div>
       )}
 
+      {/* Bottom bar */}
       <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 1, background: "linear-gradient(90deg,transparent,rgba(212,175,55,0.25),transparent)", pointerEvents: "none" }} />
       <div style={{ position: "absolute", bottom: 16, right: 24, pointerEvents: "none" }}>
         <span style={{ fontSize: 8, letterSpacing: "0.22em", color: "rgba(255,248,230,0.08)" }}>v2.6.0 — 2026</span>
