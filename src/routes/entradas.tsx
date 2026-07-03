@@ -14,7 +14,7 @@ export const Route = createFileRoute("/entradas")({
 
 const tabs = [
   { to: "/entradas", label: "Visão geral", icon: LayoutGrid, exact: true },
-  { to: "/entradas/compras", label: "Compras (NF-e)", icon: ShoppingCart },
+  { to: "/entradas/compras", label: "Documentos Fiscais", icon: ShoppingCart },
   { to: "/entradas/fornecedores", label: "Fornecedores", icon: Building2 },
   { to: "/entradas/frete-cte", label: "Frete / CT-e", icon: Truck },
   { to: "/entradas/devolucoes", label: "Devoluções", icon: RotateCcw },

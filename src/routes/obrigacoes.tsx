@@ -31,9 +31,17 @@ import {
   Clock,
   Calendar,
   FileText,
+  Landmark,
 } from "lucide-react";
 import { toast } from "sonner";
 import { DataTable, type Column } from "@/components/data-table";
+import { useEmpresaFiscal } from "@/lib/fiscal-store";
+import {
+  obrigacoesDoRegime,
+  AMBITO_LABEL,
+  PERIODICIDADE_LABEL,
+  type ObrigacaoRegime,
+} from "@/lib/obrigacoes-regimes";
 import { useObrigacoes, type Obrigacao, type GuiaRecolhimento } from "@/lib/obrigacoes-store";
 
 export const Route = createFileRoute("/obrigacoes")({
@@ -141,6 +149,10 @@ function ObrigacoesPage() {
 
       <Tabs value={tabAtiva} onValueChange={setTabAtiva} defaultValue="calendario">
         <TabsList>
+          <TabsTrigger value="regime" className="gap-1.5">
+            <Landmark className="h-3.5 w-3.5" />
+            Meu Regime
+          </TabsTrigger>
           <TabsTrigger value="calendario" className="gap-1.5">
             <Calendar className="h-3.5 w-3.5" />
             Calendário
@@ -158,6 +170,11 @@ function ObrigacoesPage() {
             Integrações
           </TabsTrigger>
         </TabsList>
+
+        {/* Obrigações do Regime Tributário */}
+        <TabsContent value="regime" className="mt-6">
+          <RegimeTab />
+        </TabsContent>
 
         {/* Calendário */}
         <TabsContent value="calendario" className="mt-6">
@@ -457,6 +474,81 @@ function IntegracaoItem({
         <p className="text-xs text-muted-foreground">{descricao}</p>
       </div>
       <Badge variant={badgeVariant}>{status}</Badge>
+    </div>
+  );
+}
+
+/* ─── Obrigações por Regime Tributário ─────────────────────────── */
+
+function RegimeTab() {
+  const [empresa] = useEmpresaFiscal();
+  const lista = obrigacoesDoRegime(empresa.regime);
+
+  const porAmbito = useMemo(() => {
+    const grupos: Record<string, ObrigacaoRegime[]> = {};
+    for (const o of lista) {
+      (grupos[o.ambito] ??= []).push(o);
+    }
+    return grupos;
+  }, [lista]);
+
+  return (
+    <div className="space-y-5">
+      <Card className="border-gold/30 bg-gold/5 p-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
+              Regime tributário da empresa
+            </p>
+            <p className="mt-1 text-lg font-semibold">{empresa.regime}</p>
+            <p className="text-xs text-muted-foreground">
+              {empresa.razaoSocial} — apuração: {empresa.regimeApuracao === "caixa" ? "Caixa" : "Competência"}
+            </p>
+          </div>
+          <Badge variant="outline" className="border-gold/40 text-gold">
+            {lista.length} obrigações aplicáveis
+          </Badge>
+        </div>
+        <p className="mt-3 text-xs text-muted-foreground">
+          O regime é definido no cadastro da empresa (Cadastros → Empresa). Ao alterá-lo,
+          este calendário de conformidade é recalculado automaticamente.
+        </p>
+      </Card>
+
+      {(["federal", "estadual", "municipal", "trabalhista"] as const).map((ambito) => {
+        const grupo = porAmbito[ambito];
+        if (!grupo?.length) return null;
+        return (
+          <div key={ambito}>
+            <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              {AMBITO_LABEL[ambito]}
+            </h3>
+            <div className="grid gap-3 md:grid-cols-2">
+              {grupo.map((o) => (
+                <Card key={o.codigo} className="p-4">
+                  <div className="flex items-start justify-between gap-2">
+                    <p className="text-sm font-medium leading-tight">{o.nome}</p>
+                    <Badge variant="secondary" className="shrink-0 text-[10px]">
+                      {PERIODICIDADE_LABEL[o.periodicidade]}
+                    </Badge>
+                  </div>
+                  <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">
+                    {o.descricao}
+                  </p>
+                  <p className="mt-2 text-[11px] text-gold">
+                    Vencimento: {o.vencimentoRegra}
+                  </p>
+                  {o.condicao && (
+                    <p className="mt-1 text-[10px] italic text-muted-foreground">
+                      {o.condicao}
+                    </p>
+                  )}
+                </Card>
+              ))}
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }

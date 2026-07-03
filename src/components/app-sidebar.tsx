@@ -79,7 +79,7 @@ const sections: { label: string; items: NavItem[] }[] = [
         icon: ArrowDownToLine,
         children: [
           { title: "Visão geral", url: "/entradas", icon: LayoutGrid },
-          { title: "Compras (NF-e)", url: "/entradas/compras", icon: ShoppingCart },
+          { title: "Documentos Fiscais", url: "/entradas/compras", icon: ShoppingCart },
           { title: "Fornecedores", url: "/entradas/fornecedores", icon: LayoutGrid },
           { title: "Frete / CT-e", url: "/entradas/frete-cte", icon: ShoppingCart },
           { title: "Devoluções", url: "/entradas/devolucoes", icon: LayoutGrid },

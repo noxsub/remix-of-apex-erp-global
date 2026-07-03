@@ -13,6 +13,7 @@ import { Route as VendasRouteImport } from './routes/vendas'
 import { Route as SaidasRouteImport } from './routes/saidas'
 import { Route as RhRouteImport } from './routes/rh'
 import { Route as ReformaTributariaRouteImport } from './routes/reforma-tributaria'
+import { Route as PontoAppRouteImport } from './routes/ponto-app'
 import { Route as OmnilinkRouteImport } from './routes/omnilink'
 import { Route as ObrigacoesRouteImport } from './routes/obrigacoes'
 import { Route as FiscalRouteImport } from './routes/fiscal'
@@ -70,6 +71,11 @@ const RhRoute = RhRouteImport.update({
 const ReformaTributariaRoute = ReformaTributariaRouteImport.update({
   id: '/reforma-tributaria',
   path: '/reforma-tributaria',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PontoAppRoute = PontoAppRouteImport.update({
+  id: '/ponto-app',
+  path: '/ponto-app',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OmnilinkRoute = OmnilinkRouteImport.update({
@@ -274,6 +280,7 @@ export interface FileRoutesByFullPath {
   '/fiscal': typeof FiscalRoute
   '/obrigacoes': typeof ObrigacoesRoute
   '/omnilink': typeof OmnilinkRoute
+  '/ponto-app': typeof PontoAppRoute
   '/reforma-tributaria': typeof ReformaTributariaRoute
   '/rh': typeof RhRouteWithChildren
   '/saidas': typeof SaidasRouteWithChildren
@@ -316,6 +323,7 @@ export interface FileRoutesByTo {
   '/fiscal': typeof FiscalRoute
   '/obrigacoes': typeof ObrigacoesRoute
   '/omnilink': typeof OmnilinkRoute
+  '/ponto-app': typeof PontoAppRoute
   '/reforma-tributaria': typeof ReformaTributariaRoute
   '/vendas': typeof VendasRoute
   '/entradas/compras': typeof EntradasComprasRoute
@@ -359,6 +367,7 @@ export interface FileRoutesById {
   '/fiscal': typeof FiscalRoute
   '/obrigacoes': typeof ObrigacoesRoute
   '/omnilink': typeof OmnilinkRoute
+  '/ponto-app': typeof PontoAppRoute
   '/reforma-tributaria': typeof ReformaTributariaRoute
   '/rh': typeof RhRouteWithChildren
   '/saidas': typeof SaidasRouteWithChildren
@@ -405,6 +414,7 @@ export interface FileRouteTypes {
     | '/fiscal'
     | '/obrigacoes'
     | '/omnilink'
+    | '/ponto-app'
     | '/reforma-tributaria'
     | '/rh'
     | '/saidas'
@@ -447,6 +457,7 @@ export interface FileRouteTypes {
     | '/fiscal'
     | '/obrigacoes'
     | '/omnilink'
+    | '/ponto-app'
     | '/reforma-tributaria'
     | '/vendas'
     | '/entradas/compras'
@@ -489,6 +500,7 @@ export interface FileRouteTypes {
     | '/fiscal'
     | '/obrigacoes'
     | '/omnilink'
+    | '/ponto-app'
     | '/reforma-tributaria'
     | '/rh'
     | '/saidas'
@@ -534,6 +546,7 @@ export interface RootRouteChildren {
   FiscalRoute: typeof FiscalRoute
   ObrigacoesRoute: typeof ObrigacoesRoute
   OmnilinkRoute: typeof OmnilinkRoute
+  PontoAppRoute: typeof PontoAppRoute
   ReformaTributariaRoute: typeof ReformaTributariaRoute
   RhRoute: typeof RhRouteWithChildren
   SaidasRoute: typeof SaidasRouteWithChildren
@@ -570,6 +583,13 @@ declare module '@tanstack/react-router' {
       path: '/reforma-tributaria'
       fullPath: '/reforma-tributaria'
       preLoaderRoute: typeof ReformaTributariaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ponto-app': {
+      id: '/ponto-app'
+      path: '/ponto-app'
+      fullPath: '/ponto-app'
+      preLoaderRoute: typeof PontoAppRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/omnilink': {
@@ -942,6 +962,7 @@ const rootRouteChildren: RootRouteChildren = {
   FiscalRoute: FiscalRoute,
   ObrigacoesRoute: ObrigacoesRoute,
   OmnilinkRoute: OmnilinkRoute,
+  PontoAppRoute: PontoAppRoute,
   ReformaTributariaRoute: ReformaTributariaRoute,
   RhRoute: RhRouteWithChildren,
   SaidasRoute: SaidasRouteWithChildren,

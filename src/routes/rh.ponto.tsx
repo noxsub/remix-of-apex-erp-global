@@ -1,13 +1,20 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useMemo, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DataTable, type Column } from "@/components/data-table";
-import { Download, Search, Clock } from "lucide-react";
+import { Download, Search, Clock, Smartphone } from "lucide-react";
 import { toast } from "sonner";
+import {
+  useMarcacoesPonto,
+  marcacoesDoDia,
+  minutosTrabalhados,
+  fmtMinutos,
+  COLABORADORES_PONTO,
+} from "@/lib/ponto-store";
 
 export const Route = createFileRoute("/rh/ponto")({ component: PontoPage });
 
@@ -28,6 +35,21 @@ const pontoData: RegistroPonto[] = [
 function PontoPage() {
   const [filtro, setFiltro] = useState("");
   const [data, setData] = useState("2026-06-26");
+  const [marcacoesApp] = useMarcacoesPonto();
+  const hojeISO = new Date().toISOString().slice(0, 10);
+  const resumoApp = useMemo(
+    () =>
+      COLABORADORES_PONTO.map((c) => {
+        const doDia = marcacoesDoDia(marcacoesApp, c.matricula, hojeISO);
+        return {
+          matricula: c.matricula,
+          nome: c.nome,
+          batidas: doDia.length,
+          horas: fmtMinutos(minutosTrabalhados(doDia)),
+        };
+      }).filter((r) => r.batidas > 0),
+    [marcacoesApp, hojeISO],
+  );
 
   const filtrados = pontoData.filter(p => !filtro || p.nome.toLowerCase().includes(filtro.toLowerCase()));
 
@@ -46,6 +68,46 @@ function PontoPage() {
 
   return (
     <div className="space-y-4">
+      {/* ── Syntera Ponto — aplicativo integrado ── */}
+      <Card className="border-gold/30 bg-gold/5 p-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p className="text-sm font-semibold">Syntera Ponto — aplicativo de registro</p>
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              Colaboradores registram a jornada no app dedicado; as marcações sincronizam aqui em tempo real.
+            </p>
+          </div>
+          <Button asChild className="gap-1.5">
+            <Link to="/ponto-app" target="_blank" rel="noopener">
+              <Smartphone className="h-3.5 w-3.5" /> Abrir Syntera Ponto
+            </Link>
+          </Button>
+        </div>
+        {resumoApp.length > 0 && (
+          <div className="mt-3 border-t border-gold/20 pt-3">
+            <p className="mb-2 text-[10px] uppercase tracking-wider text-muted-foreground">
+              Marcações vindas do app — hoje ({hojeISO.split("-").reverse().join("/")})
+            </p>
+            <div className="grid gap-1.5 sm:grid-cols-2">
+              {resumoApp.map((r) => (
+                <div key={r.matricula} className="flex items-center justify-between rounded-md border border-border bg-card px-3 py-1.5 text-xs">
+                  <span>{r.nome}</span>
+                  <span className="flex items-center gap-2">
+                    <span className="text-muted-foreground">{r.batidas} batida(s)</span>
+                    <span className="font-mono text-gold">{r.horas}</span>
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+        {resumoApp.length === 0 && (
+          <p className="mt-3 border-t border-gold/20 pt-3 text-xs text-muted-foreground">
+            Nenhuma marcação registrada pelo app hoje ainda.
+          </p>
+        )}
+      </Card>
+
       <div className="flex flex-wrap gap-3 items-end justify-between">
         <div className="flex gap-3">
           <div className="relative flex-1 max-w-sm">
