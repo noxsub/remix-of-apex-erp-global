@@ -56,8 +56,23 @@ const sections: { label: string; items: NavItem[] }[] = [
     items: [{ title: "Dashboard", url: "/dashboard", icon: LayoutDashboard }],
   },
   {
+    // Sequência fixa: Cadastros → RH → Entradas → Saídas → Financeiro
     label: "Operacional",
     items: [
+      { title: "Cadastros", url: "/cadastros", icon: Users },
+      {
+        title: "RH",
+        url: "/rh",
+        icon: UserCog,
+        children: [
+          { title: "Visão geral", url: "/rh", icon: LayoutGrid },
+          { title: "Colaboradores", url: "/rh/colaboradores", icon: Users },
+          { title: "Folha de Pagamento", url: "/rh/folha", icon: Wallet },
+          { title: "Férias / 13º", url: "/rh/ferias", icon: Calendar },
+          { title: "Benefícios", url: "/rh/beneficios", icon: Heart },
+          { title: "Controle de Ponto", url: "/rh/ponto", icon: Clock },
+        ],
+      },
       {
         title: "Entradas",
         url: "/entradas",
@@ -87,11 +102,6 @@ const sections: { label: string; items: NavItem[] }[] = [
           { title: "Relatórios", url: "/saidas/relatorios", icon: FileBarChart2 },
         ],
       },
-    ],
-  },
-  {
-    label: "Gestão",
-    items: [
       {
         title: "Financeiro",
         url: "/financeiro",
@@ -101,25 +111,16 @@ const sections: { label: string; items: NavItem[] }[] = [
           { title: "Contas a Pagar", url: "/financeiro/pagar", icon: Wallet },
           { title: "Contas a Receber", url: "/financeiro/receber", icon: Wallet },
           { title: "Fluxo de Caixa", url: "/financeiro/fluxo", icon: LayoutGrid },
-          { title: "DRE", url: "/financeiro/dre", icon: FileBarChart2 },
           { title: "Conciliação", url: "/financeiro/conciliacao", icon: LayoutGrid },
           { title: "Centros de Custo", url: "/financeiro/centros-custo", icon: LayoutGrid },
         ],
       },
-      { title: "Cadastros", url: "/cadastros", icon: Users },
-      {
-        title: "RH",
-        url: "/rh",
-        icon: UserCog,
-        children: [
-          { title: "Visão geral", url: "/rh", icon: LayoutGrid },
-          { title: "Funcionários", url: "/rh/funcionarios", icon: Users },
-          { title: "Folha de Pagamento", url: "/rh/folha", icon: Wallet },
-          { title: "Férias / 13º", url: "/rh/ferias", icon: Calendar },
-          { title: "Benefícios", url: "/rh/beneficios", icon: Heart },
-          { title: "Controle de Ponto", url: "/rh/ponto", icon: Clock },
-        ],
-      },
+    ],
+  },
+  {
+    label: "Gestão",
+    items: [
+      { title: "Análise Financeira", url: "/gestao/analise-financeira", icon: FileBarChart2 },
     ],
   },
   {
@@ -127,7 +128,7 @@ const sections: { label: string; items: NavItem[] }[] = [
     items: [
       { title: "Fiscal", url: "/fiscal", icon: Receipt },
       { title: "Reforma Tributária", url: "/reforma-tributaria", icon: TrendingUp },
-      { title: "Óbrigações", url: "/obrigacoes", icon: FileCheck },
+      { title: "Obrigações", url: "/obrigacoes", icon: FileCheck },
       { title: "Omnilink", url: "/omnilink", icon: Network },
     ],
   },

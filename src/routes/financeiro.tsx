@@ -17,7 +17,7 @@ const tabs = [
   { to: "/financeiro/pagar", label: "Contas a Pagar", icon: ArrowDownCircle },
   { to: "/financeiro/receber", label: "Contas a Receber", icon: ArrowUpCircle },
   { to: "/financeiro/fluxo", label: "Fluxo de Caixa", icon: TrendingUp },
-  { to: "/financeiro/dre", label: "DRE", icon: BarChart3 },
+  { to: "/gestao/analise-financeira", label: "Análise Financeira", icon: BarChart3 },
   { to: "/financeiro/conciliacao", label: "Conciliação", icon: Building },
   { to: "/financeiro/centros-custo", label: "Centros de Custo", icon: Layers },
 ];

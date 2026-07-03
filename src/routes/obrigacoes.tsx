@@ -39,7 +39,7 @@ import { useObrigacoes, type Obrigacao, type GuiaRecolhimento } from "@/lib/obri
 export const Route = createFileRoute("/obrigacoes")({
   head: () => ({
     meta: [
-      { title: "Óbrigações Acessórias — Sintera ERP" },
+      { title: "Obrigações Acessórias — Sintera ERP" },
       {
         name: "description",
         content: "Calendário de obrigações fiscais — ECF, ECD, SPED, Guias DARF/GPS.",
@@ -79,7 +79,7 @@ function ObrigacoesPage() {
 
   return (
     <AppShell
-      title="Óbrigações Acessórias"
+      title="Obrigações Acessórias"
       subtitle="Calendário fiscal e controle de entregas ao fisco"
       actions={
         <Button variant="outline" className="gap-1.5">

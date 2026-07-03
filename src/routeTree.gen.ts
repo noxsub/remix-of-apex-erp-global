@@ -33,14 +33,14 @@ import { Route as SaidasNotasEmitidasRouteImport } from './routes/saidas.notas-e
 import { Route as SaidasFaturamentoRouteImport } from './routes/saidas.faturamento'
 import { Route as SaidasDevolucoesRouteImport } from './routes/saidas.devolucoes'
 import { Route as RhPontoRouteImport } from './routes/rh.ponto'
-import { Route as RhFuncionariosRouteImport } from './routes/rh.funcionarios'
 import { Route as RhFolhaRouteImport } from './routes/rh.folha'
 import { Route as RhFeriasRouteImport } from './routes/rh.ferias'
+import { Route as RhColaboradoresRouteImport } from './routes/rh.colaboradores'
 import { Route as RhBeneficiosRouteImport } from './routes/rh.beneficios'
+import { Route as GestaoAnaliseFinanceiraRouteImport } from './routes/gestao.analise-financeira'
 import { Route as FinanceiroReceberRouteImport } from './routes/financeiro.receber'
 import { Route as FinanceiroPagarRouteImport } from './routes/financeiro.pagar'
 import { Route as FinanceiroFluxoRouteImport } from './routes/financeiro.fluxo'
-import { Route as FinanceiroDreRouteImport } from './routes/financeiro.dre'
 import { Route as FinanceiroConciliacaoRouteImport } from './routes/financeiro.conciliacao'
 import { Route as FinanceiroCentrosCustoRouteImport } from './routes/financeiro.centros-custo'
 import { Route as EntradasRelatoriosRouteImport } from './routes/entradas.relatorios'
@@ -172,11 +172,6 @@ const RhPontoRoute = RhPontoRouteImport.update({
   path: '/ponto',
   getParentRoute: () => RhRoute,
 } as any)
-const RhFuncionariosRoute = RhFuncionariosRouteImport.update({
-  id: '/funcionarios',
-  path: '/funcionarios',
-  getParentRoute: () => RhRoute,
-} as any)
 const RhFolhaRoute = RhFolhaRouteImport.update({
   id: '/folha',
   path: '/folha',
@@ -187,10 +182,20 @@ const RhFeriasRoute = RhFeriasRouteImport.update({
   path: '/ferias',
   getParentRoute: () => RhRoute,
 } as any)
+const RhColaboradoresRoute = RhColaboradoresRouteImport.update({
+  id: '/colaboradores',
+  path: '/colaboradores',
+  getParentRoute: () => RhRoute,
+} as any)
 const RhBeneficiosRoute = RhBeneficiosRouteImport.update({
   id: '/beneficios',
   path: '/beneficios',
   getParentRoute: () => RhRoute,
+} as any)
+const GestaoAnaliseFinanceiraRoute = GestaoAnaliseFinanceiraRouteImport.update({
+  id: '/gestao/analise-financeira',
+  path: '/gestao/analise-financeira',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const FinanceiroReceberRoute = FinanceiroReceberRouteImport.update({
   id: '/receber',
@@ -205,11 +210,6 @@ const FinanceiroPagarRoute = FinanceiroPagarRouteImport.update({
 const FinanceiroFluxoRoute = FinanceiroFluxoRouteImport.update({
   id: '/fluxo',
   path: '/fluxo',
-  getParentRoute: () => FinanceiroRoute,
-} as any)
-const FinanceiroDreRoute = FinanceiroDreRouteImport.update({
-  id: '/dre',
-  path: '/dre',
   getParentRoute: () => FinanceiroRoute,
 } as any)
 const FinanceiroConciliacaoRoute = FinanceiroConciliacaoRouteImport.update({
@@ -287,14 +287,14 @@ export interface FileRoutesByFullPath {
   '/entradas/relatorios': typeof EntradasRelatoriosRoute
   '/financeiro/centros-custo': typeof FinanceiroCentrosCustoRoute
   '/financeiro/conciliacao': typeof FinanceiroConciliacaoRoute
-  '/financeiro/dre': typeof FinanceiroDreRoute
   '/financeiro/fluxo': typeof FinanceiroFluxoRoute
   '/financeiro/pagar': typeof FinanceiroPagarRoute
   '/financeiro/receber': typeof FinanceiroReceberRoute
+  '/gestao/analise-financeira': typeof GestaoAnaliseFinanceiraRoute
   '/rh/beneficios': typeof RhBeneficiosRoute
+  '/rh/colaboradores': typeof RhColaboradoresRoute
   '/rh/ferias': typeof RhFeriasRoute
   '/rh/folha': typeof RhFolhaRoute
-  '/rh/funcionarios': typeof RhFuncionariosRoute
   '/rh/ponto': typeof RhPontoRoute
   '/saidas/devolucoes': typeof SaidasDevolucoesRoute
   '/saidas/faturamento': typeof SaidasFaturamentoRoute
@@ -327,14 +327,14 @@ export interface FileRoutesByTo {
   '/entradas/relatorios': typeof EntradasRelatoriosRoute
   '/financeiro/centros-custo': typeof FinanceiroCentrosCustoRoute
   '/financeiro/conciliacao': typeof FinanceiroConciliacaoRoute
-  '/financeiro/dre': typeof FinanceiroDreRoute
   '/financeiro/fluxo': typeof FinanceiroFluxoRoute
   '/financeiro/pagar': typeof FinanceiroPagarRoute
   '/financeiro/receber': typeof FinanceiroReceberRoute
+  '/gestao/analise-financeira': typeof GestaoAnaliseFinanceiraRoute
   '/rh/beneficios': typeof RhBeneficiosRoute
+  '/rh/colaboradores': typeof RhColaboradoresRoute
   '/rh/ferias': typeof RhFeriasRoute
   '/rh/folha': typeof RhFolhaRoute
-  '/rh/funcionarios': typeof RhFuncionariosRoute
   '/rh/ponto': typeof RhPontoRoute
   '/saidas/devolucoes': typeof SaidasDevolucoesRoute
   '/saidas/faturamento': typeof SaidasFaturamentoRoute
@@ -372,14 +372,14 @@ export interface FileRoutesById {
   '/entradas/relatorios': typeof EntradasRelatoriosRoute
   '/financeiro/centros-custo': typeof FinanceiroCentrosCustoRoute
   '/financeiro/conciliacao': typeof FinanceiroConciliacaoRoute
-  '/financeiro/dre': typeof FinanceiroDreRoute
   '/financeiro/fluxo': typeof FinanceiroFluxoRoute
   '/financeiro/pagar': typeof FinanceiroPagarRoute
   '/financeiro/receber': typeof FinanceiroReceberRoute
+  '/gestao/analise-financeira': typeof GestaoAnaliseFinanceiraRoute
   '/rh/beneficios': typeof RhBeneficiosRoute
+  '/rh/colaboradores': typeof RhColaboradoresRoute
   '/rh/ferias': typeof RhFeriasRoute
   '/rh/folha': typeof RhFolhaRoute
-  '/rh/funcionarios': typeof RhFuncionariosRoute
   '/rh/ponto': typeof RhPontoRoute
   '/saidas/devolucoes': typeof SaidasDevolucoesRoute
   '/saidas/faturamento': typeof SaidasFaturamentoRoute
@@ -418,14 +418,14 @@ export interface FileRouteTypes {
     | '/entradas/relatorios'
     | '/financeiro/centros-custo'
     | '/financeiro/conciliacao'
-    | '/financeiro/dre'
     | '/financeiro/fluxo'
     | '/financeiro/pagar'
     | '/financeiro/receber'
+    | '/gestao/analise-financeira'
     | '/rh/beneficios'
+    | '/rh/colaboradores'
     | '/rh/ferias'
     | '/rh/folha'
-    | '/rh/funcionarios'
     | '/rh/ponto'
     | '/saidas/devolucoes'
     | '/saidas/faturamento'
@@ -458,14 +458,14 @@ export interface FileRouteTypes {
     | '/entradas/relatorios'
     | '/financeiro/centros-custo'
     | '/financeiro/conciliacao'
-    | '/financeiro/dre'
     | '/financeiro/fluxo'
     | '/financeiro/pagar'
     | '/financeiro/receber'
+    | '/gestao/analise-financeira'
     | '/rh/beneficios'
+    | '/rh/colaboradores'
     | '/rh/ferias'
     | '/rh/folha'
-    | '/rh/funcionarios'
     | '/rh/ponto'
     | '/saidas/devolucoes'
     | '/saidas/faturamento'
@@ -502,14 +502,14 @@ export interface FileRouteTypes {
     | '/entradas/relatorios'
     | '/financeiro/centros-custo'
     | '/financeiro/conciliacao'
-    | '/financeiro/dre'
     | '/financeiro/fluxo'
     | '/financeiro/pagar'
     | '/financeiro/receber'
+    | '/gestao/analise-financeira'
     | '/rh/beneficios'
+    | '/rh/colaboradores'
     | '/rh/ferias'
     | '/rh/folha'
-    | '/rh/funcionarios'
     | '/rh/ponto'
     | '/saidas/devolucoes'
     | '/saidas/faturamento'
@@ -538,6 +538,7 @@ export interface RootRouteChildren {
   RhRoute: typeof RhRouteWithChildren
   SaidasRoute: typeof SaidasRouteWithChildren
   VendasRoute: typeof VendasRoute
+  GestaoAnaliseFinanceiraRoute: typeof GestaoAnaliseFinanceiraRoute
   ApiPublicWebhooksCanalIdRoute: typeof ApiPublicWebhooksCanalIdRoute
 }
 
@@ -711,13 +712,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RhPontoRouteImport
       parentRoute: typeof RhRoute
     }
-    '/rh/funcionarios': {
-      id: '/rh/funcionarios'
-      path: '/funcionarios'
-      fullPath: '/rh/funcionarios'
-      preLoaderRoute: typeof RhFuncionariosRouteImport
-      parentRoute: typeof RhRoute
-    }
     '/rh/folha': {
       id: '/rh/folha'
       path: '/folha'
@@ -732,12 +726,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RhFeriasRouteImport
       parentRoute: typeof RhRoute
     }
+    '/rh/colaboradores': {
+      id: '/rh/colaboradores'
+      path: '/colaboradores'
+      fullPath: '/rh/colaboradores'
+      preLoaderRoute: typeof RhColaboradoresRouteImport
+      parentRoute: typeof RhRoute
+    }
     '/rh/beneficios': {
       id: '/rh/beneficios'
       path: '/beneficios'
       fullPath: '/rh/beneficios'
       preLoaderRoute: typeof RhBeneficiosRouteImport
       parentRoute: typeof RhRoute
+    }
+    '/gestao/analise-financeira': {
+      id: '/gestao/analise-financeira'
+      path: '/gestao/analise-financeira'
+      fullPath: '/gestao/analise-financeira'
+      preLoaderRoute: typeof GestaoAnaliseFinanceiraRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/financeiro/receber': {
       id: '/financeiro/receber'
@@ -758,13 +766,6 @@ declare module '@tanstack/react-router' {
       path: '/fluxo'
       fullPath: '/financeiro/fluxo'
       preLoaderRoute: typeof FinanceiroFluxoRouteImport
-      parentRoute: typeof FinanceiroRoute
-    }
-    '/financeiro/dre': {
-      id: '/financeiro/dre'
-      path: '/dre'
-      fullPath: '/financeiro/dre'
-      preLoaderRoute: typeof FinanceiroDreRouteImport
       parentRoute: typeof FinanceiroRoute
     }
     '/financeiro/conciliacao': {
@@ -869,7 +870,6 @@ const EntradasRouteWithChildren = EntradasRoute._addFileChildren(
 interface FinanceiroRouteChildren {
   FinanceiroCentrosCustoRoute: typeof FinanceiroCentrosCustoRoute
   FinanceiroConciliacaoRoute: typeof FinanceiroConciliacaoRoute
-  FinanceiroDreRoute: typeof FinanceiroDreRoute
   FinanceiroFluxoRoute: typeof FinanceiroFluxoRoute
   FinanceiroPagarRoute: typeof FinanceiroPagarRoute
   FinanceiroReceberRoute: typeof FinanceiroReceberRoute
@@ -879,7 +879,6 @@ interface FinanceiroRouteChildren {
 const FinanceiroRouteChildren: FinanceiroRouteChildren = {
   FinanceiroCentrosCustoRoute: FinanceiroCentrosCustoRoute,
   FinanceiroConciliacaoRoute: FinanceiroConciliacaoRoute,
-  FinanceiroDreRoute: FinanceiroDreRoute,
   FinanceiroFluxoRoute: FinanceiroFluxoRoute,
   FinanceiroPagarRoute: FinanceiroPagarRoute,
   FinanceiroReceberRoute: FinanceiroReceberRoute,
@@ -892,18 +891,18 @@ const FinanceiroRouteWithChildren = FinanceiroRoute._addFileChildren(
 
 interface RhRouteChildren {
   RhBeneficiosRoute: typeof RhBeneficiosRoute
+  RhColaboradoresRoute: typeof RhColaboradoresRoute
   RhFeriasRoute: typeof RhFeriasRoute
   RhFolhaRoute: typeof RhFolhaRoute
-  RhFuncionariosRoute: typeof RhFuncionariosRoute
   RhPontoRoute: typeof RhPontoRoute
   RhIndexRoute: typeof RhIndexRoute
 }
 
 const RhRouteChildren: RhRouteChildren = {
   RhBeneficiosRoute: RhBeneficiosRoute,
+  RhColaboradoresRoute: RhColaboradoresRoute,
   RhFeriasRoute: RhFeriasRoute,
   RhFolhaRoute: RhFolhaRoute,
-  RhFuncionariosRoute: RhFuncionariosRoute,
   RhPontoRoute: RhPontoRoute,
   RhIndexRoute: RhIndexRoute,
 }
@@ -947,6 +946,7 @@ const rootRouteChildren: RootRouteChildren = {
   RhRoute: RhRouteWithChildren,
   SaidasRoute: SaidasRouteWithChildren,
   VendasRoute: VendasRoute,
+  GestaoAnaliseFinanceiraRoute: GestaoAnaliseFinanceiraRoute,
   ApiPublicWebhooksCanalIdRoute: ApiPublicWebhooksCanalIdRoute,
 }
 export const routeTree = rootRouteImport

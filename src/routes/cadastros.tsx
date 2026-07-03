@@ -23,7 +23,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, Settings2, Package, Briefcase, Loader2, MapPin, Building2 } from "lucide-react";
+import { Plus, Settings2, Package, Briefcase, Loader2, MapPin, Building2, Save, Trash2 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { StatusBadge } from "@/components/status-badge";
 import { toast } from "sonner";
 import {
@@ -33,6 +34,12 @@ import {
   type ClienteFiscal,
   type Fornecedor,
 } from "@/lib/erp-store";
+import {
+  useEmpresaFiscal,
+  type EmpresaFiscal,
+  type RegimeTributario,
+  type CnaeRecord,
+} from "@/lib/fiscal-store";
 import { usePerfisFiscaisCliente } from "@/lib/fiscal-store";
 import { Link } from "@tanstack/react-router";
 
@@ -169,7 +176,9 @@ function CadastrosPage() {
         <TabsList className="bg-card border border-border">
           <TabsTrigger value="clientes">Clientes</TabsTrigger>
           <TabsTrigger value="fornecedores">Fornecedores</TabsTrigger>
-          <TabsTrigger value="colaboradores">Colaboradores / Profissionais</TabsTrigger>
+          <TabsTrigger value="empresa" className="gap-1.5">
+            <Building2 className="h-3.5 w-3.5" /> Empresa
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="clientes" className="mt-4">
@@ -230,33 +239,8 @@ function CadastrosPage() {
           />
         </TabsContent>
 
-        <TabsContent value="colaboradores" className="mt-4">
-          <DataTable
-            title="Colaboradores / Profissionais"
-            description="Equipe e percentuais de comissão por profissional."
-            columns={colColaboradores}
-            data={colaboradores}
-            filename="colaboradores"
-            toolbar={
-              <Dialog open={openColaborador} onOpenChange={setOpenColaborador}>
-                <DialogTrigger asChild>
-                  <Button
-                    size="sm"
-                    className="h-8 gap-1.5 bg-foreground text-background hover:bg-foreground/90"
-                  >
-                    <Plus className="h-3.5 w-3.5" /> Novo Colaborador
-                  </Button>
-                </DialogTrigger>
-                <NovoColaboradorDialog
-                  onSave={(c) => {
-                    setColaboradores((p) => [...p, c]);
-                    setOpenColaborador(false);
-                    toast.success("Colaborador cadastrado", { description: c.nome });
-                  }}
-                />
-              </Dialog>
-            }
-          />
+        <TabsContent value="empresa" className="mt-4">
+          <EmpresaTab />
         </TabsContent>
       </Tabs>
     </AppShell>
@@ -891,6 +875,241 @@ function NovoFornecedorDialog({ onSave }: { onSave: (f: Fornecedor) => void }) {
           }
         >
           Salvar fornecedor
+        </Button>
+      </DialogFooter>
+    </DialogContent>
+  );
+}
+// ─── Empresa (migrado do módulo Fiscal) ─────────────────────────────────────
+
+// ─── Empresa ────────────────────────────────────────────────────────────────
+
+function EmpresaTab() {
+  const [empresa, setEmpresa] = useEmpresaFiscal();
+  const [form, setForm] = useState<EmpresaFiscal>(empresa);
+  const [cnaeOpen, setCnaeOpen] = useState(false);
+  const [cnaeEdit, setCnaeEdit] = useState<CnaeRecord | null>(null);
+  const regimes: RegimeTributario[] = ["Simples Nacional", "Lucro Presumido", "Lucro Real", "MEI"];
+
+  return (
+    <div className="rounded-lg border border-border bg-card">
+      <div className="border-b border-border px-5 py-4">
+        <h3 className="text-sm font-semibold tracking-tight">Dados da empresa emissora</h3>
+        <p className="text-xs text-muted-foreground">
+          Regime, CNAEs e identificação fiscal — base para emissão de notas e apuração.
+        </p>
+      </div>
+      <div className="grid grid-cols-6 gap-3 p-5">
+        <Field label="Razão Social" cls="col-span-6 sm:col-span-4">
+          <Input value={form.razaoSocial} onChange={(e) => setForm({ ...form, razaoSocial: e.target.value })} />
+        </Field>
+        <Field label="Nome Fantasia" cls="col-span-6 sm:col-span-2">
+          <Input value={form.fantasia} onChange={(e) => setForm({ ...form, fantasia: e.target.value })} />
+        </Field>
+        <Field label="CNPJ" cls="col-span-6 sm:col-span-3">
+          <Input value={form.cnpj} onChange={(e) => setForm({ ...form, cnpj: e.target.value })} />
+        </Field>
+        <Field label="Inscrição Estadual" cls="col-span-3 sm:col-span-2">
+          <Input value={form.ie} onChange={(e) => setForm({ ...form, ie: e.target.value })} />
+        </Field>
+        <Field label="Inscrição Municipal" cls="col-span-3 sm:col-span-1">
+          <Input value={form.im} onChange={(e) => setForm({ ...form, im: e.target.value })} />
+        </Field>
+
+        <Field label="Regime Tributário" cls="col-span-6 sm:col-span-2">
+          <Select value={form.regime} onValueChange={(v) => setForm({ ...form, regime: v as RegimeTributario })}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {regimes.map((r) => <SelectItem key={r} value={r}>{r}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </Field>
+        <Field label="CRT" cls="col-span-3 sm:col-span-1">
+          <Select value={form.crt} onValueChange={(v) => setForm({ ...form, crt: v as EmpresaFiscal["crt"] })}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="1">1 — Simples Nacional</SelectItem>
+              <SelectItem value="2">2 — SN excesso sublimite</SelectItem>
+              <SelectItem value="3">3 — Regime Normal</SelectItem>
+              <SelectItem value="4">4 — MEI</SelectItem>
+            </SelectContent>
+          </Select>
+        </Field>
+        <Field label="Regime de apuração" cls="col-span-3 sm:col-span-1">
+          <Select value={form.regimeApuracao} onValueChange={(v) => setForm({ ...form, regimeApuracao: v as EmpresaFiscal["regimeApuracao"] })}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="competencia">Competência</SelectItem>
+              <SelectItem value="caixa">Caixa</SelectItem>
+            </SelectContent>
+          </Select>
+        </Field>
+        <Field label="UF" cls="col-span-2 sm:col-span-1">
+          <Input value={form.uf} onChange={(e) => setForm({ ...form, uf: e.target.value.toUpperCase().slice(0, 2) })} />
+        </Field>
+        <Field label="Município" cls="col-span-4 sm:col-span-1">
+          <Input value={form.municipio} onChange={(e) => setForm({ ...form, municipio: e.target.value })} />
+        </Field>
+
+        {/* ─── CNAEs ─── */}
+        <div className="col-span-6">
+          <div className="mb-2 flex items-center justify-between">
+            <Label className="text-xs uppercase tracking-wider text-muted-foreground">
+              CNAEs cadastrados
+            </Label>
+            <Dialog open={cnaeOpen} onOpenChange={(v) => { setCnaeOpen(v); if (!v) setCnaeEdit(null); }}>
+              <DialogTrigger asChild>
+                <Button size="sm" variant="outline" className="h-8 gap-1.5">
+                  <Plus className="h-3.5 w-3.5" /> Adicionar CNAE
+                </Button>
+              </DialogTrigger>
+              <CnaeDialog
+                inicial={cnaeEdit}
+                onSave={(c) => {
+                  setForm((prev) => {
+                    const semDuplicata = prev.cnaes.filter((x) => x.codigo !== c.codigo);
+                    const principalAjustado = c.principal
+                      ? semDuplicata.map((x) => ({ ...x, principal: false }))
+                      : semDuplicata;
+                    const cnaes = [c, ...principalAjustado];
+                    const principal = cnaes.find((x) => x.principal);
+                    return {
+                      ...prev,
+                      cnaes,
+                      cnaePrincipal: principal?.codigo ?? prev.cnaePrincipal,
+                      cnaesSecundarios: cnaes.filter((x) => !x.principal).map((x) => x.codigo),
+                    };
+                  });
+                  setCnaeOpen(false);
+                  setCnaeEdit(null);
+                  toast.success("CNAE salvo", { description: c.codigo });
+                }}
+              />
+            </Dialog>
+          </div>
+          {form.cnaes.length === 0 ? (
+            <div className="rounded-md border border-dashed border-border bg-secondary/20 px-4 py-6 text-center text-xs text-muted-foreground">
+              Nenhum CNAE cadastrado. Adicione ao menos um para habilitar a sugestão de códigos de serviço.
+            </div>
+          ) : (
+            <div className="overflow-hidden rounded-md border border-border">
+              <table className="w-full text-sm">
+                <thead className="bg-secondary/40 text-[11px] uppercase tracking-wider text-muted-foreground">
+                  <tr>
+                    <th className="px-3 py-2 text-left">Código</th>
+                    <th className="px-3 py-2 text-left">Descrição</th>
+                    <th className="px-3 py-2 text-left">Atividade</th>
+                    <th className="px-3 py-2 text-right">Presunção IRPJ / CSLL</th>
+                    <th className="px-3 py-2"></th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {form.cnaes.map((c) => (
+                    <tr key={c.codigo}>
+                      <td className="px-3 py-2 font-mono text-xs">
+                        {c.codigo}
+                        {c.principal && <Badge className="ml-2 text-[10px]">principal</Badge>}
+                      </td>
+                      <td className="px-3 py-2 text-xs">{c.descricao}</td>
+                      <td className="px-3 py-2 text-xs capitalize">{c.atividade}</td>
+                      <td className="px-3 py-2 text-right text-xs tabular-nums">
+                        {c.presuncaoIRPJ}% / {c.presuncaoCSLL}%
+                      </td>
+                      <td className="px-3 py-2 text-right">
+                        <Button size="sm" variant="ghost" className="h-7"
+                          onClick={() => { setCnaeEdit(c); setCnaeOpen(true); }}>Editar</Button>
+                        <Button size="sm" variant="ghost"
+                          className="h-7 text-muted-foreground hover:text-destructive"
+                          onClick={() => setForm((p) => ({ ...p, cnaes: p.cnaes.filter((x) => x.codigo !== c.codigo) }))}>
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      </div>
+      <div className="flex justify-end border-t border-border px-5 py-3">
+        <Button
+          size="sm"
+          className="gap-1.5 bg-foreground text-background hover:bg-foreground/90"
+          onClick={() => {
+            setEmpresa(form);
+            toast.success("Dados da empresa salvos");
+          }}
+        >
+          <Save className="h-3.5 w-3.5" /> Salvar
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+function CnaeDialog({ inicial, onSave }: { inicial: CnaeRecord | null; onSave: (c: CnaeRecord) => void }) {
+  const [f, setF] = useState<CnaeRecord>(
+    inicial ?? {
+      codigo: "",
+      descricao: "",
+      principal: false,
+      atividade: "produto",
+      presuncaoIRPJ: 8,
+      presuncaoCSLL: 12,
+    },
+  );
+  return (
+    <DialogContent className="sm:max-w-xl">
+      <DialogHeader>
+        <DialogTitle>{inicial ? "Editar CNAE" : "Adicionar CNAE"}</DialogTitle>
+        <DialogDescription>Código, atividade preponderante e percentuais de presunção sugeridos.</DialogDescription>
+      </DialogHeader>
+      <div className="grid grid-cols-6 gap-3">
+        <Field label="Código" cls="col-span-2">
+          <Input placeholder="6201-5/01" value={f.codigo} onChange={(e) => setF({ ...f, codigo: e.target.value })} />
+        </Field>
+        <Field label="Atividade preponderante" cls="col-span-2">
+          <Select value={f.atividade} onValueChange={(v) => {
+            const a = v as CnaeRecord["atividade"];
+            setF({
+              ...f,
+              atividade: a,
+              presuncaoIRPJ: a === "servico" ? 32 : 8,
+              presuncaoCSLL: a === "servico" ? 32 : 12,
+            });
+          }}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="produto">Comércio / Indústria</SelectItem>
+              <SelectItem value="servico">Serviço</SelectItem>
+              <SelectItem value="ambos">Ambos</SelectItem>
+            </SelectContent>
+          </Select>
+        </Field>
+        <Field label="Principal" cls="col-span-2">
+          <div className="flex h-9 items-center gap-2 rounded-md border border-border bg-background px-3">
+            <Switch checked={f.principal} onCheckedChange={(v) => setF({ ...f, principal: v })} />
+            <span className="text-xs text-muted-foreground">CNAE principal</span>
+          </div>
+        </Field>
+        <Field label="Descrição" cls="col-span-6">
+          <Input value={f.descricao} onChange={(e) => setF({ ...f, descricao: e.target.value })} />
+        </Field>
+        <Field label="Presunção IRPJ (%)" cls="col-span-3">
+          <Input type="number" step="0.01" value={f.presuncaoIRPJ}
+            onChange={(e) => setF({ ...f, presuncaoIRPJ: Number(e.target.value) })} />
+        </Field>
+        <Field label="Presunção CSLL (%)" cls="col-span-3">
+          <Input type="number" step="0.01" value={f.presuncaoCSLL}
+            onChange={(e) => setF({ ...f, presuncaoCSLL: Number(e.target.value) })} />
+        </Field>
+      </div>
+      <DialogFooter>
+        <Button size="sm" className="bg-foreground text-background hover:bg-foreground/90"
+          disabled={!f.codigo.trim() || !f.descricao.trim()}
+          onClick={() => onSave(f)}>
+          Salvar CNAE
         </Button>
       </DialogFooter>
     </DialogContent>
