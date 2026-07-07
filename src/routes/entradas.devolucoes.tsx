@@ -56,7 +56,7 @@ function DevolucoesEntradaPage() {
           <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
           <Input placeholder="Buscar devolução..." value={filtro} onChange={(e) => setFiltro(e.target.value)} className="pl-8" />
         </div>
-        <Button className="gap-1.5"><Plus className="h-3.5 w-3.5" />Nova Devolução</Button>
+        <Button className="gap-1.5" onClick={() => toast.info("Lançamento de devolução em desenvolvimento", { description: "Por enquanto, registre o ajuste de estoque manualmente e o estorno em Financeiro." })}><Plus className="h-3.5 w-3.5" />Nova Devolução</Button>
       </div>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <Card className="p-3 border-border"><p className="text-[10px] uppercase text-muted-foreground">Total Devoluções</p><p className="text-lg font-bold">{devolucoes.length}</p></Card>

@@ -55,8 +55,8 @@ function OrcamentosPage() {
     { key: "status", header: "Status", render: (r) => <Badge variant={r.status === "aprovado" || r.status === "convertido" ? "default" : r.status === "rejeitado" || r.status === "expirado" ? "destructive" : "secondary"}>{r.status}</Badge> },
     { key: "acoes", header: "Ações", render: (r) => (
       <div className="flex gap-1">
-        <Button size="sm" variant="ghost"><Eye className="h-3.5 w-3.5" /></Button>
-        <Button size="sm" variant="ghost"><Printer className="h-3.5 w-3.5" /></Button>
+        <Button size="sm" variant="ghost" onClick={() => toast.info(`Orçamento ${r.id}`, { description: `${r.cliente} · ${r.itens} ite(ns) · ${r.total.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}` })}><Eye className="h-3.5 w-3.5" /></Button>
+        <Button size="sm" variant="ghost" onClick={() => toast.info("Geração de PDF em desenvolvimento")}><Printer className="h-3.5 w-3.5" /></Button>
         {r.status === "aberto" && <Button size="sm" variant="ghost" onClick={() => setOrcamentos(orcamentos.map(o => o.id === r.id ? { ...o, status: "enviado" as const } : o))}><Send className="h-3.5 w-3.5" /></Button>}
         {r.status === "aprovado" && <Button size="sm" variant="ghost" onClick={() => converterPedido(r.id)}><Copy className="h-3.5 w-3.5" /></Button>}
       </div>

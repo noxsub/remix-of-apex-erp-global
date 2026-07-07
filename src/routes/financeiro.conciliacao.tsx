@@ -54,7 +54,7 @@ function ConciliacaoPage() {
             <SelectItem value="divergente">Divergentes</SelectItem>
           </SelectContent>
         </Select>
-        <Button variant="outline" className="gap-1.5"><Upload className="h-3.5 w-3.5" />Importar OFX</Button>
+        <Button variant="outline" className="gap-1.5" onClick={() => toast.info("Importação de arquivo OFX em desenvolvimento", { description: "Use Financeiro → Contas a Receber para lançar manualmente enquanto isso." })}><Upload className="h-3.5 w-3.5" />Importar OFX</Button>
       </div>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <Card className="p-3 border-border"><p className="text-[10px] uppercase text-muted-foreground">Conciliados</p><p className="text-lg font-bold text-green-600">{movimentos.filter(m => m.status === "conciliado").length}</p></Card>

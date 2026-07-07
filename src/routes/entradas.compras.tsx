@@ -3,6 +3,7 @@ import { useRef, useState } from "react";
 import { useNotasEntrada, type NotaEntrada } from "@/lib/entradas-store";
 import { useItensFiscais } from "@/lib/fiscal-store";
 import { useContasPagar, proximoId } from "@/lib/financeiro-store";
+import { useCentrosCusto } from "@/lib/centro-custo-store";
 import { DataTable, type Column } from "@/components/data-table";
 import { AnexarDocumento } from "@/components/anexar-documento";
 import { Button } from "@/components/ui/button";
@@ -344,6 +345,7 @@ const TIPOS_DOC = [
 
 function LancamentoManualDialog({ onSave }: { onSave: (n: NotaEntrada) => void }) {
   const [open, setOpen] = useState(false);
+  const [centros] = useCentrosCusto();
   const [form, setForm] = useState({
     tipo: "55",
     numero: "",
@@ -363,6 +365,7 @@ function LancamentoManualDialog({ onSave }: { onSave: (n: NotaEntrada) => void }
     valorPis: "0",
     valorCofins: "0",
     observacao: "",
+    centroCustoId: "",
   });
   function set<K extends keyof typeof form>(k: K, v: string) {
     setForm((p) => ({ ...p, [k]: v }));
@@ -370,6 +373,7 @@ function LancamentoManualDialog({ onSave }: { onSave: (n: NotaEntrada) => void }
   function num(v: string) {
     return Number(String(v).replace(",", ".")) || 0;
   }
+  const centroSelecionado = centros.find((c) => c.id === form.centroCustoId);
   function salvar() {
     if (!form.numero || !form.fornecedorRazao || !form.valorProdutos) {
       toast.error("Campos obrigatórios", { description: "Número, fornecedor e valor são obrigatórios." });
@@ -449,6 +453,24 @@ function LancamentoManualDialog({ onSave }: { onSave: (n: NotaEntrada) => void }
           <Field label="COFINS"><Input value={form.valorCofins} onChange={(e) => set("valorCofins", e.target.value)} /></Field>
           <Field label="Observações" full>
             <Textarea rows={2} value={form.observacao} onChange={(e) => set("observacao", e.target.value)} />
+          </Field>
+          <Field label="Centro de Custo" full>
+            <Select value={form.centroCustoId} onValueChange={(v) => set("centroCustoId", v)}>
+              <SelectTrigger className="h-9"><SelectValue placeholder="Selecione (opcional)" /></SelectTrigger>
+              <SelectContent>
+                {centros.map((c) => (
+                  <SelectItem key={c.id} value={c.id}>
+                    {c.codigo} — {c.nome}
+                    {c.origem === "crm" ? " ✨" : ""}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {centroSelecionado?.origem === "crm" && (
+              <p className="mt-1 text-[11px] text-gold">
+                ✨ Projeto identificado da Engenharia de Vendas — cliente {centroSelecionado.clienteNome}, responsável {centroSelecionado.responsavelComercial}.
+              </p>
+            )}
           </Field>
           <div className="col-span-2">
             <AnexarDocumento label="Anexar documento fiscal (PDF)" />

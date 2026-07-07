@@ -14,6 +14,7 @@ import { Route as SaidasRouteImport } from './routes/saidas'
 import { Route as RhRouteImport } from './routes/rh'
 import { Route as ReformaTributariaRouteImport } from './routes/reforma-tributaria'
 import { Route as PontoAppRouteImport } from './routes/ponto-app'
+import { Route as PerfilRouteImport } from './routes/perfil'
 import { Route as OmnilinkRouteImport } from './routes/omnilink'
 import { Route as ObrigacoesRouteImport } from './routes/obrigacoes'
 import { Route as FiscalRouteImport } from './routes/fiscal'
@@ -51,6 +52,7 @@ import { Route as EntradasEstoqueRouteImport } from './routes/entradas.estoque'
 import { Route as EntradasDevolucoesRouteImport } from './routes/entradas.devolucoes'
 import { Route as EntradasCreditosRouteImport } from './routes/entradas.creditos'
 import { Route as EntradasComprasRouteImport } from './routes/entradas.compras'
+import { Route as ComercialEngenhariaVendasRouteImport } from './routes/comercial.engenharia-vendas'
 import { Route as ApiPublicWebhooksCanalIdRouteImport } from './routes/api/public/webhooks.$canalId'
 
 const VendasRoute = VendasRouteImport.update({
@@ -76,6 +78,11 @@ const ReformaTributariaRoute = ReformaTributariaRouteImport.update({
 const PontoAppRoute = PontoAppRouteImport.update({
   id: '/ponto-app',
   path: '/ponto-app',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PerfilRoute = PerfilRouteImport.update({
+  id: '/perfil',
+  path: '/perfil',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OmnilinkRoute = OmnilinkRouteImport.update({
@@ -263,6 +270,12 @@ const EntradasComprasRoute = EntradasComprasRouteImport.update({
   path: '/compras',
   getParentRoute: () => EntradasRoute,
 } as any)
+const ComercialEngenhariaVendasRoute =
+  ComercialEngenhariaVendasRouteImport.update({
+    id: '/comercial/engenharia-vendas',
+    path: '/comercial/engenharia-vendas',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicWebhooksCanalIdRoute =
   ApiPublicWebhooksCanalIdRouteImport.update({
     id: '/api/public/webhooks/$canalId',
@@ -280,11 +293,13 @@ export interface FileRoutesByFullPath {
   '/fiscal': typeof FiscalRoute
   '/obrigacoes': typeof ObrigacoesRoute
   '/omnilink': typeof OmnilinkRoute
+  '/perfil': typeof PerfilRoute
   '/ponto-app': typeof PontoAppRoute
   '/reforma-tributaria': typeof ReformaTributariaRoute
   '/rh': typeof RhRouteWithChildren
   '/saidas': typeof SaidasRouteWithChildren
   '/vendas': typeof VendasRoute
+  '/comercial/engenharia-vendas': typeof ComercialEngenhariaVendasRoute
   '/entradas/compras': typeof EntradasComprasRoute
   '/entradas/creditos': typeof EntradasCreditosRoute
   '/entradas/devolucoes': typeof EntradasDevolucoesRoute
@@ -323,9 +338,11 @@ export interface FileRoutesByTo {
   '/fiscal': typeof FiscalRoute
   '/obrigacoes': typeof ObrigacoesRoute
   '/omnilink': typeof OmnilinkRoute
+  '/perfil': typeof PerfilRoute
   '/ponto-app': typeof PontoAppRoute
   '/reforma-tributaria': typeof ReformaTributariaRoute
   '/vendas': typeof VendasRoute
+  '/comercial/engenharia-vendas': typeof ComercialEngenhariaVendasRoute
   '/entradas/compras': typeof EntradasComprasRoute
   '/entradas/creditos': typeof EntradasCreditosRoute
   '/entradas/devolucoes': typeof EntradasDevolucoesRoute
@@ -367,11 +384,13 @@ export interface FileRoutesById {
   '/fiscal': typeof FiscalRoute
   '/obrigacoes': typeof ObrigacoesRoute
   '/omnilink': typeof OmnilinkRoute
+  '/perfil': typeof PerfilRoute
   '/ponto-app': typeof PontoAppRoute
   '/reforma-tributaria': typeof ReformaTributariaRoute
   '/rh': typeof RhRouteWithChildren
   '/saidas': typeof SaidasRouteWithChildren
   '/vendas': typeof VendasRoute
+  '/comercial/engenharia-vendas': typeof ComercialEngenhariaVendasRoute
   '/entradas/compras': typeof EntradasComprasRoute
   '/entradas/creditos': typeof EntradasCreditosRoute
   '/entradas/devolucoes': typeof EntradasDevolucoesRoute
@@ -414,11 +433,13 @@ export interface FileRouteTypes {
     | '/fiscal'
     | '/obrigacoes'
     | '/omnilink'
+    | '/perfil'
     | '/ponto-app'
     | '/reforma-tributaria'
     | '/rh'
     | '/saidas'
     | '/vendas'
+    | '/comercial/engenharia-vendas'
     | '/entradas/compras'
     | '/entradas/creditos'
     | '/entradas/devolucoes'
@@ -457,9 +478,11 @@ export interface FileRouteTypes {
     | '/fiscal'
     | '/obrigacoes'
     | '/omnilink'
+    | '/perfil'
     | '/ponto-app'
     | '/reforma-tributaria'
     | '/vendas'
+    | '/comercial/engenharia-vendas'
     | '/entradas/compras'
     | '/entradas/creditos'
     | '/entradas/devolucoes'
@@ -500,11 +523,13 @@ export interface FileRouteTypes {
     | '/fiscal'
     | '/obrigacoes'
     | '/omnilink'
+    | '/perfil'
     | '/ponto-app'
     | '/reforma-tributaria'
     | '/rh'
     | '/saidas'
     | '/vendas'
+    | '/comercial/engenharia-vendas'
     | '/entradas/compras'
     | '/entradas/creditos'
     | '/entradas/devolucoes'
@@ -546,11 +571,13 @@ export interface RootRouteChildren {
   FiscalRoute: typeof FiscalRoute
   ObrigacoesRoute: typeof ObrigacoesRoute
   OmnilinkRoute: typeof OmnilinkRoute
+  PerfilRoute: typeof PerfilRoute
   PontoAppRoute: typeof PontoAppRoute
   ReformaTributariaRoute: typeof ReformaTributariaRoute
   RhRoute: typeof RhRouteWithChildren
   SaidasRoute: typeof SaidasRouteWithChildren
   VendasRoute: typeof VendasRoute
+  ComercialEngenhariaVendasRoute: typeof ComercialEngenhariaVendasRoute
   GestaoAnaliseFinanceiraRoute: typeof GestaoAnaliseFinanceiraRoute
   ApiPublicWebhooksCanalIdRoute: typeof ApiPublicWebhooksCanalIdRoute
 }
@@ -590,6 +617,13 @@ declare module '@tanstack/react-router' {
       path: '/ponto-app'
       fullPath: '/ponto-app'
       preLoaderRoute: typeof PontoAppRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/perfil': {
+      id: '/perfil'
+      path: '/perfil'
+      fullPath: '/perfil'
+      preLoaderRoute: typeof PerfilRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/omnilink': {
@@ -851,6 +885,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EntradasComprasRouteImport
       parentRoute: typeof EntradasRoute
     }
+    '/comercial/engenharia-vendas': {
+      id: '/comercial/engenharia-vendas'
+      path: '/comercial/engenharia-vendas'
+      fullPath: '/comercial/engenharia-vendas'
+      preLoaderRoute: typeof ComercialEngenhariaVendasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/webhooks/$canalId': {
       id: '/api/public/webhooks/$canalId'
       path: '/api/public/webhooks/$canalId'
@@ -962,11 +1003,13 @@ const rootRouteChildren: RootRouteChildren = {
   FiscalRoute: FiscalRoute,
   ObrigacoesRoute: ObrigacoesRoute,
   OmnilinkRoute: OmnilinkRoute,
+  PerfilRoute: PerfilRoute,
   PontoAppRoute: PontoAppRoute,
   ReformaTributariaRoute: ReformaTributariaRoute,
   RhRoute: RhRouteWithChildren,
   SaidasRoute: SaidasRouteWithChildren,
   VendasRoute: VendasRoute,
+  ComercialEngenhariaVendasRoute: ComercialEngenhariaVendasRoute,
   GestaoAnaliseFinanceiraRoute: GestaoAnaliseFinanceiraRoute,
   ApiPublicWebhooksCanalIdRoute: ApiPublicWebhooksCanalIdRoute,
 }

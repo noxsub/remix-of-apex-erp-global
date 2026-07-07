@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, ReferenceLine } from "recharts";
 import { Download, TrendingUp, TrendingDown } from "lucide-react";
+import { exportToExcel } from "@/lib/export-excel";
 
 export const Route = createFileRoute("/financeiro/fluxo")({ component: FluxoCaixaPage });
 
@@ -44,7 +45,18 @@ function FluxoCaixaPage() {
             <SelectItem value="categoria">Por Categoria</SelectItem>
           </SelectContent>
         </Select>
-        <Button variant="outline" className="gap-1.5"><Download className="h-3.5 w-3.5" />Exportar</Button>
+        <Button
+          variant="outline"
+          className="gap-1.5"
+          onClick={() =>
+            exportToExcel(
+              visao === "diario" ? fluxoDiario : fluxoCategoria,
+              `fluxo-caixa-${visao}`,
+            )
+          }
+        >
+          <Download className="h-3.5 w-3.5" />Exportar
+        </Button>
       </div>
 
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">

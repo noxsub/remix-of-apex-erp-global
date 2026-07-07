@@ -8,6 +8,7 @@ import { DataTable, type Column } from "@/components/data-table";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { Calculator, Download, CreditCard, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
+import { exportToExcel } from "@/lib/export-excel";
 
 export const Route = createFileRoute("/entradas/creditos")({ component: CreditosEntradaPage });
 
@@ -91,7 +92,7 @@ function CreditosEntradaPage() {
         </div>
         <div className="flex gap-2">
           <Button variant="outline" className="gap-1.5" onClick={() => toast.success("Créditos apropriados!")}><Calculator className="h-3.5 w-3.5" />Apropriar Tudo</Button>
-          <Button variant="outline" className="gap-1.5"><Download className="h-3.5 w-3.5" />Exportar</Button>
+          <Button variant="outline" className="gap-1.5" onClick={() => exportToExcel(filtrados, "creditos-fiscais")}><Download className="h-3.5 w-3.5" />Exportar</Button>
         </div>
       </div>
 

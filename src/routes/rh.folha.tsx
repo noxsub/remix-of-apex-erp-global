@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DataTable, type Column } from "@/components/data-table";
 import { Download, Printer, Calculator, CheckCircle2 } from "lucide-react";
+import { exportToExcel } from "@/lib/export-excel";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/rh/folha")({ component: FolhaPage });
@@ -66,7 +67,7 @@ function FolhaPage() {
         <div className="flex gap-2">
           <Button variant="outline" className="gap-1.5" onClick={() => toast.success("Folha calculada!")}><Calculator className="h-3.5 w-3.5" />Calcular</Button>
           <Button variant="outline" className="gap-1.5" onClick={() => toast.success("Holerites gerados!")}><Printer className="h-3.5 w-3.5" />Holerites</Button>
-          <Button variant="outline" className="gap-1.5"><Download className="h-3.5 w-3.5" />Exportar</Button>
+          <Button variant="outline" className="gap-1.5" onClick={() => exportToExcel(folhaData, "folha-pagamento")}><Download className="h-3.5 w-3.5" />Exportar</Button>
         </div>
       </div>
 

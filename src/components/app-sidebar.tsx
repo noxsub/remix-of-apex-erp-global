@@ -23,6 +23,7 @@ import {
   Calendar,
   Heart,
   Clock,
+  Briefcase,
 } from "lucide-react";
 import {
   Sidebar,
@@ -115,6 +116,12 @@ const sections: { label: string; items: NavItem[] }[] = [
           { title: "Centros de Custo", url: "/financeiro/centros-custo", icon: LayoutGrid },
         ],
       },
+    ],
+  },
+  {
+    label: "Comercial",
+    items: [
+      { title: "Engenharia de Vendas", url: "/comercial/engenharia-vendas", icon: Briefcase },
     ],
   },
   {

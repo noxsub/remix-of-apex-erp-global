@@ -38,8 +38,17 @@ import {
   Upload,
   Download,
   Coins,
+  ShieldCheck,
+  ShieldAlert,
+  CheckCircle2,
+  AlertTriangle,
+  KeyRound,
 } from "lucide-react";
 import { toast } from "sonner";
+import { useNotasEntrada } from "@/lib/entradas-store";
+import { useDocumentosSefaz } from "@/lib/sefaz-store";
+import { conferirDocumentos, type DocConferencia } from "@/lib/confere-fiscal";
+import { exportToExcel } from "@/lib/export-excel";
 import {
   useEmpresaFiscal,
   usePerfisFiscaisCliente,
@@ -91,6 +100,7 @@ function FiscalPage() {
           <TabsTrigger value="aliquotas" className="gap-1.5"><Calculator className="h-3.5 w-3.5" /> Alíquotas padrão</TabsTrigger>
           <TabsTrigger value="irpj" className="gap-1.5"><Coins className="h-3.5 w-3.5" /> IRPJ / CSLL</TabsTrigger>
           <TabsTrigger value="nf" className="gap-1.5"><FileText className="h-3.5 w-3.5" /> NF-e / NFS-e</TabsTrigger>
+          <TabsTrigger value="confere" className="gap-1.5"><ShieldCheck className="h-3.5 w-3.5" /> Confere Fiscal</TabsTrigger>
         </TabsList>
 
         <TabsContent value="perfis" className="mt-4"><PerfisTab /></TabsContent>
@@ -98,6 +108,7 @@ function FiscalPage() {
         <TabsContent value="aliquotas" className="mt-4"><AliquotasTab /></TabsContent>
         <TabsContent value="irpj" className="mt-4"><IrpjCsllTab /></TabsContent>
         <TabsContent value="nf" className="mt-4"><NFTab /></TabsContent>
+        <TabsContent value="confere" className="mt-4"><ConfereFiscalTab /></TabsContent>
       </Tabs>
     </AppShell>
   );
@@ -957,6 +968,173 @@ function Field({ label, cls, children }: { label: string; cls?: string; children
     <div className={`space-y-1.5 ${cls ?? ""}`}>
       <Label className="text-xs">{label}</Label>
       {children}
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   CONFERE FISCAL — cruzamento Escrituração × SEFAZ
+   ═══════════════════════════════════════════════════════════════ */
+
+const brl = (n: number) => n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+
+function ConfereFiscalTab() {
+  const [notas] = useNotasEntrada();
+  const [docsSefaz] = useDocumentosSefaz();
+
+  const resultado = useMemo(() => {
+    const escriturados: DocConferencia[] = notas.map((n) => ({
+      chave: n.chave ?? "",
+      numero: n.numero,
+      emitenteCnpj: n.fornecedorCnpj,
+      emitenteRazao: n.fornecedorRazao,
+      dataEmissao: n.dataEmissao,
+      valorTotal: n.valorTotal,
+      valorIcms: n.valorIcms,
+      cfop: n.cfopPrincipal,
+    }));
+    const sefaz: DocConferencia[] = docsSefaz.map((d) => ({
+      chave: d.chave,
+      numero: d.numero,
+      emitenteCnpj: d.emitenteCnpj,
+      emitenteRazao: d.emitenteRazao,
+      dataEmissao: d.dataEmissao,
+      valorTotal: d.valorTotal,
+    }));
+    return conferirDocumentos(escriturados, sefaz);
+  }, [notas, docsSefaz]);
+
+  const divergentes = resultado.convergentes.filter((c) => c.divergente);
+  const riscoOmissao = resultado.apenasSefaz.length;
+
+  return (
+    <div className="space-y-5">
+      <div className="rounded-lg border border-gold/30 bg-gold/5 p-4">
+        <div className="flex items-start gap-3">
+          <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-gold" />
+          <div>
+            <p className="text-sm font-semibold">Confere Fiscal — Escrituração × SEFAZ</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Cruza as notas de entrada lançadas no Syntera com os documentos identificados na SEFAZ,
+              apontando omissões, divergências de valor/ICMS e chaves de acesso estruturalmente inválidas —
+              o mesmo princípio do módulo Confere C100/D100 do mercado, nativo no ERP.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <div className="rounded-lg border border-border bg-card p-4">
+          <p className="text-[10px] uppercase text-muted-foreground">Convergentes</p>
+          <p className="mt-1 text-xl font-semibold text-green-600">{resultado.convergentes.length}</p>
+        </div>
+        <div className="rounded-lg border border-border bg-card p-4">
+          <p className="text-[10px] uppercase text-muted-foreground">Divergências</p>
+          <p className="mt-1 text-xl font-semibold text-amber-600">{divergentes.length}</p>
+        </div>
+        <div className="rounded-lg border border-red-500/30 bg-red-500/5 p-4">
+          <p className="text-[10px] uppercase text-muted-foreground">Risco de Omissão</p>
+          <p className="mt-1 text-xl font-semibold text-red-600">{riscoOmissao}</p>
+          <p className="text-[10px] text-muted-foreground">na SEFAZ, não escrituradas</p>
+        </div>
+        <div className="rounded-lg border border-border bg-card p-4">
+          <p className="text-[10px] uppercase text-muted-foreground">Chaves Inválidas</p>
+          <p className="mt-1 text-xl font-semibold">{resultado.chavesInvalidas.length}</p>
+        </div>
+      </div>
+
+      {riscoOmissao > 0 && (
+        <div className="rounded-lg border border-red-500/30 bg-red-500/5 p-4">
+          <div className="mb-2 flex items-center gap-2">
+            <ShieldAlert className="h-4 w-4 text-red-600" />
+            <p className="text-sm font-semibold text-red-600">
+              Documentos identificados na SEFAZ e ainda não escriturados
+            </p>
+          </div>
+          <div className="space-y-1.5">
+            {resultado.apenasSefaz.map((d) => (
+              <div key={d.chave} className="flex items-center justify-between rounded-md border border-border bg-card px-3 py-2 text-xs">
+                <div>
+                  <p className="font-medium">NF {d.numero} — {d.emitenteRazao}</p>
+                  <p className="text-muted-foreground">{d.dataEmissao} · {brl(d.valorTotal)}</p>
+                </div>
+                <Badge variant="destructive" className="text-[10px]">Não escriturada</Badge>
+              </div>
+            ))}
+          </div>
+          <p className="mt-2 text-[11px] text-muted-foreground">
+            Resolva importando o documento em Entradas → Visão Geral → botão "Importar".
+          </p>
+        </div>
+      )}
+
+      {divergentes.length > 0 && (
+        <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-4">
+          <div className="mb-2 flex items-center gap-2">
+            <AlertTriangle className="h-4 w-4 text-amber-600" />
+            <p className="text-sm font-semibold text-amber-600">Divergências de valor / ICMS</p>
+          </div>
+          <div className="space-y-1.5">
+            {divergentes.map((d) => (
+              <div key={d.chave} className="flex items-center justify-between rounded-md border border-border bg-card px-3 py-2 text-xs">
+                <div>
+                  <p className="font-medium">NF {d.numero} — {d.emitenteRazao}</p>
+                  <p className="text-muted-foreground">{d.motivoDivergencia}</p>
+                </div>
+                <div className="text-right">
+                  <p>Escriturado: {brl(d.valorEscriturado)}</p>
+                  <p className="text-amber-600">SEFAZ: {brl(d.valorSefaz)}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {resultado.chavesInvalidas.length > 0 && (
+        <div className="rounded-lg border border-border bg-card p-4">
+          <div className="mb-2 flex items-center gap-2">
+            <KeyRound className="h-4 w-4 text-muted-foreground" />
+            <p className="text-sm font-semibold">Chaves de acesso inválidas</p>
+          </div>
+          <div className="space-y-1.5">
+            {resultado.chavesInvalidas.map((c) => (
+              <div key={c.chave || c.numero} className="flex items-center justify-between rounded-md border border-border px-3 py-2 text-xs">
+                <span>NF {c.numero}</span>
+                <span className="text-muted-foreground">{c.motivo}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {resultado.convergentes.length > 0 && (
+        <div className="flex items-center justify-between rounded-lg border border-green-500/30 bg-green-500/5 p-4">
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className="h-4 w-4 text-green-600" />
+            <p className="text-sm">
+              {resultado.convergentes.length - divergentes.length} documento(s) totalmente conferidos, sem divergência.
+            </p>
+          </div>
+          <Button
+            size="sm"
+            variant="outline"
+            className="gap-1.5"
+            onClick={() =>
+              exportToExcel(
+                [
+                  ...resultado.convergentes.map((c) => ({ tipo: "Convergente", ...c })),
+                  ...resultado.apenasSefaz.map((d) => ({ tipo: "Apenas SEFAZ (risco de omissão)", ...d })),
+                  ...resultado.apenasEscrituracao.map((d) => ({ tipo: "Apenas escriturado", ...d })),
+                ],
+                "confere-fiscal",
+              )
+            }
+          >
+            <Download className="h-3.5 w-3.5" /> Exportar relatório
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

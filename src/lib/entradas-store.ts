@@ -65,7 +65,7 @@ const seed: NotaEntrada[] = [
     numero: "000458",
     serie: "1",
     modelo: "55",
-    chave: "35240611222333000144550010000004581234567890",
+    chave: "35260644333222000100550010000045811000045814",
     fornecedorCnpj: "11.222.333/0001-44",
     fornecedorRazao: "Fornecedor Alpha S.A.",
     dataEmissao: "2026-06-05",

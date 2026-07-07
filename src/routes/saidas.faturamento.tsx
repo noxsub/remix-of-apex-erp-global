@@ -114,7 +114,7 @@ function FaturamentoPage() {
     { key: "acoes", header: "Ações", render: (r) => (
       <div className="flex gap-1">
         {r.status === "rascunho" && <Button size="sm" variant="ghost" className="gap-1" onClick={() => emitirNf(r.id)}><Send className="h-3.5 w-3.5" />Emitir</Button>}
-        {r.status === "autorizada" && <Button size="sm" variant="ghost"><FileText className="h-3.5 w-3.5" /></Button>}
+        {r.status === "autorizada" && <Button size="sm" variant="ghost" onClick={() => toast.info(`DANFE ${r.modelo}-${r.numero}`, { description: `Chave: ${r.chaveAcesso?.slice(0, 20)}...` })}><FileText className="h-3.5 w-3.5" /></Button>}
       </div>
     )},
   ];

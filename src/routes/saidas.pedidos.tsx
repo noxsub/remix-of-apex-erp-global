@@ -78,7 +78,7 @@ function PedidosVendaPage() {
       key: "acoes", header: "Ações", render: (r) => (
         <div className="flex gap-1">
           <Button size="sm" variant="ghost" onClick={() => { setPedidoSel(r); setDetalheOpen(true); }}><Eye className="h-3.5 w-3.5" /></Button>
-          <Button size="sm" variant="ghost"><Printer className="h-3.5 w-3.5" /></Button>
+          <Button size="sm" variant="ghost" onClick={() => toast.info("Geração de PDF em desenvolvimento")}><Printer className="h-3.5 w-3.5" /></Button>
           {r.status === "aprovado" && <Button size="sm" variant="ghost" onClick={() => { setPedidos(pedidos.map(p => p.id === r.id ? { ...p, status: "faturado" as const } : p)); toast.success("Pedido faturado!"); }}><Send className="h-3.5 w-3.5" /></Button>}
         </div>
       ),

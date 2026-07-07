@@ -67,8 +67,8 @@ function FreteCTePage() {
           <Input placeholder="Buscar CT-e..." value={filtro} onChange={(e) => setFiltro(e.target.value)} className="pl-8" />
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" className="gap-1.5"><Download className="h-3.5 w-3.5" />Importar XML</Button>
-          <Button className="gap-1.5"><Plus className="h-3.5 w-3.5" />Novo CT-e</Button>
+          <Button variant="outline" className="gap-1.5" onClick={() => toast.info("Importação de XML de CT-e em desenvolvimento", { description: "Use Entradas → Documentos Fiscais para importar via SEFAZ enquanto isso." })}><Download className="h-3.5 w-3.5" />Importar XML</Button>
+          <Button className="gap-1.5" onClick={() => toast.info("Lançamento manual de CT-e em desenvolvimento")}><Plus className="h-3.5 w-3.5" />Novo CT-e</Button>
         </div>
       </div>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
