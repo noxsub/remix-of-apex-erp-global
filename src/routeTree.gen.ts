@@ -17,12 +17,14 @@ import { Route as PontoAppRouteImport } from './routes/ponto-app'
 import { Route as PerfilRouteImport } from './routes/perfil'
 import { Route as OmnilinkRouteImport } from './routes/omnilink'
 import { Route as ObrigacoesRouteImport } from './routes/obrigacoes'
+import { Route as MapaOperacionalRouteImport } from './routes/mapa-operacional'
 import { Route as FiscalRouteImport } from './routes/fiscal'
 import { Route as FinanceiroRouteImport } from './routes/financeiro'
 import { Route as EstoqueRouteImport } from './routes/estoque'
 import { Route as EntradasRouteImport } from './routes/entradas'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as CadastrosRouteImport } from './routes/cadastros'
+import { Route as AcademyRouteImport } from './routes/academy'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SaidasIndexRouteImport } from './routes/saidas.index'
 import { Route as RhIndexRouteImport } from './routes/rh.index'
@@ -95,6 +97,11 @@ const ObrigacoesRoute = ObrigacoesRouteImport.update({
   path: '/obrigacoes',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MapaOperacionalRoute = MapaOperacionalRouteImport.update({
+  id: '/mapa-operacional',
+  path: '/mapa-operacional',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const FiscalRoute = FiscalRouteImport.update({
   id: '/fiscal',
   path: '/fiscal',
@@ -123,6 +130,11 @@ const DashboardRoute = DashboardRouteImport.update({
 const CadastrosRoute = CadastrosRouteImport.update({
   id: '/cadastros',
   path: '/cadastros',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AcademyRoute = AcademyRouteImport.update({
+  id: '/academy',
+  path: '/academy',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -285,12 +297,14 @@ const ApiPublicWebhooksCanalIdRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/academy': typeof AcademyRoute
   '/cadastros': typeof CadastrosRoute
   '/dashboard': typeof DashboardRoute
   '/entradas': typeof EntradasRouteWithChildren
   '/estoque': typeof EstoqueRoute
   '/financeiro': typeof FinanceiroRouteWithChildren
   '/fiscal': typeof FiscalRoute
+  '/mapa-operacional': typeof MapaOperacionalRoute
   '/obrigacoes': typeof ObrigacoesRoute
   '/omnilink': typeof OmnilinkRoute
   '/perfil': typeof PerfilRoute
@@ -332,10 +346,12 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/academy': typeof AcademyRoute
   '/cadastros': typeof CadastrosRoute
   '/dashboard': typeof DashboardRoute
   '/estoque': typeof EstoqueRoute
   '/fiscal': typeof FiscalRoute
+  '/mapa-operacional': typeof MapaOperacionalRoute
   '/obrigacoes': typeof ObrigacoesRoute
   '/omnilink': typeof OmnilinkRoute
   '/perfil': typeof PerfilRoute
@@ -376,12 +392,14 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/academy': typeof AcademyRoute
   '/cadastros': typeof CadastrosRoute
   '/dashboard': typeof DashboardRoute
   '/entradas': typeof EntradasRouteWithChildren
   '/estoque': typeof EstoqueRoute
   '/financeiro': typeof FinanceiroRouteWithChildren
   '/fiscal': typeof FiscalRoute
+  '/mapa-operacional': typeof MapaOperacionalRoute
   '/obrigacoes': typeof ObrigacoesRoute
   '/omnilink': typeof OmnilinkRoute
   '/perfil': typeof PerfilRoute
@@ -425,12 +443,14 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/academy'
     | '/cadastros'
     | '/dashboard'
     | '/entradas'
     | '/estoque'
     | '/financeiro'
     | '/fiscal'
+    | '/mapa-operacional'
     | '/obrigacoes'
     | '/omnilink'
     | '/perfil'
@@ -472,10 +492,12 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/academy'
     | '/cadastros'
     | '/dashboard'
     | '/estoque'
     | '/fiscal'
+    | '/mapa-operacional'
     | '/obrigacoes'
     | '/omnilink'
     | '/perfil'
@@ -515,12 +537,14 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/academy'
     | '/cadastros'
     | '/dashboard'
     | '/entradas'
     | '/estoque'
     | '/financeiro'
     | '/fiscal'
+    | '/mapa-operacional'
     | '/obrigacoes'
     | '/omnilink'
     | '/perfil'
@@ -563,12 +587,14 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AcademyRoute: typeof AcademyRoute
   CadastrosRoute: typeof CadastrosRoute
   DashboardRoute: typeof DashboardRoute
   EntradasRoute: typeof EntradasRouteWithChildren
   EstoqueRoute: typeof EstoqueRoute
   FinanceiroRoute: typeof FinanceiroRouteWithChildren
   FiscalRoute: typeof FiscalRoute
+  MapaOperacionalRoute: typeof MapaOperacionalRoute
   ObrigacoesRoute: typeof ObrigacoesRoute
   OmnilinkRoute: typeof OmnilinkRoute
   PerfilRoute: typeof PerfilRoute
@@ -640,6 +666,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ObrigacoesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/mapa-operacional': {
+      id: '/mapa-operacional'
+      path: '/mapa-operacional'
+      fullPath: '/mapa-operacional'
+      preLoaderRoute: typeof MapaOperacionalRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/fiscal': {
       id: '/fiscal'
       path: '/fiscal'
@@ -680,6 +713,13 @@ declare module '@tanstack/react-router' {
       path: '/cadastros'
       fullPath: '/cadastros'
       preLoaderRoute: typeof CadastrosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/academy': {
+      id: '/academy'
+      path: '/academy'
+      fullPath: '/academy'
+      preLoaderRoute: typeof AcademyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -995,12 +1035,14 @@ const SaidasRouteWithChildren =
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AcademyRoute: AcademyRoute,
   CadastrosRoute: CadastrosRoute,
   DashboardRoute: DashboardRoute,
   EntradasRoute: EntradasRouteWithChildren,
   EstoqueRoute: EstoqueRoute,
   FinanceiroRoute: FinanceiroRouteWithChildren,
   FiscalRoute: FiscalRoute,
+  MapaOperacionalRoute: MapaOperacionalRoute,
   ObrigacoesRoute: ObrigacoesRoute,
   OmnilinkRoute: OmnilinkRoute,
   PerfilRoute: PerfilRoute,

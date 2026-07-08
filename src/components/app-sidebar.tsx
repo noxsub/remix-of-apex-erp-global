@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   LayoutDashboard,
   ArrowDownToLine,
@@ -144,6 +144,39 @@ const sections: { label: string; items: NavItem[] }[] = [
 export function AppSidebar() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
+  /* Estado de abertura dos itens com submenu — independente da rota ativa.
+     Corrige o bug em que clicar no pai navegava em vez de expandir/recolher. */
+  const [openItems, setOpenItems] = useState<Set<string>>(() => {
+    const initial = new Set<string>();
+    for (const section of sections) {
+      for (const item of section.items) {
+        if (item.children?.length && (pathname === item.url || pathname.startsWith(item.url + "/"))) {
+          initial.add(item.url);
+        }
+      }
+    }
+    return initial;
+  });
+
+  useEffect(() => {
+    for (const section of sections) {
+      for (const item of section.items) {
+        if (item.children?.length && (pathname === item.url || pathname.startsWith(item.url + "/"))) {
+          setOpenItems((prev) => (prev.has(item.url) ? prev : new Set(prev).add(item.url)));
+        }
+      }
+    }
+  }, [pathname]);
+
+  const toggleItem = (url: string) => {
+    setOpenItems((prev) => {
+      const next = new Set(prev);
+      if (next.has(url)) next.delete(url);
+      else next.add(url);
+      return next;
+    });
+  };
+
   /* dados reais do Floki — o sidebar reflete o pulso do sistema */
   const [canais] = useCanais();
   const [pedidos] = usePedidosMarketplace();
@@ -224,29 +257,32 @@ export function AppSidebar() {
                       ? pathname === "/"
                       : pathname.startsWith(item.url);
                   const hasChildren = !!item.children?.length;
-                  const expanded = hasChildren && active;
+                  const expanded = hasChildren && openItems.has(item.url);
                   return (
                     <SidebarMenuItem key={item.url}>
                       <SidebarMenuButton
-                        asChild
+                        asChild={!hasChildren}
+                        onClick={hasChildren ? () => toggleItem(item.url) : undefined}
                         isActive={active}
                         tooltip={item.title}
-                        className="data-[active=true]:bg-accent data-[active=true]:text-accent-foreground data-[active=true]:border-l-2 data-[active=true]:border-gold"
+                        className="data-[active=true]:bg-accent data-[active=true]:text-accent-foreground data-[active=true]:border-l-2 data-[active=true]:border-gold cursor-pointer"
                       >
-                        <Link
-                          to={item.url}
-                          className="flex items-center gap-2.5"
-                        >
-                          <item.icon className="h-4 w-4" />
-                          <span className="text-sm flex-1">{item.title}</span>
-                          {hasChildren && (
+                        {hasChildren ? (
+                          <div className="flex items-center gap-2.5">
+                            <item.icon className="h-4 w-4" />
+                            <span className="text-sm flex-1">{item.title}</span>
                             <ChevronRight
                               className={`h-3.5 w-3.5 text-muted-foreground transition-transform group-data-[collapsible=icon]:hidden ${
                                 expanded ? "rotate-90" : ""
                               }`}
                             />
-                          )}
-                        </Link>
+                          </div>
+                        ) : (
+                          <Link to={item.url} className="flex items-center gap-2.5">
+                            <item.icon className="h-4 w-4" />
+                            <span className="text-sm flex-1">{item.title}</span>
+                          </Link>
+                        )}
                       </SidebarMenuButton>
 
                       {/* Badge: alertas Floki no Dashboard */}

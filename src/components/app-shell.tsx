@@ -1,9 +1,18 @@
 import type { ReactNode } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
-import { Bell, Search, User, KeyRound, Fingerprint, LogOut } from "lucide-react";
+import { Bell, Search, User, KeyRound, Fingerprint, LogOut, Moon, Sun, HeadphonesIcon, Sparkles, ChevronRight } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,8 +30,36 @@ interface AppShellProps {
   children: ReactNode;
 }
 
+function useTemaEscuro() {
+  const [escuro, setEscuro] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return document.documentElement.classList.contains("dark");
+  });
+
+  useEffect(() => {
+    const salvo = window.localStorage.getItem("erp:tema");
+    if (salvo === "dark") {
+      document.documentElement.classList.add("dark");
+      setEscuro(true);
+    }
+  }, []);
+
+  const alternar = () => {
+    setEscuro((prev) => {
+      const next = !prev;
+      document.documentElement.classList.toggle("dark", next);
+      window.localStorage.setItem("erp:tema", next ? "dark" : "light");
+      return next;
+    });
+  };
+
+  return [escuro, alternar] as const;
+}
+
 export function AppShell({ title, subtitle, actions, children }: AppShellProps) {
   const [usuario] = useUsuarioAtual();
+  const [escuro, alternarTema] = useTemaEscuro();
+  const [chamadoAberto, setChamadoAberto] = useState(false);
 
   return (
     <SidebarProvider>
@@ -49,7 +86,7 @@ export function AppShell({ title, subtitle, actions, children }: AppShellProps) 
                     {usuario.avatarIniciais}
                   </button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuContent align="end" className="w-64">
                   <DropdownMenuLabel>
                     <p className="text-sm font-medium">{usuario.nome}</p>
                     <p className="text-[11px] font-normal text-muted-foreground">{usuario.email}</p>
@@ -60,6 +97,21 @@ export function AppShell({ title, subtitle, actions, children }: AppShellProps) 
                       <User className="h-3.5 w-3.5" /> Meu Perfil
                     </Link>
                   </DropdownMenuItem>
+
+                  {/* Alternar tema */}
+                  <div className="flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent">
+                    {escuro ? <Moon className="h-3.5 w-3.5" /> : <Sun className="h-3.5 w-3.5" />}
+                    <span className="flex-1">Versão {escuro ? "Escura" : "Clara"}</span>
+                    <button
+                      onClick={alternarTema}
+                      className={`relative h-[22px] w-[38px] shrink-0 rounded-full transition-colors ${escuro ? "bg-gold" : "bg-muted-foreground/30"}`}
+                    >
+                      <span
+                        className={`absolute top-[3px] h-4 w-4 rounded-full bg-white transition-all ${escuro ? "left-[19px]" : "left-[3px]"}`}
+                      />
+                    </button>
+                  </div>
+
                   <DropdownMenuItem asChild>
                     <Link to="/perfil" className="flex items-center gap-2">
                       <KeyRound className="h-3.5 w-3.5" /> Alterar Senha
@@ -70,6 +122,27 @@ export function AppShell({ title, subtitle, actions, children }: AppShellProps) 
                       <Fingerprint className="h-3.5 w-3.5" /> Meu PIN de Ponto
                     </Link>
                   </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setChamadoAberto(true)} className="flex items-center gap-2">
+                    <HeadphonesIcon className="h-3.5 w-3.5" /> Abrir Chamado
+                  </DropdownMenuItem>
+
+                  <DropdownMenuSeparator />
+
+                  {/* SynteraAcademy — destaque dourado */}
+                  <DropdownMenuItem asChild>
+                    <Link
+                      to="/academy"
+                      className="flex items-center gap-2 rounded-md border border-gold/20 bg-gold/5 text-gold hover:bg-gold/10 hover:text-gold"
+                    >
+                      <Sparkles className="h-3.5 w-3.5" />
+                      <div className="flex-1">
+                        <p className="text-xs font-semibold">SynteraAcademy</p>
+                        <p className="text-[10px] font-normal text-muted-foreground">Portal de conhecimento</p>
+                      </div>
+                      <ChevronRight className="h-3 w-3" />
+                    </Link>
+                  </DropdownMenuItem>
+
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
                     <Link to="/" className="flex items-center gap-2 text-destructive">
@@ -97,6 +170,23 @@ export function AppShell({ title, subtitle, actions, children }: AppShellProps) 
           </main>
         </div>
       </div>
+
+      {/* Central de Ajuda */}
+      <Dialog open={chamadoAberto} onOpenChange={setChamadoAberto}>
+        <DialogContent className="max-w-sm text-center">
+          <DialogHeader>
+            <DialogTitle className="flex items-center justify-center gap-2">
+              <HeadphonesIcon className="h-5 w-5 text-gold" /> Central de Ajuda
+            </DialogTitle>
+            <DialogDescription>
+              Abra um chamado, acesse a documentação ou fale com nosso suporte técnico pelo chat integrado.
+            </DialogDescription>
+          </DialogHeader>
+          <Button onClick={() => setChamadoAberto(false)} className="mt-2">
+            Fechar
+          </Button>
+        </DialogContent>
+      </Dialog>
     </SidebarProvider>
   );
 }

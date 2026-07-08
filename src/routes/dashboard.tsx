@@ -19,6 +19,7 @@ import {
   Boxes,
   FileCheck2,
   Landmark,
+  Map as MapIcon,
   Network,
   Receipt,
   Sparkles,
@@ -28,6 +29,7 @@ import {
 } from "lucide-react";
 
 import { AppShell } from "@/components/app-shell";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -107,6 +109,11 @@ function DashboardPage() {
       subtitle="Centro operacional do Syntera — acesse módulos, acompanhe movimentações e leia os sinais do Floki."
       actions={
         <div className="flex flex-wrap items-center gap-2">
+          <Button asChild variant="outline" size="sm" className="h-8 gap-1.5">
+            <Link to="/mapa-operacional">
+              <MapIcon className="h-3.5 w-3.5" /> Mapa Operacional
+            </Link>
+          </Button>
           <Select defaultValue="geral">
             <SelectTrigger className="h-8 w-44">
               <SelectValue placeholder="Módulo" />
