@@ -72,17 +72,6 @@ const colaboradoresIniciais: Colaborador[] = [
 ];
 
 function CadastrosPage() {
-  const [estoqueAtivo, setEstoqueAtivo] = useState<boolean>(() => {
-    if (typeof window === "undefined") return true;
-    const v = window.localStorage.getItem("erp:estoqueAtivo");
-    return v === null ? true : v === "true";
-  });
-  useEffect(() => {
-    window.localStorage.setItem("erp:estoqueAtivo", String(estoqueAtivo));
-    window.dispatchEvent(
-      new CustomEvent("erp:estoque-toggle", { detail: { ativo: estoqueAtivo } }),
-    );
-  }, [estoqueAtivo]);
   const [clientes, setClientes] = useClientes();
   const [fornecedores, setFornecedores] = useFornecedores();
   const [colaboradores, setColaboradores] = useState(colaboradoresIniciais);
@@ -126,52 +115,6 @@ function CadastrosPage() {
       title="Cadastros"
       subtitle="Clientes, fornecedores, colaboradores e preferências do sistema."
     >
-      {/* Configurações do Sistema */}
-      <div className="mb-5 rounded-lg border border-border bg-card">
-        <div className="flex items-center gap-2 border-b border-border px-5 py-3">
-          <Settings2 className="h-3.5 w-3.5 text-muted-foreground" />
-          <span className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
-            Configurações do Sistema
-          </span>
-        </div>
-        <div className="flex flex-wrap items-center justify-between gap-4 px-5 py-4">
-          <div className="flex items-start gap-3">
-            <div
-              className={`mt-0.5 rounded-md p-1.5 ${
-                estoqueAtivo ? "bg-gold/10 text-gold" : "bg-secondary text-muted-foreground"
-              }`}
-            >
-              {estoqueAtivo ? <Package className="h-4 w-4" /> : <Briefcase className="h-4 w-4" />}
-            </div>
-            <div>
-              <Label htmlFor="toggle-estoque" className="text-sm font-medium">
-                Ativar Controle de Estoque de Produtos
-              </Label>
-              <p className="mt-0.5 text-xs text-muted-foreground">
-                {estoqueAtivo
-                  ? "Empresa orientada a produtos — movimentação de estoque habilitada."
-                  : "Empresa orientada a serviços — controle de estoque desabilitado."}
-              </p>
-            </div>
-          </div>
-          <Switch
-            id="toggle-estoque"
-            checked={estoqueAtivo}
-            onCheckedChange={(v) => {
-              setEstoqueAtivo(v);
-              toast.success(
-                v ? "Controle de estoque ativado" : "Modo Serviços ativado",
-                {
-                  description: v
-                    ? "O sistema irá rastrear entradas, saídas e saldos."
-                    : "O foco passa a ser serviços — estoque oculto nas vendas.",
-                },
-              );
-            }}
-          />
-        </div>
-      </div>
-
       <Tabs defaultValue="clientes">
         <TabsList className="bg-card border border-border">
           <TabsTrigger value="clientes">Clientes</TabsTrigger>
@@ -1113,5 +1056,14 @@ function CnaeDialog({ inicial, onSave }: { inicial: CnaeRecord | null; onSave: (
         </Button>
       </DialogFooter>
     </DialogContent>
+  );
+}
+
+function Field({ label, cls, children }: { label: string; cls?: string; children: React.ReactNode }) {
+  return (
+    <div className={`space-y-1.5 ${cls ?? ""}`}>
+      <Label className="text-xs">{label}</Label>
+      {children}
+    </div>
   );
 }

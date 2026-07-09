@@ -29,6 +29,14 @@ export type ItemDocumentoSefaz = {
   aliqPisSaida: number;
   aliqCofinsSaida: number;
   precoVendaSugerido: number;
+  /* Centro de Custo */
+  centroCustoId?: string;
+  /* Informações financeiras */
+  contaContabil?: string;
+  formaPagamento?: "boleto" | "pix" | "ted" | "debito" | "cartao";
+  condicaoPagamento?: string;
+  /* Anexo do item */
+  anexoNome?: string;
 };
 
 export type DocumentoSefaz = {

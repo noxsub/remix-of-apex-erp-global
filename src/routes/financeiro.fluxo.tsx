@@ -50,7 +50,7 @@ function FluxoCaixaPage() {
           className="gap-1.5"
           onClick={() =>
             exportToExcel(
-              visao === "diario" ? fluxoDiario : fluxoCategoria,
+              (visao === "diario" ? fluxoDiario : fluxoCategoria) as Record<string, unknown>[],
               `fluxo-caixa-${visao}`,
             )
           }

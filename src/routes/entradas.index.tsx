@@ -2,13 +2,16 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useNotasEntrada, type NotaEntrada, type ItemEntrada } from "@/lib/entradas-store";
 import { useItensFiscais, type ItemFiscal } from "@/lib/fiscal-store";
-import { useDocumentosSefaz, type DocumentoSefaz } from "@/lib/sefaz-store";
+import { useDocumentosSefaz, type DocumentoSefaz, type ItemDocumentoSefaz } from "@/lib/sefaz-store";
 import { useContasPagar, proximoId } from "@/lib/financeiro-store";
+import { useCentrosCusto } from "@/lib/centro-custo-store";
 import { DataTable, type Column } from "@/components/data-table";
+import { AnexarDocumento } from "@/components/anexar-documento";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Dialog,
   DialogContent,
@@ -27,6 +30,7 @@ import {
   RefreshCw,
   DownloadCloud,
   Landmark,
+  Paperclip,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -365,6 +369,7 @@ function ImportarNfDialog({
   onImportar: (doc: DocumentoSefaz, dados: { dataEntrada: string; natureza: string }) => void;
 }) {
   const [docEditado, setDocEditado] = useState<DocumentoSefaz>(doc);
+  const [centros] = useCentrosCusto();
   const [dataEntrada, setDataEntrada] = useState(new Date().toISOString().slice(0, 10));
   const [natureza, setNatureza] = useState(doc.natureza);
 
@@ -436,6 +441,11 @@ function ImportarNfDialog({
                 <TabsList className="h-8">
                   <TabsTrigger value="entrada" className="text-xs">Fiscal — Entrada</TabsTrigger>
                   <TabsTrigger value="saida" className="text-xs">Fiscal — Saída</TabsTrigger>
+                  <TabsTrigger value="centro" className="text-xs">Centro de Custo</TabsTrigger>
+                  <TabsTrigger value="financeiro" className="text-xs">Financeiro</TabsTrigger>
+                  <TabsTrigger value="anexo" className="text-xs gap-1">
+                    <Paperclip className="h-3 w-3" /> Anexo
+                  </TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="entrada" className="mt-2">
@@ -457,6 +467,54 @@ function ImportarNfDialog({
                     <CampoFiscalNum label="PIS %" value={it.aliqPisSaida} onChange={(v) => setItem(idx, { aliqPisSaida: v })} />
                     <CampoFiscalNum label="COFINS %" value={it.aliqCofinsSaida} onChange={(v) => setItem(idx, { aliqCofinsSaida: v })} />
                     <CampoFiscalNum label="Preço venda R$" value={it.precoVendaSugerido} onChange={(v) => setItem(idx, { precoVendaSugerido: v })} />
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="centro" className="mt-2">
+                  <div className="max-w-xs">
+                    <Label className="text-[10px] text-muted-foreground">Centro de Custo</Label>
+                    <Select value={it.centroCustoId ?? ""} onValueChange={(v) => setItem(idx, { centroCustoId: v })}>
+                      <SelectTrigger className="mt-0.5 h-8 text-xs"><SelectValue placeholder="Selecione (opcional)" /></SelectTrigger>
+                      <SelectContent>
+                        {centros.map((c) => (
+                          <SelectItem key={c.id} value={c.id}>
+                            {c.codigo} — {c.nome}{c.origem === "crm" ? " ✨" : ""}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {centros.find((c) => c.id === it.centroCustoId)?.origem === "crm" && (
+                      <p className="mt-1 text-[10px] text-gold">✨ Projeto identificado da Engenharia de Vendas.</p>
+                    )}
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="financeiro" className="mt-2">
+                  <div className="grid grid-cols-3 gap-2">
+                    <CampoFiscal label="Conta Contábil" value={it.contaContabil ?? ""} onChange={(v) => setItem(idx, { contaContabil: v })} />
+                    <div>
+                      <Label className="text-[10px] text-muted-foreground">Forma de Pagamento</Label>
+                      <Select value={it.formaPagamento ?? "boleto"} onValueChange={(v) => setItem(idx, { formaPagamento: v as ItemDocumentoSefaz["formaPagamento"] })}>
+                        <SelectTrigger className="mt-0.5 h-7 text-xs"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="boleto">Boleto</SelectItem>
+                          <SelectItem value="pix">PIX</SelectItem>
+                          <SelectItem value="ted">TED</SelectItem>
+                          <SelectItem value="debito">Débito</SelectItem>
+                          <SelectItem value="cartao">Cartão</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <CampoFiscal label="Condição de Pagamento" value={it.condicaoPagamento ?? ""} onChange={(v) => setItem(idx, { condicaoPagamento: v })} />
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="anexo" className="mt-2">
+                  <div className="max-w-sm">
+                    <AnexarDocumento
+                      label="Anexar documento do item (PDF)"
+                      onChange={(arquivo) => setItem(idx, { anexoNome: arquivo?.nome })}
+                    />
                   </div>
                 </TabsContent>
               </Tabs>
