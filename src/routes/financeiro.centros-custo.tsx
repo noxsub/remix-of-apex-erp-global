@@ -79,9 +79,51 @@ function CentrosCustoPage() {
 
   const pieData = useMemo(() => centros.filter((c) => c.ativo).map((c) => ({ name: c.nome, value: c.realizado || 1 })), [centros]);
 
+  const [filtro, setFiltro] = useState("");
+  const [filtroStatus, setFiltroStatus] = useState<"todos" | "ok" | "alerta" | "estourado">("todos");
+  const [filtroOrigem, setFiltroOrigem] = useState<"todos" | "manual" | "crm">("todos");
+
+  const centrosFiltrados = useMemo(
+    () =>
+      centros.filter((c) => {
+        if (filtro && !c.nome.toLowerCase().includes(filtro.toLowerCase()) && !c.codigo.toLowerCase().includes(filtro.toLowerCase())) return false;
+        if (filtroStatus !== "todos" && statusDe(c) !== filtroStatus) return false;
+        if (filtroOrigem !== "todos" && c.origem !== filtroOrigem) return false;
+        return true;
+      }),
+    [centros, filtro, filtroStatus, filtroOrigem],
+  );
+
   return (
     <div className="space-y-6">
-      <div className="flex justify-end">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-2">
+          <Input
+            placeholder="Buscar por nome ou código..."
+            value={filtro}
+            onChange={(e) => setFiltro(e.target.value)}
+            className="h-8 w-56 text-xs"
+          />
+          <select
+            value={filtroStatus}
+            onChange={(e) => setFiltroStatus(e.target.value as typeof filtroStatus)}
+            className="h-8 rounded-md border border-border bg-background px-2 text-xs"
+          >
+            <option value="todos">Todos os status</option>
+            <option value="ok">OK</option>
+            <option value="alerta">Alerta</option>
+            <option value="estourado">Estourado</option>
+          </select>
+          <select
+            value={filtroOrigem}
+            onChange={(e) => setFiltroOrigem(e.target.value as typeof filtroOrigem)}
+            className="h-8 rounded-md border border-border bg-background px-2 text-xs"
+          >
+            <option value="todos">Todas as origens</option>
+            <option value="manual">Manual</option>
+            <option value="crm">CRM ✨</option>
+          </select>
+        </div>
         <NovoCentroCustoDialog
           open={novoOpen}
           onOpenChange={setNovoOpen}
@@ -115,7 +157,7 @@ function CentrosCustoPage() {
           <Card className="p-3 border-border"><p className="text-[10px] uppercase text-muted-foreground">Vindos do CRM</p><p className="text-lg font-bold text-gold">{centros.filter((c) => c.origem === "crm").length}</p></Card>
         </div>
       </div>
-      <DataTable columns={cols} data={centros} filename="centros-de-custo" />
+      <DataTable columns={cols} data={centrosFiltrados} filename="centros-de-custo" />
     </div>
   );
 }

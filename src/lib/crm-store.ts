@@ -28,7 +28,8 @@ export type ItemCotado = {
   fornecedorNome?: string;
 };
 
-export type StatusCotacao = "em_cotacao" | "proposta_enviada" | "negociacao" | "ganho" | "perdido";
+/** Etapa é uma string livre (id de EtapaCrm), exceto "ganho"/"perdido" que são reservadas e disparam lógica de negócio. */
+export type StatusCotacao = string;
 
 export type Cotacao = {
   id: string;
@@ -42,14 +43,6 @@ export type Cotacao = {
   criadoEm: string;
   observacoes?: string;
   centroCustoGeradoId?: string; // preenchido após ganhar
-};
-
-export const STATUS_LABEL: Record<StatusCotacao, string> = {
-  em_cotacao: "Em Cotação",
-  proposta_enviada: "Proposta Enviada",
-  negociacao: "Em Negociação",
-  ganho: "Ganho",
-  perdido: "Perdido",
 };
 
 const KEY = "erp:crm:cotacoes";
@@ -109,7 +102,7 @@ export const cotacoesIniciais: Cotacao[] = [
     titulo: "Manutenção preventiva — Frota Norte",
     clienteNome: "Transportadora Rápida SA",
     vendedorResponsavel: "Maria Santos",
-    status: "proposta_enviada",
+    status: "proposta",
     criadoEm: "30/06/2026",
     itens: [
       {

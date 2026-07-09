@@ -132,9 +132,16 @@ const sections: { label: string; items: NavItem[] }[] = [
   {
     label: "Inteligência",
     items: [
-      { title: "Fiscal", url: "/fiscal", icon: Receipt },
-      { title: "Reforma Tributária", url: "/reforma-tributaria", icon: TrendingUp },
-      { title: "Obrigações", url: "/obrigacoes", icon: FileCheck },
+      {
+        title: "Fiscal",
+        url: "/fiscal",
+        icon: Receipt,
+        children: [
+          { title: "Visão geral", url: "/fiscal", icon: LayoutGrid },
+          { title: "Reforma Tributária", url: "/reforma-tributaria", icon: TrendingUp },
+          { title: "Obrigações", url: "/obrigacoes", icon: FileCheck },
+        ],
+      },
       { title: "Omnilink", url: "/omnilink", icon: Network },
     ],
   },

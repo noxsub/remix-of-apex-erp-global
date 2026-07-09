@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { DataTable, type Column } from "@/components/data-table";
-import { Plus, Search, Send, FileText, AlertCircle, CheckCircle2 } from "lucide-react";
+import { Plus, Search, Send, FileText, AlertCircle, CheckCircle2, Printer } from "lucide-react";
 import { toast } from "sonner";
 import { useFaturados } from "@/lib/erp-store";
 import { useContasReceber, proximoId } from "@/lib/financeiro-store";
@@ -47,6 +47,7 @@ const fmt = (n: number) => n.toLocaleString("pt-BR", { style: "currency", curren
 
 function FaturamentoPage() {
   const [nfs, setNfs] = useState(nfsIniciais);
+  const [nfParaVisualizar, setNfParaVisualizar] = useState<NfEmissao | null>(null);
   const [novoOpen, setNovoOpen] = useState(false);
   const [filtro, setFiltro] = useState("");
   const [, setFaturados] = useFaturados();
@@ -114,7 +115,7 @@ function FaturamentoPage() {
     { key: "acoes", header: "Ações", render: (r) => (
       <div className="flex gap-1">
         {r.status === "rascunho" && <Button size="sm" variant="ghost" className="gap-1" onClick={() => emitirNf(r.id)}><Send className="h-3.5 w-3.5" />Emitir</Button>}
-        {r.status === "autorizada" && <Button size="sm" variant="ghost" onClick={() => toast.info(`DANFE ${r.modelo}-${r.numero}`, { description: `Chave: ${r.chaveAcesso?.slice(0, 20)}...` })}><FileText className="h-3.5 w-3.5" /></Button>}
+        {r.status === "autorizada" && <Button size="sm" variant="ghost" onClick={() => setNfParaVisualizar(r)}><FileText className="h-3.5 w-3.5" /></Button>}
       </div>
     )},
   ];
@@ -179,6 +180,111 @@ function FaturamentoPage() {
       </div>
 
       <DataTable columns={cols} data={filtrados} />
+
+      {nfParaVisualizar && (
+        <DanfeViewDialog nf={nfParaVisualizar} onClose={() => setNfParaVisualizar(null)} />
+      )}
     </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   VISUALIZAÇÃO / PDF DA NF EMITIDA
+   Documento formatado na tela, com botão "Imprimir / Salvar PDF"
+   que usa a função de impressão nativa do navegador — permite
+   salvar como PDF real sem depender de biblioteca externa.
+   ═══════════════════════════════════════════════════════════════ */
+
+function DanfeViewDialog({ nf, onClose }: { nf: NfEmissao; onClose: () => void }) {
+  return (
+    <Dialog open onOpenChange={(v) => !v && onClose()}>
+      <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto print:max-h-none print:overflow-visible">
+        <style>{`
+          @media print {
+            body * { visibility: hidden; }
+            #danfe-print, #danfe-print * { visibility: visible; }
+            #danfe-print { position: fixed; inset: 0; padding: 24px; }
+          }
+        `}</style>
+        <div id="danfe-print" className="space-y-4 text-sm">
+          <div className="flex items-start justify-between border-b border-border pb-3">
+            <div>
+              <p className="text-base font-bold">DANFE — Documento Auxiliar da NF-e</p>
+              <p className="text-xs text-muted-foreground">Modelo {nf.modelo} · Série {nf.serie} · Nº {nf.numero}</p>
+            </div>
+            <Badge variant="default" className="text-[10px]">AUTORIZADA</Badge>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3 rounded-md border border-border p-3">
+            <div>
+              <p className="text-[10px] uppercase text-muted-foreground">Destinatário</p>
+              <p className="font-medium">{nf.cliente}</p>
+              <p className="text-xs text-muted-foreground">{nf.cpfCnpj}</p>
+            </div>
+            <div>
+              <p className="text-[10px] uppercase text-muted-foreground">Natureza da Operação</p>
+              <p className="font-medium">{nf.naturezaOp}</p>
+            </div>
+            <div className="col-span-2">
+              <p className="text-[10px] uppercase text-muted-foreground">Chave de Acesso</p>
+              <p className="break-all font-mono text-[11px]">{nf.chaveAcesso}</p>
+            </div>
+            <div>
+              <p className="text-[10px] uppercase text-muted-foreground">Protocolo de Autorização</p>
+              <p className="font-mono text-xs">{nf.protocolo}</p>
+            </div>
+            <div>
+              <p className="text-[10px] uppercase text-muted-foreground">Pedido de Origem</p>
+              <p className="text-xs">{nf.pedido}</p>
+            </div>
+          </div>
+
+          {nf.itens.length > 0 && (
+            <div className="rounded-md border border-border">
+              <table className="w-full text-xs">
+                <thead className="border-b border-border bg-secondary/40">
+                  <tr>
+                    <th className="p-2 text-left">Código</th>
+                    <th className="p-2 text-left">Descrição</th>
+                    <th className="p-2 text-right">Qtd</th>
+                    <th className="p-2 text-right">Unit.</th>
+                    <th className="p-2 text-right">Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {nf.itens.map((it) => (
+                    <tr key={it.codigo} className="border-b border-border last:border-0">
+                      <td className="p-2">{it.codigo}</td>
+                      <td className="p-2">{it.descricao}</td>
+                      <td className="p-2 text-right">{it.qtd} {it.un}</td>
+                      <td className="p-2 text-right">{fmt(it.unitario)}</td>
+                      <td className="p-2 text-right">{fmt(it.total)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          <div className="flex justify-end gap-8 border-t border-border pt-3 text-sm">
+            <div className="text-right">
+              <p className="text-[10px] uppercase text-muted-foreground">Total de Impostos</p>
+              <p className="font-medium">{fmt(nf.totalImpostos)}</p>
+            </div>
+            <div className="text-right">
+              <p className="text-[10px] uppercase text-muted-foreground">Valor Total da NF</p>
+              <p className="text-base font-bold text-gold">{fmt(nf.totalNf)}</p>
+            </div>
+          </div>
+        </div>
+
+        <DialogFooter className="print:hidden">
+          <Button variant="outline" size="sm" onClick={onClose}>Fechar</Button>
+          <Button size="sm" className="gap-1.5" onClick={() => window.print()}>
+            <Printer className="h-3.5 w-3.5" /> Imprimir / Salvar PDF
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

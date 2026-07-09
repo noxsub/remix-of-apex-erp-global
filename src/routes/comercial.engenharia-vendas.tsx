@@ -18,18 +18,17 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { DataTable, type Column } from "@/components/data-table";
-import { Plus, Trash2, Trophy, XCircle, Eye, Briefcase } from "lucide-react";
+import { Plus, Trash2, Trophy, XCircle, Eye, Briefcase, LayoutGrid, List, GripVertical } from "lucide-react";
 import { toast } from "sonner";
 import {
   useCotacoes,
   proximoNumeroProjeto,
   valorTotalCotacao,
   custoTotalCotacao,
-  STATUS_LABEL,
   type Cotacao,
   type ItemCotado,
-  type StatusCotacao,
 } from "@/lib/crm-store";
+import { useEtapasCrm, corParaNovaEtapa, type EtapaCrm } from "@/lib/etapas-crm-store";
 import { useCentrosCusto, proximoCodigoCC } from "@/lib/centro-custo-store";
 import { useClientes, useFornecedores, type Cliente, type Fornecedor } from "@/lib/erp-store";
 import { useItensFiscais, type ItemFiscal } from "@/lib/fiscal-store";
@@ -43,12 +42,16 @@ const brl = (n: number) => n.toLocaleString("pt-BR", { style: "currency", curren
 
 function EngenhariaVendasPage() {
   const [cotacoes, setCotacoes] = useCotacoes();
+  const [etapas, setEtapas] = useEtapasCrm();
   const [, setCentrosCusto] = useCentrosCusto();
   const [clientes, setClientes] = useClientes();
   const [fornecedores, setFornecedores] = useFornecedores();
   const [itensFiscais, setItensFiscais] = useItensFiscais();
   const [novoOpen, setNovoOpen] = useState(false);
   const [detalhe, setDetalhe] = useState<Cotacao | null>(null);
+  const [visao, setVisao] = useState<"kanban" | "lista">("kanban");
+
+  const nomeEtapa = (id: string) => etapas.find((e) => e.id === id)?.nome ?? id;
 
   const kpis = useMemo(() => {
     const ativas = cotacoes.filter((c) => c.status !== "ganho" && c.status !== "perdido");
@@ -152,8 +155,20 @@ function EngenhariaVendasPage() {
   };
 
   const marcarComoPerdido = (id: string) => {
-    setCotacoes((prev) => prev.map((c) => (c.id === id ? { ...c, status: "perdido" as const } : c)));
+    setCotacoes((prev) => prev.map((c) => (c.id === id ? { ...c, status: "perdido" } : c)));
     toast.info("Cotação marcada como perdida.");
+  };
+
+  /** Dispatcher usado tanto pelos botões quanto pelo drag-and-drop do Kanban. */
+  const moverCotacao = (cot: Cotacao, novaEtapaId: string) => {
+    if (novaEtapaId === cot.status) return;
+    if (novaEtapaId === "ganho") {
+      marcarComoGanho(cot);
+    } else if (novaEtapaId === "perdido") {
+      marcarComoPerdido(cot.id);
+    } else {
+      setCotacoes((prev) => prev.map((c) => (c.id === cot.id ? { ...c, status: novaEtapaId } : c)));
+    }
   };
 
   const cols: Column<Cotacao>[] = [
@@ -166,15 +181,17 @@ function EngenhariaVendasPage() {
     {
       key: "status",
       header: "Status",
-      render: (r) => (
-        <Badge
-          variant={
-            r.status === "ganho" ? "default" : r.status === "perdido" ? "destructive" : "secondary"
-          }
-        >
-          {STATUS_LABEL[r.status]}
-        </Badge>
-      ),
+      render: (r) => {
+        const etapa = etapas.find((e) => e.id === r.status);
+        return (
+          <Badge
+            variant={r.status === "ganho" ? "default" : r.status === "perdido" ? "destructive" : "secondary"}
+            style={etapa && r.status !== "ganho" && r.status !== "perdido" ? { borderColor: etapa.cor, color: etapa.cor } : undefined}
+          >
+            {nomeEtapa(r.status)}
+          </Badge>
+        );
+      },
     },
     {
       key: "acoes",
@@ -224,6 +241,38 @@ function EngenhariaVendasPage() {
         </Card>
       </div>
 
+      <div className="mt-4 flex items-center justify-between">
+        <div className="flex gap-1 rounded-md border border-border bg-secondary/40 p-0.5">
+          <button
+            onClick={() => setVisao("kanban")}
+            className={`flex items-center gap-1.5 rounded px-3 py-1.5 text-xs font-medium transition-colors ${
+              visao === "kanban" ? "bg-background shadow-sm" : "text-muted-foreground"
+            }`}
+          >
+            <LayoutGrid className="h-3.5 w-3.5" /> Kanban
+          </button>
+          <button
+            onClick={() => setVisao("lista")}
+            className={`flex items-center gap-1.5 rounded px-3 py-1.5 text-xs font-medium transition-colors ${
+              visao === "lista" ? "bg-background shadow-sm" : "text-muted-foreground"
+            }`}
+          >
+            <List className="h-3.5 w-3.5" /> Lista
+          </button>
+        </div>
+      </div>
+
+      {visao === "kanban" ? (
+        <div className="mt-3">
+          <KanbanBoard
+            cotacoes={cotacoes}
+            etapas={etapas}
+            onSetEtapas={setEtapas}
+            onMover={moverCotacao}
+            onAbrirDetalhe={setDetalhe}
+          />
+        </div>
+      ) : (
       <div className="mt-4">
         <DataTable
           title="Cotações e Projetos"
@@ -233,6 +282,7 @@ function EngenhariaVendasPage() {
           filename="engenharia-vendas"
         />
       </div>
+      )}
 
       {detalhe && <DetalheCotacaoDialog cot={detalhe} onClose={() => setDetalhe(null)} />}
     </AppShell>
@@ -290,7 +340,7 @@ function NovaCotacaoDialog({
       clienteDocumento: clienteDocumento || undefined,
       vendedorResponsavel: vendedor,
       itens,
-      status: "em_cotacao",
+      status: "lead",
       criadoEm: new Date().toLocaleDateString("pt-BR"),
       observacoes: observacoes || undefined,
     };
@@ -412,5 +462,152 @@ function DetalheCotacaoDialog({ cot, onClose }: { cot: Cotacao; onClose: () => v
         )}
       </DialogContent>
     </Dialog>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   KANBAN — colunas parametrizáveis, drag-and-drop nativo (HTML5)
+   ═══════════════════════════════════════════════════════════════ */
+
+function KanbanBoard({
+  cotacoes,
+  etapas,
+  onSetEtapas,
+  onMover,
+  onAbrirDetalhe,
+}: {
+  cotacoes: Cotacao[];
+  etapas: EtapaCrm[];
+  onSetEtapas: ReturnType<typeof useEtapasCrm>[1];
+  onMover: (cot: Cotacao, novaEtapaId: string) => void;
+  onAbrirDetalhe: (c: Cotacao) => void;
+}) {
+  const [arrastando, setArrastando] = useState<string | null>(null);
+  const [sobreColuna, setSobreColuna] = useState<string | null>(null);
+  const [novaEtapaOpen, setNovaEtapaOpen] = useState(false);
+  const [nomeNovaEtapa, setNomeNovaEtapa] = useState("");
+
+  const etapasOrdenadas = [...etapas].sort((a, b) => a.ordem - b.ordem);
+
+  const criarEtapa = () => {
+    if (!nomeNovaEtapa.trim()) return;
+    const semReservadas = etapasOrdenadas.filter((e) => !e.reservada);
+    const maxOrdem = semReservadas.length ? Math.max(...semReservadas.map((e) => e.ordem)) : -1;
+    onSetEtapas((prev) => [
+      ...prev,
+      {
+        id: `etapa-${Date.now()}`,
+        nome: nomeNovaEtapa.trim(),
+        cor: corParaNovaEtapa(prev),
+        ordem: maxOrdem + 1,
+      },
+    ]);
+    setNomeNovaEtapa("");
+    setNovaEtapaOpen(false);
+    toast.success("Nova etapa criada no funil!");
+  };
+
+  return (
+    <div className="flex gap-3 overflow-x-auto pb-3">
+      {etapasOrdenadas.map((etapa) => {
+        const cards = cotacoes.filter((c) => c.status === etapa.id);
+        const valorColuna = cards.reduce((s, c) => s + valorTotalCotacao(c), 0);
+        const isSobre = sobreColuna === etapa.id;
+        return (
+          <div
+            key={etapa.id}
+            onDragOver={(e) => {
+              e.preventDefault();
+              setSobreColuna(etapa.id);
+            }}
+            onDragLeave={() => setSobreColuna((s) => (s === etapa.id ? null : s))}
+            onDrop={(e) => {
+              e.preventDefault();
+              setSobreColuna(null);
+              const cotId = e.dataTransfer.getData("text/cotacao-id");
+              const cot = cotacoes.find((c) => c.id === cotId);
+              if (cot) onMover(cot, etapa.id);
+              setArrastando(null);
+            }}
+            className={`flex w-64 shrink-0 flex-col rounded-lg border transition-colors ${
+              isSobre ? "border-gold bg-gold/5" : "border-border bg-secondary/20"
+            }`}
+          >
+            <div className="flex items-center justify-between border-b border-border px-3 py-2.5">
+              <div className="flex items-center gap-2">
+                <span className="h-2 w-2 rounded-full" style={{ background: etapa.cor }} />
+                <span className="text-xs font-semibold">{etapa.nome}</span>
+                <Badge variant="secondary" className="h-5 px-1.5 text-[10px]">{cards.length}</Badge>
+              </div>
+            </div>
+            {valorColuna > 0 && (
+              <div className="border-b border-border px-3 py-1.5 text-[10px] text-muted-foreground">
+                {brl(valorColuna)}
+              </div>
+            )}
+            <div className="flex-1 space-y-2 p-2" style={{ minHeight: 120 }}>
+              {cards.map((c) => (
+                <div
+                  key={c.id}
+                  draggable
+                  onDragStart={(e) => {
+                    e.dataTransfer.setData("text/cotacao-id", c.id);
+                    setArrastando(c.id);
+                  }}
+                  onDragEnd={() => setArrastando(null)}
+                  onClick={() => onAbrirDetalhe(c)}
+                  className={`cursor-grab rounded-md border border-border bg-card p-2.5 text-xs shadow-sm transition-opacity active:cursor-grabbing hover:border-gold/40 ${
+                    arrastando === c.id ? "opacity-40" : ""
+                  }`}
+                >
+                  <div className="mb-1 flex items-start justify-between gap-1">
+                    <p className="font-medium leading-tight">{c.titulo}</p>
+                    <GripVertical className="h-3 w-3 shrink-0 text-muted-foreground/40" />
+                  </div>
+                  <p className="text-[10px] text-muted-foreground">{c.numeroProjeto}</p>
+                  <p className="mt-1.5 text-[11px] font-medium text-muted-foreground">{c.clienteNome}</p>
+                  <div className="mt-2 flex items-center justify-between">
+                    <span className="text-[10px] text-muted-foreground">{c.vendedorResponsavel}</span>
+                    <span className="text-xs font-semibold text-gold">{brl(valorTotalCotacao(c))}</span>
+                  </div>
+                </div>
+              ))}
+              {cards.length === 0 && (
+                <div className="rounded-md border border-dashed border-border/60 p-4 text-center text-[10px] text-muted-foreground">
+                  Arraste um card aqui
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      })}
+
+      {/* Coluna "+ Nova Etapa" — colunas parametrizáveis */}
+      <div className="w-56 shrink-0">
+        <Dialog open={novaEtapaOpen} onOpenChange={setNovaEtapaOpen}>
+          <DialogTrigger asChild>
+            <button className="flex h-full min-h-[120px] w-full items-center justify-center gap-1.5 rounded-lg border border-dashed border-border text-xs text-muted-foreground hover:border-gold hover:text-gold">
+              <Plus className="h-3.5 w-3.5" /> Nova Etapa
+            </button>
+          </DialogTrigger>
+          <DialogContent className="max-w-sm">
+            <DialogHeader>
+              <DialogTitle>Nova etapa do funil</DialogTitle>
+              <DialogDescription>Cria uma nova coluna no Kanban, antes de "Projeto Ganho".</DialogDescription>
+            </DialogHeader>
+            <Input
+              value={nomeNovaEtapa}
+              onChange={(e) => setNomeNovaEtapa(e.target.value)}
+              placeholder="Ex: Aprovação Jurídica"
+              onKeyDown={(e) => e.key === "Enter" && criarEtapa()}
+            />
+            <DialogFooter>
+              <Button variant="outline" size="sm" onClick={() => setNovaEtapaOpen(false)}>Cancelar</Button>
+              <Button size="sm" onClick={criarEtapa}>Criar Etapa</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </div>
+    </div>
   );
 }
