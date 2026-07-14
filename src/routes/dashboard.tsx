@@ -20,6 +20,7 @@ import {
   FileCheck2,
   Landmark,
   Map as MapIcon,
+  Radar,
   Network,
   Receipt,
   Sparkles,
@@ -112,6 +113,11 @@ function DashboardPage() {
           <Button asChild variant="outline" size="sm" className="h-8 gap-1.5">
             <Link to="/mapa-operacional">
               <MapIcon className="h-3.5 w-3.5" /> Mapa Operacional
+            </Link>
+          </Button>
+          <Button asChild variant="outline" size="sm" className="h-8 gap-1.5">
+            <Link to="/vetorcore">
+              <Radar className="h-3.5 w-3.5" /> VetorCore
             </Link>
           </Button>
           <Select defaultValue="geral">

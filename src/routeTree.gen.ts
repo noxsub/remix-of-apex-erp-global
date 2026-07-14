@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as VetorcoreRouteImport } from './routes/vetorcore'
 import { Route as VendasRouteImport } from './routes/vendas'
 import { Route as SaidasRouteImport } from './routes/saidas'
 import { Route as RhRouteImport } from './routes/rh'
@@ -57,6 +58,11 @@ import { Route as EntradasComprasRouteImport } from './routes/entradas.compras'
 import { Route as ComercialEngenhariaVendasRouteImport } from './routes/comercial.engenharia-vendas'
 import { Route as ApiPublicWebhooksCanalIdRouteImport } from './routes/api/public/webhooks.$canalId'
 
+const VetorcoreRoute = VetorcoreRouteImport.update({
+  id: '/vetorcore',
+  path: '/vetorcore',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const VendasRoute = VendasRouteImport.update({
   id: '/vendas',
   path: '/vendas',
@@ -313,6 +319,7 @@ export interface FileRoutesByFullPath {
   '/rh': typeof RhRouteWithChildren
   '/saidas': typeof SaidasRouteWithChildren
   '/vendas': typeof VendasRoute
+  '/vetorcore': typeof VetorcoreRoute
   '/comercial/engenharia-vendas': typeof ComercialEngenhariaVendasRoute
   '/entradas/compras': typeof EntradasComprasRoute
   '/entradas/creditos': typeof EntradasCreditosRoute
@@ -358,6 +365,7 @@ export interface FileRoutesByTo {
   '/ponto-app': typeof PontoAppRoute
   '/reforma-tributaria': typeof ReformaTributariaRoute
   '/vendas': typeof VendasRoute
+  '/vetorcore': typeof VetorcoreRoute
   '/comercial/engenharia-vendas': typeof ComercialEngenhariaVendasRoute
   '/entradas/compras': typeof EntradasComprasRoute
   '/entradas/creditos': typeof EntradasCreditosRoute
@@ -408,6 +416,7 @@ export interface FileRoutesById {
   '/rh': typeof RhRouteWithChildren
   '/saidas': typeof SaidasRouteWithChildren
   '/vendas': typeof VendasRoute
+  '/vetorcore': typeof VetorcoreRoute
   '/comercial/engenharia-vendas': typeof ComercialEngenhariaVendasRoute
   '/entradas/compras': typeof EntradasComprasRoute
   '/entradas/creditos': typeof EntradasCreditosRoute
@@ -459,6 +468,7 @@ export interface FileRouteTypes {
     | '/rh'
     | '/saidas'
     | '/vendas'
+    | '/vetorcore'
     | '/comercial/engenharia-vendas'
     | '/entradas/compras'
     | '/entradas/creditos'
@@ -504,6 +514,7 @@ export interface FileRouteTypes {
     | '/ponto-app'
     | '/reforma-tributaria'
     | '/vendas'
+    | '/vetorcore'
     | '/comercial/engenharia-vendas'
     | '/entradas/compras'
     | '/entradas/creditos'
@@ -553,6 +564,7 @@ export interface FileRouteTypes {
     | '/rh'
     | '/saidas'
     | '/vendas'
+    | '/vetorcore'
     | '/comercial/engenharia-vendas'
     | '/entradas/compras'
     | '/entradas/creditos'
@@ -603,6 +615,7 @@ export interface RootRouteChildren {
   RhRoute: typeof RhRouteWithChildren
   SaidasRoute: typeof SaidasRouteWithChildren
   VendasRoute: typeof VendasRoute
+  VetorcoreRoute: typeof VetorcoreRoute
   ComercialEngenhariaVendasRoute: typeof ComercialEngenhariaVendasRoute
   GestaoAnaliseFinanceiraRoute: typeof GestaoAnaliseFinanceiraRoute
   ApiPublicWebhooksCanalIdRoute: typeof ApiPublicWebhooksCanalIdRoute
@@ -610,6 +623,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/vetorcore': {
+      id: '/vetorcore'
+      path: '/vetorcore'
+      fullPath: '/vetorcore'
+      preLoaderRoute: typeof VetorcoreRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/vendas': {
       id: '/vendas'
       path: '/vendas'
@@ -1051,6 +1071,7 @@ const rootRouteChildren: RootRouteChildren = {
   RhRoute: RhRouteWithChildren,
   SaidasRoute: SaidasRouteWithChildren,
   VendasRoute: VendasRoute,
+  VetorcoreRoute: VetorcoreRoute,
   ComercialEngenhariaVendasRoute: ComercialEngenhariaVendasRoute,
   GestaoAnaliseFinanceiraRoute: GestaoAnaliseFinanceiraRoute,
   ApiPublicWebhooksCanalIdRoute: ApiPublicWebhooksCanalIdRoute,
