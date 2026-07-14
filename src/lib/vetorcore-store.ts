@@ -24,6 +24,8 @@ export type KeyResult = {
   origemAuto?: "financeiro_receita" | "financeiro_inadimplencia" | "entradas_volume" | "manual";
   prazo: string; // dd/mm/aaaa
   atualizadoEm: string; // ISO timestamp
+  /** Preenchido pelo colaborador ao fazer check-in manual */
+  ultimoComentario?: string;
 };
 
 export type Objetivo = {
@@ -46,10 +48,11 @@ const KEY_KRS = "erp:vetorcore:krs";
 const KEY_AREAS = "erp:vetorcore:areas";
 
 export const AREAS_INICIAIS: AreaOkr[] = [
-  { id: "comercial", nome: "Comercial", responsavelNome: "João Silva", cor: "#1E3A5F" },
+  { id: "comercial", nome: "Comercial", responsavelNome: "Maria Santos", cor: "#1E3A5F" },
   { id: "financeiro", nome: "Financeiro", responsavelNome: "Ana Oliveira", cor: "#2C5F6F" },
   { id: "operacoes", nome: "Operações", responsavelNome: "Pedro Costa", cor: "#3D6B4F" },
   { id: "rh", nome: "RH", responsavelNome: "Luciana Ferreira", cor: "#5F4A3D" },
+  { id: "fiscal", nome: "Fiscal", responsavelNome: "João Silva", cor: "#4A3D5F" },
 ];
 
 export const OBJETIVOS_INICIAIS: Objetivo[] = [
@@ -57,15 +60,18 @@ export const OBJETIVOS_INICIAIS: Objetivo[] = [
   { id: "obj-2", titulo: "Saúde financeira sob controle", areaId: "financeiro", trimestre: "Q3-2026", krIds: ["kr-3", "kr-4"] },
   { id: "obj-3", titulo: "Eficiência operacional de entradas", areaId: "operacoes", trimestre: "Q3-2026", krIds: ["kr-5"] },
   { id: "obj-4", titulo: "Retenção e engajamento de equipe", areaId: "rh", trimestre: "Q3-2026", krIds: ["kr-6"] },
+  { id: "obj-5", titulo: "Conformidade fiscal impecável", areaId: "fiscal", trimestre: "Q3-2026", krIds: ["kr-7", "kr-8"] },
 ];
 
 export const KRS_INICIAIS: KeyResult[] = [
-  { id: "kr-1", titulo: "Faturar R$ 500k no trimestre", responsavelNome: "João Silva", responsavelMatricula: "002", areaId: "comercial", metaValor: 500000, atualValor: 0, unidade: "moeda", origemAuto: "financeiro_receita", prazo: "30/09/2026", atualizadoEm: new Date().toISOString() },
+  { id: "kr-1", titulo: "Faturar R$ 500k no trimestre", responsavelNome: "Maria Santos", responsavelMatricula: "002", areaId: "comercial", metaValor: 500000, atualValor: 0, unidade: "moeda", origemAuto: "financeiro_receita", prazo: "30/09/2026", atualizadoEm: new Date().toISOString() },
   { id: "kr-2", titulo: "Fechar 8 novos projetos via CRM", responsavelNome: "Maria Santos", responsavelMatricula: "002", areaId: "comercial", metaValor: 8, atualValor: 2, unidade: "numero", origemAuto: "manual", prazo: "30/09/2026", atualizadoEm: new Date().toISOString() },
   { id: "kr-3", titulo: "Reduzir inadimplência para < 5%", responsavelNome: "Ana Oliveira", responsavelMatricula: "004", areaId: "financeiro", metaValor: 5, atualValor: 0, unidade: "percentual", origemAuto: "financeiro_inadimplencia", prazo: "30/09/2026", atualizadoEm: new Date().toISOString() },
   { id: "kr-4", titulo: "Zerar títulos vencidos > 60 dias", responsavelNome: "Ana Oliveira", responsavelMatricula: "004", areaId: "financeiro", metaValor: 0, atualValor: 3, unidade: "numero", origemAuto: "manual", prazo: "30/09/2026", atualizadoEm: new Date().toISOString() },
   { id: "kr-5", titulo: "Processar 100% das NFs em até 24h", responsavelNome: "Pedro Costa", responsavelMatricula: "003", areaId: "operacoes", metaValor: 100, atualValor: 78, unidade: "percentual", origemAuto: "entradas_volume", prazo: "30/09/2026", atualizadoEm: new Date().toISOString() },
   { id: "kr-6", titulo: "Manter turnover abaixo de 8%", responsavelNome: "Luciana Ferreira", responsavelMatricula: "006", areaId: "rh", metaValor: 8, atualValor: 6.2, unidade: "percentual", origemAuto: "manual", prazo: "30/09/2026", atualizadoEm: new Date().toISOString() },
+  { id: "kr-7", titulo: "Zerar pendências de obrigações acessórias", responsavelNome: "João Silva", responsavelMatricula: "001", areaId: "fiscal", metaValor: 0, atualValor: 2, unidade: "numero", origemAuto: "manual", prazo: "30/09/2026", atualizadoEm: new Date().toISOString() },
+  { id: "kr-8", titulo: "Revisar 100% dos CFOPs de itens novos", responsavelNome: "João Silva", responsavelMatricula: "001", areaId: "fiscal", metaValor: 100, atualValor: 64, unidade: "percentual", origemAuto: "manual", prazo: "30/09/2026", atualizadoEm: new Date().toISOString() },
 ];
 
 function read<T>(k: string, f: T): T {

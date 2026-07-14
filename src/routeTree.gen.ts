@@ -31,6 +31,7 @@ import { Route as SaidasIndexRouteImport } from './routes/saidas.index'
 import { Route as RhIndexRouteImport } from './routes/rh.index'
 import { Route as FinanceiroIndexRouteImport } from './routes/financeiro.index'
 import { Route as EntradasIndexRouteImport } from './routes/entradas.index'
+import { Route as VetorcoreMeusOkrsRouteImport } from './routes/vetorcore.meus-okrs'
 import { Route as SaidasRelatoriosRouteImport } from './routes/saidas.relatorios'
 import { Route as SaidasPedidosRouteImport } from './routes/saidas.pedidos'
 import { Route as SaidasOrcamentosRouteImport } from './routes/saidas.orcamentos'
@@ -167,6 +168,11 @@ const EntradasIndexRoute = EntradasIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => EntradasRoute,
+} as any)
+const VetorcoreMeusOkrsRoute = VetorcoreMeusOkrsRouteImport.update({
+  id: '/meus-okrs',
+  path: '/meus-okrs',
+  getParentRoute: () => VetorcoreRoute,
 } as any)
 const SaidasRelatoriosRoute = SaidasRelatoriosRouteImport.update({
   id: '/relatorios',
@@ -319,7 +325,7 @@ export interface FileRoutesByFullPath {
   '/rh': typeof RhRouteWithChildren
   '/saidas': typeof SaidasRouteWithChildren
   '/vendas': typeof VendasRoute
-  '/vetorcore': typeof VetorcoreRoute
+  '/vetorcore': typeof VetorcoreRouteWithChildren
   '/comercial/engenharia-vendas': typeof ComercialEngenhariaVendasRoute
   '/entradas/compras': typeof EntradasComprasRoute
   '/entradas/creditos': typeof EntradasCreditosRoute
@@ -345,6 +351,7 @@ export interface FileRoutesByFullPath {
   '/saidas/orcamentos': typeof SaidasOrcamentosRoute
   '/saidas/pedidos': typeof SaidasPedidosRoute
   '/saidas/relatorios': typeof SaidasRelatoriosRoute
+  '/vetorcore/meus-okrs': typeof VetorcoreMeusOkrsRoute
   '/entradas/': typeof EntradasIndexRoute
   '/financeiro/': typeof FinanceiroIndexRoute
   '/rh/': typeof RhIndexRoute
@@ -365,7 +372,7 @@ export interface FileRoutesByTo {
   '/ponto-app': typeof PontoAppRoute
   '/reforma-tributaria': typeof ReformaTributariaRoute
   '/vendas': typeof VendasRoute
-  '/vetorcore': typeof VetorcoreRoute
+  '/vetorcore': typeof VetorcoreRouteWithChildren
   '/comercial/engenharia-vendas': typeof ComercialEngenhariaVendasRoute
   '/entradas/compras': typeof EntradasComprasRoute
   '/entradas/creditos': typeof EntradasCreditosRoute
@@ -391,6 +398,7 @@ export interface FileRoutesByTo {
   '/saidas/orcamentos': typeof SaidasOrcamentosRoute
   '/saidas/pedidos': typeof SaidasPedidosRoute
   '/saidas/relatorios': typeof SaidasRelatoriosRoute
+  '/vetorcore/meus-okrs': typeof VetorcoreMeusOkrsRoute
   '/entradas': typeof EntradasIndexRoute
   '/financeiro': typeof FinanceiroIndexRoute
   '/rh': typeof RhIndexRoute
@@ -416,7 +424,7 @@ export interface FileRoutesById {
   '/rh': typeof RhRouteWithChildren
   '/saidas': typeof SaidasRouteWithChildren
   '/vendas': typeof VendasRoute
-  '/vetorcore': typeof VetorcoreRoute
+  '/vetorcore': typeof VetorcoreRouteWithChildren
   '/comercial/engenharia-vendas': typeof ComercialEngenhariaVendasRoute
   '/entradas/compras': typeof EntradasComprasRoute
   '/entradas/creditos': typeof EntradasCreditosRoute
@@ -442,6 +450,7 @@ export interface FileRoutesById {
   '/saidas/orcamentos': typeof SaidasOrcamentosRoute
   '/saidas/pedidos': typeof SaidasPedidosRoute
   '/saidas/relatorios': typeof SaidasRelatoriosRoute
+  '/vetorcore/meus-okrs': typeof VetorcoreMeusOkrsRoute
   '/entradas/': typeof EntradasIndexRoute
   '/financeiro/': typeof FinanceiroIndexRoute
   '/rh/': typeof RhIndexRoute
@@ -494,6 +503,7 @@ export interface FileRouteTypes {
     | '/saidas/orcamentos'
     | '/saidas/pedidos'
     | '/saidas/relatorios'
+    | '/vetorcore/meus-okrs'
     | '/entradas/'
     | '/financeiro/'
     | '/rh/'
@@ -540,6 +550,7 @@ export interface FileRouteTypes {
     | '/saidas/orcamentos'
     | '/saidas/pedidos'
     | '/saidas/relatorios'
+    | '/vetorcore/meus-okrs'
     | '/entradas'
     | '/financeiro'
     | '/rh'
@@ -590,6 +601,7 @@ export interface FileRouteTypes {
     | '/saidas/orcamentos'
     | '/saidas/pedidos'
     | '/saidas/relatorios'
+    | '/vetorcore/meus-okrs'
     | '/entradas/'
     | '/financeiro/'
     | '/rh/'
@@ -615,7 +627,7 @@ export interface RootRouteChildren {
   RhRoute: typeof RhRouteWithChildren
   SaidasRoute: typeof SaidasRouteWithChildren
   VendasRoute: typeof VendasRoute
-  VetorcoreRoute: typeof VetorcoreRoute
+  VetorcoreRoute: typeof VetorcoreRouteWithChildren
   ComercialEngenhariaVendasRoute: typeof ComercialEngenhariaVendasRoute
   GestaoAnaliseFinanceiraRoute: typeof GestaoAnaliseFinanceiraRoute
   ApiPublicWebhooksCanalIdRoute: typeof ApiPublicWebhooksCanalIdRoute
@@ -776,6 +788,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/entradas/'
       preLoaderRoute: typeof EntradasIndexRouteImport
       parentRoute: typeof EntradasRoute
+    }
+    '/vetorcore/meus-okrs': {
+      id: '/vetorcore/meus-okrs'
+      path: '/meus-okrs'
+      fullPath: '/vetorcore/meus-okrs'
+      preLoaderRoute: typeof VetorcoreMeusOkrsRouteImport
+      parentRoute: typeof VetorcoreRoute
     }
     '/saidas/relatorios': {
       id: '/saidas/relatorios'
@@ -1053,6 +1072,18 @@ const SaidasRouteChildren: SaidasRouteChildren = {
 const SaidasRouteWithChildren =
   SaidasRoute._addFileChildren(SaidasRouteChildren)
 
+interface VetorcoreRouteChildren {
+  VetorcoreMeusOkrsRoute: typeof VetorcoreMeusOkrsRoute
+}
+
+const VetorcoreRouteChildren: VetorcoreRouteChildren = {
+  VetorcoreMeusOkrsRoute: VetorcoreMeusOkrsRoute,
+}
+
+const VetorcoreRouteWithChildren = VetorcoreRoute._addFileChildren(
+  VetorcoreRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AcademyRoute: AcademyRoute,
@@ -1071,7 +1102,7 @@ const rootRouteChildren: RootRouteChildren = {
   RhRoute: RhRouteWithChildren,
   SaidasRoute: SaidasRouteWithChildren,
   VendasRoute: VendasRoute,
-  VetorcoreRoute: VetorcoreRoute,
+  VetorcoreRoute: VetorcoreRouteWithChildren,
   ComercialEngenhariaVendasRoute: ComercialEngenhariaVendasRoute,
   GestaoAnaliseFinanceiraRoute: GestaoAnaliseFinanceiraRoute,
   ApiPublicWebhooksCanalIdRoute: ApiPublicWebhooksCanalIdRoute,

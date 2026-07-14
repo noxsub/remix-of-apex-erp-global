@@ -103,6 +103,10 @@ function VetorCoreDiretoria() {
             <Link to="/dashboard" className="text-[11px] hover:underline" style={{ color: C.steel }}>
               ← Voltar ao Syntera ERP
             </Link>
+            {" · "}
+            <Link to="/vetorcore/meus-okrs" className="text-[11px] hover:underline" style={{ color: C.steel }}>
+              Meus OKRs →
+            </Link>
           </div>
         </div>
 
