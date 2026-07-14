@@ -11,6 +11,14 @@ import { useEffect, useState } from "react";
 
 export type SaudeStatus = "saudavel" | "atencao" | "critico";
 
+export type CheckIn = {
+  id: string;
+  valor: number;
+  comentario?: string;
+  autorNome: string;
+  timestamp: string; // ISO
+};
+
 export type KeyResult = {
   id: string;
   titulo: string;
@@ -21,11 +29,13 @@ export type KeyResult = {
   atualValor: number;
   unidade: "moeda" | "percentual" | "numero";
   /** Fonte real do dado — usada para o cálculo automático quando aplicável */
-  origemAuto?: "financeiro_receita" | "financeiro_inadimplencia" | "entradas_volume" | "manual";
+  origemAuto?: "financeiro_receita" | "financeiro_inadimplencia" | "entradas_volume" | "crm_projetos_ganhos" | "omnilink_vendas" | "manual";
   prazo: string; // dd/mm/aaaa
   atualizadoEm: string; // ISO timestamp
-  /** Preenchido pelo colaborador ao fazer check-in manual */
+  /** Preenchido pelo colaborador ao fazer check-in manual (mantido para compatibilidade — ver history) */
   ultimoComentario?: string;
+  /** Histórico completo de check-ins, mais recente primeiro */
+  historico?: CheckIn[];
 };
 
 export type Objetivo = {
@@ -56,7 +66,7 @@ export const AREAS_INICIAIS: AreaOkr[] = [
 ];
 
 export const OBJETIVOS_INICIAIS: Objetivo[] = [
-  { id: "obj-1", titulo: "Acelerar receita recorrente", areaId: "comercial", trimestre: "Q3-2026", krIds: ["kr-1", "kr-2"] },
+  { id: "obj-1", titulo: "Acelerar receita recorrente", areaId: "comercial", trimestre: "Q3-2026", krIds: ["kr-1", "kr-2", "kr-9"] },
   { id: "obj-2", titulo: "Saúde financeira sob controle", areaId: "financeiro", trimestre: "Q3-2026", krIds: ["kr-3", "kr-4"] },
   { id: "obj-3", titulo: "Eficiência operacional de entradas", areaId: "operacoes", trimestre: "Q3-2026", krIds: ["kr-5"] },
   { id: "obj-4", titulo: "Retenção e engajamento de equipe", areaId: "rh", trimestre: "Q3-2026", krIds: ["kr-6"] },
@@ -65,7 +75,8 @@ export const OBJETIVOS_INICIAIS: Objetivo[] = [
 
 export const KRS_INICIAIS: KeyResult[] = [
   { id: "kr-1", titulo: "Faturar R$ 500k no trimestre", responsavelNome: "Maria Santos", responsavelMatricula: "002", areaId: "comercial", metaValor: 500000, atualValor: 0, unidade: "moeda", origemAuto: "financeiro_receita", prazo: "30/09/2026", atualizadoEm: new Date().toISOString() },
-  { id: "kr-2", titulo: "Fechar 8 novos projetos via CRM", responsavelNome: "Maria Santos", responsavelMatricula: "002", areaId: "comercial", metaValor: 8, atualValor: 2, unidade: "numero", origemAuto: "manual", prazo: "30/09/2026", atualizadoEm: new Date().toISOString() },
+  { id: "kr-2", titulo: "Fechar 8 novos projetos via CRM", responsavelNome: "Maria Santos", responsavelMatricula: "002", areaId: "comercial", metaValor: 8, atualValor: 2, unidade: "numero", origemAuto: "crm_projetos_ganhos", prazo: "30/09/2026", atualizadoEm: new Date().toISOString() },
+  { id: "kr-9", titulo: "Faturar R$ 100k via Omnilink (marketplaces)", responsavelNome: "Maria Santos", responsavelMatricula: "002", areaId: "comercial", metaValor: 100000, atualValor: 0, unidade: "moeda", origemAuto: "omnilink_vendas", prazo: "30/09/2026", atualizadoEm: new Date().toISOString() },
   { id: "kr-3", titulo: "Reduzir inadimplência para < 5%", responsavelNome: "Ana Oliveira", responsavelMatricula: "004", areaId: "financeiro", metaValor: 5, atualValor: 0, unidade: "percentual", origemAuto: "financeiro_inadimplencia", prazo: "30/09/2026", atualizadoEm: new Date().toISOString() },
   { id: "kr-4", titulo: "Zerar títulos vencidos > 60 dias", responsavelNome: "Ana Oliveira", responsavelMatricula: "004", areaId: "financeiro", metaValor: 0, atualValor: 3, unidade: "numero", origemAuto: "manual", prazo: "30/09/2026", atualizadoEm: new Date().toISOString() },
   { id: "kr-5", titulo: "Processar 100% das NFs em até 24h", responsavelNome: "Pedro Costa", responsavelMatricula: "003", areaId: "operacoes", metaValor: 100, atualValor: 78, unidade: "percentual", origemAuto: "entradas_volume", prazo: "30/09/2026", atualizadoEm: new Date().toISOString() },

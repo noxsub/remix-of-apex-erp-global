@@ -8,7 +8,15 @@ import {
   Minus,
   AlertTriangle,
   Circle,
+  Bell,
+  X,
 } from "lucide-react";
+import {
+  useAlertasVetorCore,
+  useDetectorDeAlertasVetorCore,
+  marcarAlertaComoLido,
+  marcarTodosComoLidos,
+} from "@/lib/vetorcore-alerts";
 import {
   useObjetivos,
   useAreasOkr,
@@ -48,8 +56,21 @@ function fmtValor(v: number, unidade: KeyResult["unidade"]): string {
   return String(v);
 }
 
+function tempoRelativo(iso: string): string {
+  const diffMin = Math.round((Date.now() - new Date(iso).getTime()) / 60000);
+  if (diffMin < 1) return "agora mesmo";
+  if (diffMin < 60) return `há ${diffMin} min`;
+  const diffH = Math.round(diffMin / 60);
+  if (diffH < 24) return `há ${diffH}h`;
+  const diffD = Math.round(diffH / 24);
+  return `há ${diffD} dia(s)`;
+}
+
 function VetorCoreDiretoria() {
   const krsAoVivo = useVetorCoreSync();
+  useDetectorDeAlertasVetorCore();
+  const [alertas, setAlertas] = useAlertasVetorCore();
+  const [painelAlertasAberto, setPainelAlertasAberto] = useState(false);
   const [objetivos] = useObjetivos();
   const [areas] = useAreasOkr();
   const [trimestre, setTrimestre] = useState("Q3-2026");
@@ -121,6 +142,74 @@ function VetorCoreDiretoria() {
             <option value="Q2-2026">Q2 2026</option>
             <option value="Q1-2026">Q1 2026</option>
           </select>
+
+          {/* Sino de alertas */}
+          <div className="relative">
+            <button
+              onClick={() => setPainelAlertasAberto((v) => !v)}
+              className="relative flex h-8 w-8 items-center justify-center rounded-full border transition-colors hover:bg-black/[0.02]"
+              style={{ borderColor: C.border }}
+            >
+              <Bell className="h-4 w-4" style={{ color: C.graphiteSoft }} />
+              {alertas.some((a) => !a.lido) && (
+                <span
+                  className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[9px] font-bold text-white"
+                  style={{ background: "#B54B3F" }}
+                >
+                  {alertas.filter((a) => !a.lido).length}
+                </span>
+              )}
+            </button>
+
+            {painelAlertasAberto && (
+              <div
+                className="absolute right-0 top-10 z-20 w-80 rounded-lg border shadow-lg"
+                style={{ borderColor: C.border, background: C.card }}
+              >
+                <div className="flex items-center justify-between border-b px-4 py-2.5" style={{ borderColor: C.border }}>
+                  <p className="text-xs font-semibold">Alertas de Desvio</p>
+                  <div className="flex items-center gap-2">
+                    {alertas.some((a) => !a.lido) && (
+                      <button
+                        onClick={() => marcarTodosComoLidos(setAlertas)}
+                        className="text-[10px] hover:underline"
+                        style={{ color: C.steel }}
+                      >
+                        Marcar tudo como lido
+                      </button>
+                    )}
+                    <button onClick={() => setPainelAlertasAberto(false)}>
+                      <X className="h-3.5 w-3.5" style={{ color: C.graphiteSoft }} />
+                    </button>
+                  </div>
+                </div>
+                <div className="max-h-72 overflow-y-auto">
+                  {alertas.length === 0 && (
+                    <p className="px-4 py-6 text-center text-xs" style={{ color: C.graphiteSoft }}>
+                      Nenhum alerta até agora.
+                    </p>
+                  )}
+                  {alertas.map((a) => (
+                    <button
+                      key={a.id}
+                      onClick={() => marcarAlertaComoLido(setAlertas, a.id)}
+                      className="flex w-full items-start gap-2 border-b px-4 py-2.5 text-left last:border-0 hover:bg-black/[0.02]"
+                      style={{ borderColor: C.border, opacity: a.lido ? 0.55 : 1 }}
+                    >
+                      <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" style={{ color: "#B54B3F" }} />
+                      <div className="flex-1">
+                        <p className="text-xs font-medium">{a.krTitulo}</p>
+                        <p className="text-[10px]" style={{ color: C.graphiteSoft }}>
+                          Caiu para {a.progresso}% · {tempoRelativo(a.criadoEm)}
+                        </p>
+                      </div>
+                      {!a.lido && <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: "#B54B3F" }} />}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
 
           {/* Indicador Live */}
           <div

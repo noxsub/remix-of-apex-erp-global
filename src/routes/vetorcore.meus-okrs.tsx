@@ -91,10 +91,23 @@ function VetorCoreColaborador() {
   }, [meusKrs]);
 
   const fazerCheckIn = (kr: KeyResult, novoValor: number, comentario: string) => {
+    const entrada = {
+      id: `checkin-${Date.now()}`,
+      valor: novoValor,
+      comentario: comentario || undefined,
+      autorNome: usuario.nome,
+      timestamp: new Date().toISOString(),
+    };
     setKrs((prev) =>
       prev.map((k) =>
         k.id === kr.id
-          ? { ...k, atualValor: novoValor, ultimoComentario: comentario || k.ultimoComentario, atualizadoEm: new Date().toISOString() }
+          ? {
+              ...k,
+              atualValor: novoValor,
+              ultimoComentario: comentario || k.ultimoComentario,
+              atualizadoEm: entrada.timestamp,
+              historico: [entrada, ...(k.historico ?? [])],
+            }
           : k,
       ),
     );
@@ -189,11 +202,8 @@ function VetorCoreColaborador() {
                   </span>
                 </div>
 
-                {kr.ultimoComentario && (
-                  <div className="mt-2 flex items-start gap-1.5 rounded-md p-2 text-[11px]" style={{ background: "#F4F5F7" }}>
-                    <MessageSquare className="mt-0.5 h-3 w-3 shrink-0" style={{ color: C.graphiteSoft }} />
-                    <span style={{ color: C.graphiteSoft }}>{kr.ultimoComentario}</span>
-                  </div>
+                {(kr.historico?.length ?? 0) > 0 && (
+                  <HistoricoCheckIns historico={kr.historico!} />
                 )}
 
                 <div className="mt-3 flex justify-end">
@@ -223,6 +233,49 @@ function VetorCoreColaborador() {
 
       {checkInKr && (
         <CheckInDialog kr={checkInKr} onClose={() => setCheckInKr(null)} onConfirmar={fazerCheckIn} />
+      )}
+    </div>
+  );
+}
+
+function HistoricoCheckIns({ historico }: { historico: NonNullable<KeyResult["historico"]> }) {
+  const [aberto, setAberto] = useState(false);
+  const [maisRecente, ...resto] = historico;
+
+  return (
+    <div className="mt-2">
+      <div className="flex items-start gap-1.5 rounded-md p-2 text-[11px]" style={{ background: "#F4F5F7" }}>
+        <MessageSquare className="mt-0.5 h-3 w-3 shrink-0" style={{ color: C.graphiteSoft }} />
+        <div className="flex-1">
+          <span style={{ color: C.graphiteSoft }}>
+            {maisRecente.comentario || <em>Check-in sem comentário</em>}
+          </span>
+          <span className="ml-1.5" style={{ color: "#9CA3AF" }}>
+            — {maisRecente.autorNome} · {tempoRelativo(maisRecente.timestamp)}
+          </span>
+        </div>
+      </div>
+      {resto.length > 0 && (
+        <button
+          onClick={() => setAberto((v) => !v)}
+          className="mt-1 flex items-center gap-1 text-[10px] font-medium hover:underline"
+          style={{ color: C.navy }}
+        >
+          <Clock className="h-2.5 w-2.5" />
+          {aberto ? "Ocultar histórico" : `Ver histórico completo (${resto.length} check-in${resto.length > 1 ? "s" : ""} anterior${resto.length > 1 ? "es" : ""})`}
+        </button>
+      )}
+      {aberto && (
+        <div className="mt-1.5 space-y-1.5 border-l-2 pl-3" style={{ borderColor: C.border }}>
+          {resto.map((h) => (
+            <div key={h.id} className="text-[11px]">
+              <span style={{ color: C.graphiteSoft }}>{h.comentario || <em>Sem comentário</em>}</span>
+              <span className="ml-1.5" style={{ color: "#9CA3AF" }}>
+                — {h.autorNome} · {tempoRelativo(h.timestamp)}
+              </span>
+            </div>
+          ))}
+        </div>
       )}
     </div>
   );
