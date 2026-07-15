@@ -24,6 +24,8 @@ import {
   Heart,
   Clock,
   Briefcase,
+  Radar,
+  Target,
 } from "lucide-react";
 import {
   Sidebar,
@@ -121,6 +123,20 @@ const sections: { label: string; items: NavItem[] }[] = [
     label: "Comercial",
     items: [
       { title: "Engenharia de Vendas", url: "/comercial/engenharia-vendas", icon: Briefcase },
+    ],
+  },
+  {
+    label: "VetorCore (OKRs)",
+    items: [
+      {
+        title: "VetorCore",
+        url: "/vetorcore",
+        icon: Radar,
+        children: [
+          { title: "Visão da Diretoria", url: "/vetorcore", icon: LayoutGrid },
+          { title: "Meus OKRs", url: "/vetorcore/meus-okrs", icon: Target },
+        ],
+      },
     ],
   },
   {

@@ -10,7 +10,23 @@ import {
   Circle,
   Bell,
   X,
+  Plus,
+  Pencil,
+  Trash2,
+  Filter,
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { toast } from "sonner";
 import {
   useAlertasVetorCore,
   useDetectorDeAlertasVetorCore,
@@ -20,11 +36,14 @@ import {
 import {
   useObjetivos,
   useAreasOkr,
+  useKeyResults,
   progressoKr,
   saudeDoProgresso,
   SAUDE_COR,
   SAUDE_LABEL,
   type KeyResult,
+  type Objetivo,
+  type SaudeStatus,
 } from "@/lib/vetorcore-store";
 import { useVetorCoreSync } from "@/lib/vetorcore-sync";
 
@@ -71,22 +90,50 @@ function VetorCoreDiretoria() {
   useDetectorDeAlertasVetorCore();
   const [alertas, setAlertas] = useAlertasVetorCore();
   const [painelAlertasAberto, setPainelAlertasAberto] = useState(false);
-  const [objetivos] = useObjetivos();
+  const [objetivos, setObjetivos] = useObjetivos();
+  const [, setKrsRaw] = useKeyResults();
   const [areas] = useAreasOkr();
   const [trimestre, setTrimestre] = useState("Q3-2026");
   const [areaExpandida, setAreaExpandida] = useState<string | null>(null);
+  const [filtroArea, setFiltroArea] = useState("todas");
+  const [filtroSaude, setFiltroSaude] = useState<"todas" | SaudeStatus>("todas");
 
-  const objetivosDoTrimestre = objetivos.filter((o) => o.trimestre === trimestre);
+  const [objetivoEditando, setObjetivoEditando] = useState<Objetivo | "novo" | null>(null);
+  const [krEditando, setKrEditando] = useState<KeyResult | "novo" | null>(null);
+  const [confirmarExclusao, setConfirmarExclusao] = useState<{ tipo: "objetivo" | "kr"; id: string; titulo: string } | null>(null);
+
+  const objetivosDoTrimestre = objetivos.filter(
+    (o) => o.trimestre === trimestre && (filtroArea === "todas" || o.areaId === filtroArea),
+  );
+
+  const excluirObjetivo = (id: string) => {
+    const obj = objetivos.find((o) => o.id === id);
+    if (!obj) return;
+    setObjetivos((prev) => prev.filter((o) => o.id !== id));
+    setKrsRaw((prev) => prev.filter((kr) => !obj.krIds.includes(kr.id)));
+    toast.success("Objetivo e seus Key Results foram excluídos.");
+  };
+
+  const excluirKr = (id: string) => {
+    setKrsRaw((prev) => prev.filter((kr) => kr.id !== id));
+    setObjetivos((prev) => prev.map((o) => ({ ...o, krIds: o.krIds.filter((k) => k !== id) })));
+    toast.success("Key Result excluído.");
+  };
 
   const krsPorArea = useMemo(() => {
     const mapa = new Map<string, KeyResult[]>();
     for (const area of areas) {
       const objIds = objetivosDoTrimestre.filter((o) => o.areaId === area.id).map((o) => o.id);
       const krIds = new Set(objetivosDoTrimestre.filter((o) => objIds.includes(o.id)).flatMap((o) => o.krIds));
-      mapa.set(area.id, krsAoVivo.filter((kr) => krIds.has(kr.id)));
+      const krsFiltrados = krsAoVivo.filter((kr) => {
+        if (!krIds.has(kr.id)) return false;
+        if (filtroSaude !== "todas" && saudeDoProgresso(progressoKr(kr)) !== filtroSaude) return false;
+        return true;
+      });
+      mapa.set(area.id, krsFiltrados);
     }
     return mapa;
-  }, [areas, objetivosDoTrimestre, krsAoVivo]);
+  }, [areas, objetivosDoTrimestre, krsAoVivo, filtroSaude]);
 
   const roolupGlobal = useMemo(() => {
     const todos = [...krsPorArea.values()].flat();
@@ -226,6 +273,37 @@ function VetorCoreDiretoria() {
       </header>
 
       <main className="mx-auto max-w-7xl space-y-6 px-6 py-6">
+        {/* ── FILTROS E AÇÕES ── */}
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex flex-wrap items-center gap-2">
+            <Filter className="h-3.5 w-3.5" style={{ color: C.graphiteSoft }} />
+            <Select value={filtroArea} onValueChange={setFiltroArea}>
+              <SelectTrigger className="h-8 w-40 text-xs"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todas">Todas as áreas</SelectItem>
+                {areas.map((a) => <SelectItem key={a.id} value={a.id}>{a.nome}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <Select value={filtroSaude} onValueChange={(v) => setFiltroSaude(v as typeof filtroSaude)}>
+              <SelectTrigger className="h-8 w-36 text-xs"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todas">Toda saúde</SelectItem>
+                <SelectItem value="saudavel">Saudável</SelectItem>
+                <SelectItem value="atencao">Atenção</SelectItem>
+                <SelectItem value="critico">Crítico</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button size="sm" variant="outline" className="h-8 gap-1.5 text-xs" onClick={() => setObjetivoEditando("novo")}>
+              <Plus className="h-3.5 w-3.5" /> Novo Objetivo
+            </Button>
+            <Button size="sm" className="h-8 gap-1.5 text-xs" style={{ background: C.navy }} onClick={() => setKrEditando("novo")}>
+              <Plus className="h-3.5 w-3.5" /> Novo Key Result
+            </Button>
+          </div>
+        </div>
+
         {/* ── ALERTA DE DESVIO CRÍTICO ── */}
         {alertasCriticos.length > 0 && (
           <div
@@ -315,7 +393,7 @@ function VetorCoreDiretoria() {
                   {expandida && (
                     <div className="space-y-2 px-5 pb-4 pl-12">
                       {krsArea.map((kr) => (
-                        <LinhaKr key={kr.id} kr={kr} />
+                        <LinhaKr key={kr.id} kr={kr} onEditar={() => setKrEditando(kr)} onExcluir={() => setConfirmarExclusao({ tipo: "kr", id: kr.id, titulo: kr.titulo })} />
                       ))}
                       {krsArea.length === 0 && (
                         <p className="text-xs" style={{ color: C.graphiteSoft }}>Nenhum Key Result cadastrado para este trimestre.</p>
@@ -343,12 +421,17 @@ function VetorCoreDiretoria() {
                   <th className="px-3 py-2.5 font-medium">Progresso</th>
                   <th className="px-3 py-2.5 text-right font-medium">Atual / Meta</th>
                   <th className="px-5 py-2.5 text-right font-medium">Prazo</th>
+                  <th className="px-3 py-2.5 text-right font-medium">Ações</th>
                 </tr>
               </thead>
               <tbody>
                 {objetivosDoTrimestre.map((obj) => {
                   const area = areas.find((a) => a.id === obj.areaId);
-                  const krsObj = krsAoVivo.filter((kr) => obj.krIds.includes(kr.id));
+                  const krsObj = krsAoVivo.filter(
+                    (kr) =>
+                      obj.krIds.includes(kr.id) &&
+                      (filtroSaude === "todas" || saudeDoProgresso(progressoKr(kr)) === filtroSaude),
+                  );
                   return krsObj.map((kr, i) => {
                     const progresso = progressoKr(kr);
                     const saude = saudeDoProgresso(progresso);
@@ -377,6 +460,21 @@ function VetorCoreDiretoria() {
                           {fmtValor(kr.atualValor, kr.unidade)} / {fmtValor(kr.metaValor, kr.unidade)}
                         </td>
                         <td className="px-5 py-3 text-right text-xs" style={{ color: C.graphiteSoft }}>{kr.prazo}</td>
+                        <td className="px-3 py-3">
+                          <div className="flex items-center justify-end gap-0.5">
+                            <button onClick={() => setKrEditando(kr)} className="rounded p-1 hover:bg-black/5" title="Editar Key Result">
+                              <Pencil className="h-3 w-3" style={{ color: C.graphiteSoft }} />
+                            </button>
+                            <button onClick={() => setConfirmarExclusao({ tipo: "kr", id: kr.id, titulo: kr.titulo })} className="rounded p-1 hover:bg-black/5" title="Excluir Key Result">
+                              <Trash2 className="h-3 w-3" style={{ color: "#B54B3F" }} />
+                            </button>
+                            {i === 0 && (
+                              <button onClick={() => setConfirmarExclusao({ tipo: "objetivo", id: obj.id, titulo: obj.titulo })} className="rounded p-1 hover:bg-black/5" title="Excluir Objetivo inteiro">
+                                <X className="h-3 w-3" style={{ color: "#B54B3F" }} />
+                              </button>
+                            )}
+                          </div>
+                        </td>
                       </tr>
                     );
                   });
@@ -386,6 +484,75 @@ function VetorCoreDiretoria() {
           </div>
         </section>
       </main>
+
+      {objetivoEditando && (
+        <ObjetivoDialog
+          objetivo={objetivoEditando === "novo" ? null : objetivoEditando}
+          areas={areas}
+          trimestreAtual={trimestre}
+          onClose={() => setObjetivoEditando(null)}
+          onSalvar={(dados) => {
+            if (objetivoEditando === "novo") {
+              setObjetivos((prev) => [...prev, { ...dados, id: `obj-${Date.now()}`, krIds: [] }]);
+              toast.success("Objetivo criado!");
+            } else {
+              setObjetivos((prev) => prev.map((o) => (o.id === objetivoEditando.id ? { ...o, ...dados } : o)));
+              toast.success("Objetivo atualizado!");
+            }
+            setObjetivoEditando(null);
+          }}
+        />
+      )}
+
+      {krEditando && (
+        <KeyResultDialog
+          kr={krEditando === "novo" ? null : krEditando}
+          areas={areas}
+          objetivos={objetivos.filter((o) => o.trimestre === trimestre)}
+          onClose={() => setKrEditando(null)}
+          onSalvar={(dados, objetivoId) => {
+            if (krEditando === "novo") {
+              const novoId = `kr-${Date.now()}`;
+              setKrsRaw((prev) => [...prev, { ...dados, id: novoId, atualizadoEm: new Date().toISOString() }]);
+              setObjetivos((prev) => prev.map((o) => (o.id === objetivoId ? { ...o, krIds: [...o.krIds, novoId] } : o)));
+              toast.success("Key Result criado!");
+            } else {
+              setKrsRaw((prev) => prev.map((k) => (k.id === krEditando.id ? { ...k, ...dados } : k)));
+              toast.success("Key Result atualizado!");
+            }
+            setKrEditando(null);
+          }}
+        />
+      )}
+
+      {confirmarExclusao && (
+        <Dialog open onOpenChange={(v) => !v && setConfirmarExclusao(null)}>
+          <DialogContent className="max-w-sm">
+            <DialogHeader>
+              <DialogTitle>Confirmar exclusão</DialogTitle>
+            </DialogHeader>
+            <p className="text-sm" style={{ color: C.graphiteSoft }}>
+              {confirmarExclusao.tipo === "objetivo"
+                ? <>Excluir o objetivo <strong>"{confirmarExclusao.titulo}"</strong> também remove todos os seus Key Results. Esta ação não pode ser desfeita.</>
+                : <>Excluir o Key Result <strong>"{confirmarExclusao.titulo}"</strong>? Esta ação não pode ser desfeita.</>}
+            </p>
+            <DialogFooter>
+              <Button variant="outline" size="sm" onClick={() => setConfirmarExclusao(null)}>Cancelar</Button>
+              <Button
+                size="sm"
+                style={{ background: "#B54B3F" }}
+                onClick={() => {
+                  if (confirmarExclusao.tipo === "objetivo") excluirObjetivo(confirmarExclusao.id);
+                  else excluirKr(confirmarExclusao.id);
+                  setConfirmarExclusao(null);
+                }}
+              >
+                Excluir
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 }
@@ -426,7 +593,7 @@ function CardRollup({
   );
 }
 
-function LinhaKr({ kr }: { kr: KeyResult }) {
+function LinhaKr({ kr, onEditar, onExcluir }: { kr: KeyResult; onEditar: () => void; onExcluir: () => void }) {
   const progresso = progressoKr(kr);
   const saude = saudeDoProgresso(progresso);
   return (
@@ -439,6 +606,207 @@ function LinhaKr({ kr }: { kr: KeyResult }) {
         <div className="h-full rounded-full" style={{ width: `${progresso}%`, background: SAUDE_COR[saude] }} />
       </div>
       <span className="w-10 text-right text-xs font-semibold tabular-nums" style={{ color: SAUDE_COR[saude] }}>{progresso}%</span>
+      <div className="flex items-center gap-0.5">
+        <button onClick={onEditar} className="rounded p-1 hover:bg-black/5"><Pencil className="h-3 w-3" style={{ color: C.graphiteSoft }} /></button>
+        <button onClick={onExcluir} className="rounded p-1 hover:bg-black/5"><Trash2 className="h-3 w-3" style={{ color: "#B54B3F" }} /></button>
+      </div>
     </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   CRUD — Objetivo e Key Result
+   ═══════════════════════════════════════════════════════════════ */
+
+function ObjetivoDialog({
+  objetivo,
+  areas,
+  trimestreAtual,
+  onClose,
+  onSalvar,
+}: {
+  objetivo: Objetivo | null;
+  areas: { id: string; nome: string }[];
+  trimestreAtual: string;
+  onClose: () => void;
+  onSalvar: (dados: Omit<Objetivo, "id" | "krIds">) => void;
+}) {
+  const [titulo, setTitulo] = useState(objetivo?.titulo ?? "");
+  const [areaId, setAreaId] = useState(objetivo?.areaId ?? areas[0]?.id ?? "");
+  const [trimestre, setTrimestre] = useState(objetivo?.trimestre ?? trimestreAtual);
+
+  const salvar = () => {
+    if (!titulo.trim() || !areaId) {
+      toast.error("Preencha o título e selecione uma área.");
+      return;
+    }
+    onSalvar({ titulo, areaId, trimestre });
+  };
+
+  return (
+    <Dialog open onOpenChange={(v) => !v && onClose()}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>{objetivo ? "Editar Objetivo" : "Novo Objetivo"}</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3">
+          <div className="space-y-1.5">
+            <Label className="text-xs">Título *</Label>
+            <Input value={titulo} onChange={(e) => setTitulo(e.target.value)} placeholder="Ex: Acelerar receita recorrente" />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs">Área *</Label>
+            <Select value={areaId} onValueChange={setAreaId}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {areas.map((a) => <SelectItem key={a.id} value={a.id}>{a.nome}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs">Trimestre</Label>
+            <Select value={trimestre} onValueChange={setTrimestre}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Q1-2026">Q1 2026</SelectItem>
+                <SelectItem value="Q2-2026">Q2 2026</SelectItem>
+                <SelectItem value="Q3-2026">Q3 2026</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" size="sm" onClick={onClose}>Cancelar</Button>
+          <Button size="sm" onClick={salvar}>{objetivo ? "Salvar" : "Criar"}</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function KeyResultDialog({
+  kr,
+  areas,
+  objetivos,
+  onClose,
+  onSalvar,
+}: {
+  kr: KeyResult | null;
+  areas: { id: string; nome: string }[];
+  objetivos: Objetivo[];
+  onClose: () => void;
+  onSalvar: (dados: Omit<KeyResult, "id" | "atualizadoEm">, objetivoId: string) => void;
+}) {
+  const [titulo, setTitulo] = useState(kr?.titulo ?? "");
+  const [objetivoId, setObjetivoId] = useState(objetivos.find((o) => o.krIds.includes(kr?.id ?? ""))?.id ?? objetivos[0]?.id ?? "");
+  const [areaId, setAreaId] = useState(kr?.areaId ?? areas[0]?.id ?? "");
+  const [responsavelNome, setResponsavelNome] = useState(kr?.responsavelNome ?? "");
+  const [responsavelMatricula, setResponsavelMatricula] = useState(kr?.responsavelMatricula ?? "");
+  const [metaValor, setMetaValor] = useState(String(kr?.metaValor ?? ""));
+  const [atualValor, setAtualValor] = useState(String(kr?.atualValor ?? "0"));
+  const [unidade, setUnidade] = useState<KeyResult["unidade"]>(kr?.unidade ?? "numero");
+  const [prazo, setPrazo] = useState(kr?.prazo ?? "");
+
+  const salvar = () => {
+    if (!titulo.trim() || !responsavelNome.trim() || !metaValor || !prazo) {
+      toast.error("Preencha título, responsável, meta e prazo.");
+      return;
+    }
+    onSalvar(
+      {
+        titulo,
+        areaId,
+        responsavelNome,
+        responsavelMatricula,
+        metaValor: Number(metaValor),
+        atualValor: Number(atualValor) || 0,
+        unidade,
+        prazo,
+        origemAuto: kr?.origemAuto ?? "manual",
+        historico: kr?.historico,
+        ultimoComentario: kr?.ultimoComentario,
+      },
+      objetivoId,
+    );
+  };
+
+  return (
+    <Dialog open onOpenChange={(v) => !v && onClose()}>
+      <DialogContent className="max-h-[85vh] max-w-md overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>{kr ? "Editar Key Result" : "Novo Key Result"}</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3">
+          <div className="space-y-1.5">
+            <Label className="text-xs">Título *</Label>
+            <Input value={titulo} onChange={(e) => setTitulo(e.target.value)} />
+          </div>
+          {!kr && (
+            <div className="space-y-1.5">
+              <Label className="text-xs">Objetivo *</Label>
+              <Select value={objetivoId} onValueChange={setObjetivoId}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {objetivos.map((o) => <SelectItem key={o.id} value={o.id}>{o.titulo}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+          <div className="space-y-1.5">
+            <Label className="text-xs">Área</Label>
+            <Select value={areaId} onValueChange={setAreaId}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {areas.map((a) => <SelectItem key={a.id} value={a.id}>{a.nome}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label className="text-xs">Responsável *</Label>
+              <Input value={responsavelNome} onChange={(e) => setResponsavelNome(e.target.value)} />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs">Matrícula</Label>
+              <Input value={responsavelMatricula} onChange={(e) => setResponsavelMatricula(e.target.value)} placeholder="Ex: 002" />
+            </div>
+          </div>
+          <div className="grid grid-cols-3 gap-3">
+            <div className="space-y-1.5">
+              <Label className="text-xs">Meta *</Label>
+              <Input type="number" value={metaValor} onChange={(e) => setMetaValor(e.target.value)} />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs">Atual</Label>
+              <Input type="number" value={atualValor} onChange={(e) => setAtualValor(e.target.value)} />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs">Unidade</Label>
+              <Select value={unidade} onValueChange={(v) => setUnidade(v as KeyResult["unidade"])}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="numero">Número</SelectItem>
+                  <SelectItem value="moeda">R$</SelectItem>
+                  <SelectItem value="percentual">%</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs">Prazo *</Label>
+            <Input value={prazo} onChange={(e) => setPrazo(e.target.value)} placeholder="dd/mm/aaaa" />
+          </div>
+          {kr?.origemAuto && kr.origemAuto !== "manual" && (
+            <p className="rounded-md p-2 text-[11px]" style={{ background: "#F4F5F7", color: C.graphiteSoft }}>
+              ⚠️ Este Key Result é atualizado automaticamente pelo ERP ({kr.origemAuto}). Editar o "Atual" aqui será sobrescrito na próxima sincronização.
+            </p>
+          )}
+        </div>
+        <DialogFooter>
+          <Button variant="outline" size="sm" onClick={onClose}>Cancelar</Button>
+          <Button size="sm" onClick={salvar}>{kr ? "Salvar" : "Criar"}</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
