@@ -46,6 +46,14 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { useNotasEntrada } from "@/lib/entradas-store";
+import { useContasReceber } from "@/lib/financeiro-store";
+import {
+  apurarTributos,
+  SEGMENTO_LABEL,
+  type SegmentoNegocio,
+  type RegimeApuracaoFiscal,
+  type ApuracaoResultado,
+} from "@/lib/apuracao-fiscal-engine";
 import { useDocumentosSefaz } from "@/lib/sefaz-store";
 import { conferirDocumentos, type DocConferencia } from "@/lib/confere-fiscal";
 import { exportToExcel } from "@/lib/export-excel";
@@ -101,6 +109,7 @@ function FiscalPage() {
           <TabsTrigger value="irpj" className="gap-1.5"><Coins className="h-3.5 w-3.5" /> IRPJ / CSLL</TabsTrigger>
           <TabsTrigger value="nf" className="gap-1.5"><FileText className="h-3.5 w-3.5" /> NF-e / NFS-e</TabsTrigger>
           <TabsTrigger value="confere" className="gap-1.5"><ShieldCheck className="h-3.5 w-3.5" /> Confere Fiscal</TabsTrigger>
+          <TabsTrigger value="apuracao" className="gap-1.5"><Calculator className="h-3.5 w-3.5" /> Apuração Completa</TabsTrigger>
         </TabsList>
 
         <TabsContent value="perfis" className="mt-4"><PerfisTab /></TabsContent>
@@ -109,6 +118,7 @@ function FiscalPage() {
         <TabsContent value="irpj" className="mt-4"><IrpjCsllTab /></TabsContent>
         <TabsContent value="nf" className="mt-4"><NFTab /></TabsContent>
         <TabsContent value="confere" className="mt-4"><ConfereFiscalTab /></TabsContent>
+        <TabsContent value="apuracao" className="mt-4"><ApuracaoCompletaTab /></TabsContent>
       </Tabs>
     </AppShell>
   );
@@ -1133,6 +1143,193 @@ function ConfereFiscalTab() {
           >
             <Download className="h-3.5 w-3.5" /> Exportar relatório
           </Button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   APURAÇÃO COMPLETA — motor de cálculo real, todos os regimes
+   ═══════════════════════════════════════════════════════════════ */
+
+const brlAp = (n: number) => n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+
+function ApuracaoCompletaTab() {
+  const [empresa] = useEmpresaFiscal();
+  const [contasReceber] = useContasReceber();
+  const [notasEntrada] = useNotasEntrada();
+
+  const receitaSugerida = useMemo(() => contasReceber.reduce((s, t) => s + t.totalReceber, 0), [contasReceber]);
+  const comprasSugeridas = useMemo(() => notasEntrada.reduce((s, n) => s + n.valorTotal, 0), [notasEntrada]);
+
+  const [segmento, setSegmento] = useState<SegmentoNegocio>("comercio_varejo");
+  const [regime, setRegime] = useState<RegimeApuracaoFiscal>(
+    (empresa.regime as RegimeApuracaoFiscal) ?? "Lucro Presumido",
+  );
+  const [competencia, setCompetencia] = useState(() => {
+    const d = new Date();
+    return `${String(d.getMonth() + 1).padStart(2, "0")}/${d.getFullYear()}`;
+  });
+  const [receitaBruta, setReceitaBruta] = useState(String(receitaSugerida || 0));
+  const [rbt12, setRbt12] = useState(String((receitaSugerida || 0) * 12));
+  const [folhaPagamento, setFolhaPagamento] = useState("31810");
+  const [comprasComCredito, setComprasComCredito] = useState(String(comprasSugeridas || 0));
+  const [aliquotaIcmsIss, setAliquotaIcmsIss] = useState(segmento === "servicos" ? "5" : "18");
+
+  const [resultado, setResultado] = useState<ApuracaoResultado | null>(null);
+
+  const apurar = () => {
+    const r = apurarTributos({
+      regime,
+      segmento,
+      competencia,
+      receitaBruta: Number(receitaBruta) || 0,
+      rbt12: Number(rbt12) || 0,
+      folhaPagamento: Number(folhaPagamento) || 0,
+      comprasComCredito: Number(comprasComCredito) || 0,
+      aliquotaIcmsIssMedia: Number(aliquotaIcmsIss) || 0,
+    });
+    setResultado(r);
+  };
+
+  return (
+    <div className="space-y-5">
+      <div className="rounded-lg border border-gold/30 bg-gold/5 p-4">
+        <div className="flex items-start gap-3">
+          <Calculator className="mt-0.5 h-5 w-5 shrink-0 text-gold" />
+          <div>
+            <p className="text-sm font-semibold">Apuração Completa — todos os regimes, todos os segmentos</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Simples Nacional (com Fator R), Lucro Presumido e Lucro Real, cobrindo IRPJ, CSLL, PIS, COFINS, ICMS/ISS
+              (Lei 116/2003), FGTS, INSS patronal e CBS/IBS da Reforma Tributária. Receita e compras já vêm pré-preenchidas
+              a partir do Financeiro e das Entradas reais — ajuste antes de apurar.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3 rounded-lg border border-border p-4 sm:grid-cols-4">
+        <div className="space-y-1.5">
+          <Label className="text-xs">Regime Tributário</Label>
+          <Select value={regime} onValueChange={(v) => setRegime(v as RegimeApuracaoFiscal)}>
+            <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Simples Nacional">Simples Nacional</SelectItem>
+              <SelectItem value="Lucro Presumido">Lucro Presumido</SelectItem>
+              <SelectItem value="Lucro Real">Lucro Real</SelectItem>
+              <SelectItem value="MEI">MEI</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-1.5">
+          <Label className="text-xs">Segmento</Label>
+          <Select value={segmento} onValueChange={(v) => setSegmento(v as SegmentoNegocio)}>
+            <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {(Object.keys(SEGMENTO_LABEL) as SegmentoNegocio[]).map((s) => (
+                <SelectItem key={s} value={s}>{SEGMENTO_LABEL[s]}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-1.5">
+          <Label className="text-xs">Competência</Label>
+          <Input value={competencia} onChange={(e) => setCompetencia(e.target.value)} placeholder="mm/aaaa" className="h-9" />
+        </div>
+        <div className="space-y-1.5">
+          <Label className="text-xs">Alíquota ICMS/ISS média (%)</Label>
+          <Input type="number" value={aliquotaIcmsIss} onChange={(e) => setAliquotaIcmsIss(e.target.value)} className="h-9" />
+        </div>
+        <div className="space-y-1.5">
+          <Label className="text-xs">Receita Bruta do mês (R$)</Label>
+          <Input type="number" value={receitaBruta} onChange={(e) => setReceitaBruta(e.target.value)} className="h-9" />
+          <p className="text-[10px] text-muted-foreground">Sugerido de Contas a Receber: {brlAp(receitaSugerida)}</p>
+        </div>
+        <div className="space-y-1.5">
+          <Label className="text-xs">RBT12 (Simples Nacional)</Label>
+          <Input type="number" value={rbt12} onChange={(e) => setRbt12(e.target.value)} className="h-9" />
+        </div>
+        <div className="space-y-1.5">
+          <Label className="text-xs">Folha de Pagamento (mês)</Label>
+          <Input type="number" value={folhaPagamento} onChange={(e) => setFolhaPagamento(e.target.value)} className="h-9" />
+        </div>
+        <div className="space-y-1.5">
+          <Label className="text-xs">Compras com direito a crédito</Label>
+          <Input type="number" value={comprasComCredito} onChange={(e) => setComprasComCredito(e.target.value)} className="h-9" />
+          <p className="text-[10px] text-muted-foreground">Sugerido de Entradas: {brlAp(comprasSugeridas)}</p>
+        </div>
+      </div>
+
+      <Button className="gap-1.5" onClick={apurar}>
+        <Calculator className="h-3.5 w-3.5" /> Apurar Tributos
+      </Button>
+
+      {resultado && (
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+            <div className="rounded-lg border border-border bg-card p-4">
+              <p className="text-[10px] uppercase text-muted-foreground">Total de Tributos</p>
+              <p className="mt-1 text-xl font-semibold text-gold">{brlAp(resultado.totalTributos)}</p>
+            </div>
+            <div className="rounded-lg border border-border bg-card p-4">
+              <p className="text-[10px] uppercase text-muted-foreground">Carga Tributária</p>
+              <p className="mt-1 text-xl font-semibold">{resultado.cargaTributariaPct.toFixed(2)}%</p>
+            </div>
+            <div className="rounded-lg border border-border bg-card p-4">
+              <p className="text-[10px] uppercase text-muted-foreground">Receita Líquida Estimada</p>
+              <p className="mt-1 text-xl font-semibold">{brlAp(resultado.input.receitaBruta - resultado.totalTributos)}</p>
+            </div>
+          </div>
+
+          {resultado.detalhesSimples && (
+            <div className="rounded-lg border border-border bg-secondary/30 p-3 text-xs">
+              <p className="font-medium">{resultado.detalhesSimples.anexo} — Faixa {resultado.detalhesSimples.faixa}</p>
+              <p className="mt-1 text-muted-foreground">
+                Alíquota nominal: {resultado.detalhesSimples.aliqNominal}% · Parcela a deduzir: {brlAp(resultado.detalhesSimples.parcelaDeduzir)} ·
+                Alíquota efetiva: <strong>{resultado.detalhesSimples.aliqEfetiva}%</strong>
+                {resultado.detalhesSimples.fatorR !== undefined && <> · Fator R: {resultado.detalhesSimples.fatorR}%</>}
+              </p>
+            </div>
+          )}
+
+          <div className="overflow-hidden rounded-lg border border-border">
+            <table className="w-full text-sm">
+              <thead className="bg-secondary/40">
+                <tr className="text-left text-[11px] uppercase tracking-wider text-muted-foreground">
+                  <th className="px-4 py-2.5">Tributo</th>
+                  <th className="px-3 py-2.5 text-right">Base de Cálculo</th>
+                  <th className="px-3 py-2.5 text-right">Alíquota</th>
+                  <th className="px-4 py-2.5 text-right">Valor</th>
+                </tr>
+              </thead>
+              <tbody>
+                {resultado.linhas.map((l) => (
+                  <tr key={l.codigo} className="border-t border-border">
+                    <td className="px-4 py-2.5">
+                      <p className="font-medium">{l.nome}</p>
+                      {l.observacao && <p className="mt-0.5 text-[11px] text-muted-foreground">{l.observacao}</p>}
+                    </td>
+                    <td className="px-3 py-2.5 text-right tabular-nums">{brlAp(l.base)}</td>
+                    <td className="px-3 py-2.5 text-right tabular-nums">{l.aliquota}%</td>
+                    <td className="px-4 py-2.5 text-right font-semibold tabular-nums">{brlAp(l.valor)}</td>
+                  </tr>
+                ))}
+              </tbody>
+              <tfoot>
+                <tr className="border-t-2 border-foreground/20 bg-secondary/20">
+                  <td className="px-4 py-3 font-semibold" colSpan={3}>Total de Tributos</td>
+                  <td className="px-4 py-3 text-right text-base font-bold text-gold">{brlAp(resultado.totalTributos)}</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+
+          <p className="text-[11px] text-muted-foreground">
+            Apuração gerencial simplificada, baseada nas tabelas e alíquotas oficiais vigentes. Não substitui SPED/EFD
+            homologado nem a apuração formal de um contador — use para comparar regimes e acompanhar a carga tributária
+            dentro do ERP.
+          </p>
         </div>
       )}
     </div>
