@@ -19,11 +19,13 @@ import { Route as PerfilRouteImport } from './routes/perfil'
 import { Route as OmnilinkRouteImport } from './routes/omnilink'
 import { Route as ObrigacoesRouteImport } from './routes/obrigacoes'
 import { Route as MapaOperacionalRouteImport } from './routes/mapa-operacional'
+import { Route as HomeRouteImport } from './routes/home'
 import { Route as FiscalRouteImport } from './routes/fiscal'
 import { Route as FinanceiroRouteImport } from './routes/financeiro'
 import { Route as EstoqueRouteImport } from './routes/estoque'
 import { Route as EntradasRouteImport } from './routes/entradas'
 import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as ConfiguracaoInicialRouteImport } from './routes/configuracao-inicial'
 import { Route as CadastrosRouteImport } from './routes/cadastros'
 import { Route as AcademyRouteImport } from './routes/academy'
 import { Route as IndexRouteImport } from './routes/index'
@@ -56,6 +58,9 @@ import { Route as EntradasEstoqueRouteImport } from './routes/entradas.estoque'
 import { Route as EntradasDevolucoesRouteImport } from './routes/entradas.devolucoes'
 import { Route as EntradasCreditosRouteImport } from './routes/entradas.creditos'
 import { Route as EntradasComprasRouteImport } from './routes/entradas.compras'
+import { Route as ConfiguracaoInicialConfiguracoesRouteImport } from './routes/configuracao-inicial_.configuracoes'
+import { Route as ConfiguracaoInicialConclusaoRouteImport } from './routes/configuracao-inicial_.conclusao'
+import { Route as ConfiguracaoInicialAdministradorRouteImport } from './routes/configuracao-inicial_.administrador'
 import { Route as ComercialEngenhariaVendasRouteImport } from './routes/comercial.engenharia-vendas'
 import { Route as ApiPublicWebhooksCanalIdRouteImport } from './routes/api/public/webhooks.$canalId'
 
@@ -109,6 +114,11 @@ const MapaOperacionalRoute = MapaOperacionalRouteImport.update({
   path: '/mapa-operacional',
   getParentRoute: () => rootRouteImport,
 } as any)
+const HomeRoute = HomeRouteImport.update({
+  id: '/home',
+  path: '/home',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const FiscalRoute = FiscalRouteImport.update({
   id: '/fiscal',
   path: '/fiscal',
@@ -132,6 +142,11 @@ const EntradasRoute = EntradasRouteImport.update({
 const DashboardRoute = DashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ConfiguracaoInicialRoute = ConfiguracaoInicialRouteImport.update({
+  id: '/configuracao-inicial',
+  path: '/configuracao-inicial',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CadastrosRoute = CadastrosRouteImport.update({
@@ -294,6 +309,24 @@ const EntradasComprasRoute = EntradasComprasRouteImport.update({
   path: '/compras',
   getParentRoute: () => EntradasRoute,
 } as any)
+const ConfiguracaoInicialConfiguracoesRoute =
+  ConfiguracaoInicialConfiguracoesRouteImport.update({
+    id: '/configuracao-inicial_/configuracoes',
+    path: '/configuracao-inicial/configuracoes',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ConfiguracaoInicialConclusaoRoute =
+  ConfiguracaoInicialConclusaoRouteImport.update({
+    id: '/configuracao-inicial_/conclusao',
+    path: '/configuracao-inicial/conclusao',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ConfiguracaoInicialAdministradorRoute =
+  ConfiguracaoInicialAdministradorRouteImport.update({
+    id: '/configuracao-inicial_/administrador',
+    path: '/configuracao-inicial/administrador',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ComercialEngenhariaVendasRoute =
   ComercialEngenhariaVendasRouteImport.update({
     id: '/comercial/engenharia-vendas',
@@ -311,11 +344,13 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/academy': typeof AcademyRoute
   '/cadastros': typeof CadastrosRoute
+  '/configuracao-inicial': typeof ConfiguracaoInicialRoute
   '/dashboard': typeof DashboardRoute
   '/entradas': typeof EntradasRouteWithChildren
   '/estoque': typeof EstoqueRoute
   '/financeiro': typeof FinanceiroRouteWithChildren
   '/fiscal': typeof FiscalRoute
+  '/home': typeof HomeRoute
   '/mapa-operacional': typeof MapaOperacionalRoute
   '/obrigacoes': typeof ObrigacoesRoute
   '/omnilink': typeof OmnilinkRoute
@@ -327,6 +362,9 @@ export interface FileRoutesByFullPath {
   '/vendas': typeof VendasRoute
   '/vetorcore': typeof VetorcoreRouteWithChildren
   '/comercial/engenharia-vendas': typeof ComercialEngenhariaVendasRoute
+  '/configuracao-inicial/administrador': typeof ConfiguracaoInicialAdministradorRoute
+  '/configuracao-inicial/conclusao': typeof ConfiguracaoInicialConclusaoRoute
+  '/configuracao-inicial/configuracoes': typeof ConfiguracaoInicialConfiguracoesRoute
   '/entradas/compras': typeof EntradasComprasRoute
   '/entradas/creditos': typeof EntradasCreditosRoute
   '/entradas/devolucoes': typeof EntradasDevolucoesRoute
@@ -362,9 +400,11 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/academy': typeof AcademyRoute
   '/cadastros': typeof CadastrosRoute
+  '/configuracao-inicial': typeof ConfiguracaoInicialRoute
   '/dashboard': typeof DashboardRoute
   '/estoque': typeof EstoqueRoute
   '/fiscal': typeof FiscalRoute
+  '/home': typeof HomeRoute
   '/mapa-operacional': typeof MapaOperacionalRoute
   '/obrigacoes': typeof ObrigacoesRoute
   '/omnilink': typeof OmnilinkRoute
@@ -374,6 +414,9 @@ export interface FileRoutesByTo {
   '/vendas': typeof VendasRoute
   '/vetorcore': typeof VetorcoreRouteWithChildren
   '/comercial/engenharia-vendas': typeof ComercialEngenhariaVendasRoute
+  '/configuracao-inicial/administrador': typeof ConfiguracaoInicialAdministradorRoute
+  '/configuracao-inicial/conclusao': typeof ConfiguracaoInicialConclusaoRoute
+  '/configuracao-inicial/configuracoes': typeof ConfiguracaoInicialConfiguracoesRoute
   '/entradas/compras': typeof EntradasComprasRoute
   '/entradas/creditos': typeof EntradasCreditosRoute
   '/entradas/devolucoes': typeof EntradasDevolucoesRoute
@@ -410,11 +453,13 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/academy': typeof AcademyRoute
   '/cadastros': typeof CadastrosRoute
+  '/configuracao-inicial': typeof ConfiguracaoInicialRoute
   '/dashboard': typeof DashboardRoute
   '/entradas': typeof EntradasRouteWithChildren
   '/estoque': typeof EstoqueRoute
   '/financeiro': typeof FinanceiroRouteWithChildren
   '/fiscal': typeof FiscalRoute
+  '/home': typeof HomeRoute
   '/mapa-operacional': typeof MapaOperacionalRoute
   '/obrigacoes': typeof ObrigacoesRoute
   '/omnilink': typeof OmnilinkRoute
@@ -426,6 +471,9 @@ export interface FileRoutesById {
   '/vendas': typeof VendasRoute
   '/vetorcore': typeof VetorcoreRouteWithChildren
   '/comercial/engenharia-vendas': typeof ComercialEngenhariaVendasRoute
+  '/configuracao-inicial_/administrador': typeof ConfiguracaoInicialAdministradorRoute
+  '/configuracao-inicial_/conclusao': typeof ConfiguracaoInicialConclusaoRoute
+  '/configuracao-inicial_/configuracoes': typeof ConfiguracaoInicialConfiguracoesRoute
   '/entradas/compras': typeof EntradasComprasRoute
   '/entradas/creditos': typeof EntradasCreditosRoute
   '/entradas/devolucoes': typeof EntradasDevolucoesRoute
@@ -463,11 +511,13 @@ export interface FileRouteTypes {
     | '/'
     | '/academy'
     | '/cadastros'
+    | '/configuracao-inicial'
     | '/dashboard'
     | '/entradas'
     | '/estoque'
     | '/financeiro'
     | '/fiscal'
+    | '/home'
     | '/mapa-operacional'
     | '/obrigacoes'
     | '/omnilink'
@@ -479,6 +529,9 @@ export interface FileRouteTypes {
     | '/vendas'
     | '/vetorcore'
     | '/comercial/engenharia-vendas'
+    | '/configuracao-inicial/administrador'
+    | '/configuracao-inicial/conclusao'
+    | '/configuracao-inicial/configuracoes'
     | '/entradas/compras'
     | '/entradas/creditos'
     | '/entradas/devolucoes'
@@ -514,9 +567,11 @@ export interface FileRouteTypes {
     | '/'
     | '/academy'
     | '/cadastros'
+    | '/configuracao-inicial'
     | '/dashboard'
     | '/estoque'
     | '/fiscal'
+    | '/home'
     | '/mapa-operacional'
     | '/obrigacoes'
     | '/omnilink'
@@ -526,6 +581,9 @@ export interface FileRouteTypes {
     | '/vendas'
     | '/vetorcore'
     | '/comercial/engenharia-vendas'
+    | '/configuracao-inicial/administrador'
+    | '/configuracao-inicial/conclusao'
+    | '/configuracao-inicial/configuracoes'
     | '/entradas/compras'
     | '/entradas/creditos'
     | '/entradas/devolucoes'
@@ -561,11 +619,13 @@ export interface FileRouteTypes {
     | '/'
     | '/academy'
     | '/cadastros'
+    | '/configuracao-inicial'
     | '/dashboard'
     | '/entradas'
     | '/estoque'
     | '/financeiro'
     | '/fiscal'
+    | '/home'
     | '/mapa-operacional'
     | '/obrigacoes'
     | '/omnilink'
@@ -577,6 +637,9 @@ export interface FileRouteTypes {
     | '/vendas'
     | '/vetorcore'
     | '/comercial/engenharia-vendas'
+    | '/configuracao-inicial_/administrador'
+    | '/configuracao-inicial_/conclusao'
+    | '/configuracao-inicial_/configuracoes'
     | '/entradas/compras'
     | '/entradas/creditos'
     | '/entradas/devolucoes'
@@ -613,11 +676,13 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AcademyRoute: typeof AcademyRoute
   CadastrosRoute: typeof CadastrosRoute
+  ConfiguracaoInicialRoute: typeof ConfiguracaoInicialRoute
   DashboardRoute: typeof DashboardRoute
   EntradasRoute: typeof EntradasRouteWithChildren
   EstoqueRoute: typeof EstoqueRoute
   FinanceiroRoute: typeof FinanceiroRouteWithChildren
   FiscalRoute: typeof FiscalRoute
+  HomeRoute: typeof HomeRoute
   MapaOperacionalRoute: typeof MapaOperacionalRoute
   ObrigacoesRoute: typeof ObrigacoesRoute
   OmnilinkRoute: typeof OmnilinkRoute
@@ -629,6 +694,9 @@ export interface RootRouteChildren {
   VendasRoute: typeof VendasRoute
   VetorcoreRoute: typeof VetorcoreRouteWithChildren
   ComercialEngenhariaVendasRoute: typeof ComercialEngenhariaVendasRoute
+  ConfiguracaoInicialAdministradorRoute: typeof ConfiguracaoInicialAdministradorRoute
+  ConfiguracaoInicialConclusaoRoute: typeof ConfiguracaoInicialConclusaoRoute
+  ConfiguracaoInicialConfiguracoesRoute: typeof ConfiguracaoInicialConfiguracoesRoute
   GestaoAnaliseFinanceiraRoute: typeof GestaoAnaliseFinanceiraRoute
   ApiPublicWebhooksCanalIdRoute: typeof ApiPublicWebhooksCanalIdRoute
 }
@@ -705,6 +773,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MapaOperacionalRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/home': {
+      id: '/home'
+      path: '/home'
+      fullPath: '/home'
+      preLoaderRoute: typeof HomeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/fiscal': {
       id: '/fiscal'
       path: '/fiscal'
@@ -738,6 +813,13 @@ declare module '@tanstack/react-router' {
       path: '/dashboard'
       fullPath: '/dashboard'
       preLoaderRoute: typeof DashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/configuracao-inicial': {
+      id: '/configuracao-inicial'
+      path: '/configuracao-inicial'
+      fullPath: '/configuracao-inicial'
+      preLoaderRoute: typeof ConfiguracaoInicialRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/cadastros': {
@@ -964,6 +1046,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EntradasComprasRouteImport
       parentRoute: typeof EntradasRoute
     }
+    '/configuracao-inicial_/configuracoes': {
+      id: '/configuracao-inicial_/configuracoes'
+      path: '/configuracao-inicial/configuracoes'
+      fullPath: '/configuracao-inicial/configuracoes'
+      preLoaderRoute: typeof ConfiguracaoInicialConfiguracoesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/configuracao-inicial_/conclusao': {
+      id: '/configuracao-inicial_/conclusao'
+      path: '/configuracao-inicial/conclusao'
+      fullPath: '/configuracao-inicial/conclusao'
+      preLoaderRoute: typeof ConfiguracaoInicialConclusaoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/configuracao-inicial_/administrador': {
+      id: '/configuracao-inicial_/administrador'
+      path: '/configuracao-inicial/administrador'
+      fullPath: '/configuracao-inicial/administrador'
+      preLoaderRoute: typeof ConfiguracaoInicialAdministradorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/comercial/engenharia-vendas': {
       id: '/comercial/engenharia-vendas'
       path: '/comercial/engenharia-vendas'
@@ -1088,11 +1191,13 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AcademyRoute: AcademyRoute,
   CadastrosRoute: CadastrosRoute,
+  ConfiguracaoInicialRoute: ConfiguracaoInicialRoute,
   DashboardRoute: DashboardRoute,
   EntradasRoute: EntradasRouteWithChildren,
   EstoqueRoute: EstoqueRoute,
   FinanceiroRoute: FinanceiroRouteWithChildren,
   FiscalRoute: FiscalRoute,
+  HomeRoute: HomeRoute,
   MapaOperacionalRoute: MapaOperacionalRoute,
   ObrigacoesRoute: ObrigacoesRoute,
   OmnilinkRoute: OmnilinkRoute,
@@ -1104,6 +1209,9 @@ const rootRouteChildren: RootRouteChildren = {
   VendasRoute: VendasRoute,
   VetorcoreRoute: VetorcoreRouteWithChildren,
   ComercialEngenhariaVendasRoute: ComercialEngenhariaVendasRoute,
+  ConfiguracaoInicialAdministradorRoute: ConfiguracaoInicialAdministradorRoute,
+  ConfiguracaoInicialConclusaoRoute: ConfiguracaoInicialConclusaoRoute,
+  ConfiguracaoInicialConfiguracoesRoute: ConfiguracaoInicialConfiguracoesRoute,
   GestaoAnaliseFinanceiraRoute: GestaoAnaliseFinanceiraRoute,
   ApiPublicWebhooksCanalIdRoute: ApiPublicWebhooksCanalIdRoute,
 }

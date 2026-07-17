@@ -1,0 +1,171 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum RegimeTributario {
+  SIMPLES_NACIONAL
+  LUCRO_PRESUMIDO
+  LUCRO_REAL
+  MEI
+}
+
+enum StatusContaReceber {
+  PENDENTE
+  PARCIAL
+  RECEBIDO
+  VENCIDO
+  CANCELADO
+}
+
+model Empresa {
+  id           String  @id @default(cuid())
+  razaoSocial  String
+  nomeFantasia String?
+  cnpj         String  @unique
+  email        String?
+  telefone     String?
+  ativo        Boolean @default(true)
+
+  usuarios       Usuario[]
+  clientes       Cliente[]
+  fornecedores   Fornecedor[]
+  produtos       Produto[]
+  contasReceber  ContaReceber[]
+  configuracao   ConfiguracaoEmpresa?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ConfiguracaoEmpresa {
+  id               String           @id @default(cuid())
+  moeda            String           @default("BRL")
+  idioma           String           @default("pt-BR")
+  fusoHorario      String           @default("America/Sao_Paulo")
+  regimeTributario RegimeTributario
+
+  empresaId String  @unique
+  empresa   Empresa @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Usuario {
+  id        String  @id @default(cuid())
+  nome      String
+  email     String  @unique
+  senhaHash String
+  perfil    String  @default("ADMIN")
+  ativo     Boolean @default(true)
+
+  empresaId String
+  empresa   Empresa @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([empresaId])
+}
+
+model Cliente {
+  id           String  @id @default(cuid())
+  codigo       String?
+  razaoSocial  String
+  nomeFantasia String?
+  cnpjCpf      String
+  email        String?
+  telefone     String?
+  ativo        Boolean @default(true)
+
+  empresaId String
+  empresa   Empresa @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+
+  contasReceber ContaReceber[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([empresaId])
+  @@unique([empresaId, cnpjCpf])
+}
+
+model Fornecedor {
+  id           String  @id @default(cuid())
+  codigo       String?
+  razaoSocial  String
+  nomeFantasia String?
+  cnpjCpf      String
+  email        String?
+  telefone     String?
+  ativo        Boolean @default(true)
+
+  empresaId String
+  empresa   Empresa @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([empresaId])
+  @@unique([empresaId, cnpjCpf])
+}
+
+model Produto {
+  id         String  @id @default(cuid())
+  codigo     String
+  descricao  String
+  unidade    String  @default("UN")
+  precoVenda Decimal @default(0)
+  ativo      Boolean @default(true)
+
+  empresaId String
+  empresa   Empresa @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([empresaId])
+  @@unique([empresaId, codigo])
+}
+
+model ContaReceber {
+  id String @id @default(cuid())
+
+  numeroDocumento String
+  descricao       String?
+
+  dataEmissao    DateTime
+  dataVencimento DateTime
+
+  valorOriginal Decimal
+  valorRecebido Decimal @default(0)
+  valorAberto   Decimal
+
+  juros    Decimal @default(0)
+  multa    Decimal @default(0)
+  desconto Decimal @default(0)
+
+  status StatusContaReceber @default(PENDENTE)
+
+  observacao String?
+
+  empresaId String
+  empresa   Empresa @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+
+  clienteId String
+  cliente   Cliente @relation(fields: [clienteId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([empresaId])
+  @@index([clienteId])
+  @@index([status])
+  @@index([dataVencimento])
+  @@unique([empresaId, numeroDocumento])
+}

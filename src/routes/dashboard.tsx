@@ -47,12 +47,20 @@ import {
 } from "@/lib/dashboard-metrics";
 import { usePedidosMarketplace } from "@/lib/omnilink-store";
 import { formatAxisCompact, formatBRLCompact } from "@/lib/format";
+import { requireAuthenticatedRoute } from "@/lib/require-auth";
 
 export const Route = createFileRoute("/dashboard")({
+  beforeLoad: async () => {
+    return requireAuthenticatedRoute();
+  },
   head: () => ({
     meta: [
       { title: "Dashboard — Syntera ERP" },
-      { name: "description", content: "Painel operacional integrado do Syntera ERP com visão financeira, fiscal, estoque e vendas." },
+      {
+        name: "description",
+        content:
+          "Painel operacional integrado do Syntera ERP com visão financeira, fiscal, estoque e vendas.",
+      },
     ],
   }),
   component: DashboardPage,

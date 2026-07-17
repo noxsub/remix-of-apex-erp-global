@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState, useCallback } from "react";
 
+import { loginFn } from "../functions/auth.functions";
 export const Route = createFileRoute("/")({
   head: () => ({ meta: [{ title: "Syntera ERP" }] }),
   component: SynteraDNA,
@@ -42,6 +43,8 @@ function SynteraDNA() {
   const [loginId, setLoginId] = useState("");
   const [loginPw, setLoginPw] = useState("");
   const [loginError, setLoginError] = useState(false);
+  const [loginLoading, setLoginLoading] = useState(false);
+  const [loginErrorMessage, setLoginErrorMessage] = useState("");
 
   /* ── Resize ─────────────────────────────────────────────────────────────── */
   useEffect(() => {
@@ -202,18 +205,51 @@ function SynteraDNA() {
   };
 
   /* ── Login ───────────────────────────────────────────────────────────────── */
-  const handleLogin = () => {
-    if (loginId.toUpperCase() === "ADM" && loginPw === "123") {
+  const handleLogin = async () => {
+    if (loginLoading) {
+      return;
+    }
+
+    setLoginLoading(true);
+    setLoginError(false);
+    setLoginErrorMessage("");
+
+    try {
+      await loginFn({
+        data: {
+          email: loginId,
+          senha: loginPw,
+        },
+      });
+
       setPhase("success");
-      setTimeout(() => navigate({ to: "/dashboard" }), 1200);
-    } else {
+
+      window.setTimeout(() => {
+        void navigate({
+          to: "/home",
+        });
+      }, 1200);
+    } catch (error) {
       setLoginError(true);
-      setTimeout(() => setLoginError(false), 2000);
+
+      setLoginErrorMessage(
+        error instanceof Error
+          ? error.message
+          : "Não foi possível realizar o login.",
+      );
+    } finally {
+      setLoginLoading(false);
     }
   };
 
-  const handleKey = (e: React.KeyboardEvent) => { if (e.key === "Enter") handleLogin(); };
-
+  const handleKey = (
+    event: React.KeyboardEvent<HTMLInputElement>,
+  ) => {
+    if (event.key === "Enter") {
+      void handleLogin();
+    }
+  };  
+ 
   /* ── Module positions ────────────────────────────────────────────────────── */
   const R = Math.min(dims.w, dims.h) * 0.3;
   const cx = dims.w / 2, cy = dims.h / 2;
@@ -301,16 +337,139 @@ function SynteraDNA() {
 
       {/* Login form */}
       {phase === "login" && (
-        <div style={{ position: "absolute", left: "50%", top: "50%", transform: "translate(-50%,-50%)", zIndex: 25, textAlign: "center", animation: loginError ? "shake 0.4s ease" : "loginIn 0.9s ease forwards", width: 290 }}>
-          <div style={{ fontSize: 9, letterSpacing: "0.6em", color: "rgba(212,175,55,0.32)", marginBottom: 6, fontWeight: 500 }}>SYNTERA ERP</div>
-          <div style={{ fontSize: 10, color: "rgba(255,248,230,0.14)", marginBottom: 32, letterSpacing: "0.15em" }}>Enterprise AI Platform</div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            <input value={loginId} onChange={e => { setLoginId(e.target.value); setLoginError(false); }} onKeyDown={handleKey} placeholder="ID do usuário" style={inputStyle} />
-            <input type="password" value={loginPw} onChange={e => { setLoginPw(e.target.value); setLoginError(false); }} onKeyDown={handleKey} placeholder="Senha" style={inputStyle} />
-            {loginError && <div style={{ fontSize: 10.5, color: "rgba(220,75,75,0.8)", letterSpacing: "0.06em" }}>Credenciais inválidas</div>}
-            <button onClick={handleLogin} style={{ background: "linear-gradient(135deg,#9A7206,#D4AF37,#E8C84A)", border: "none", borderRadius: 8, color: "#04070e", fontWeight: 700, fontSize: 13, letterSpacing: "0.2em", padding: 14, cursor: "pointer", fontFamily: "inherit", marginTop: 2, boxShadow: "0 4px 24px rgba(212,175,55,0.22)" }}>ENTRAR</button>
-            <a href="#" style={{ color: "rgba(212,175,55,0.25)", fontSize: 10, textDecoration: "none", letterSpacing: "0.08em", display: "block", marginTop: 2 }}>Esqueceu a senha?</a>
+        <div
+          style={{
+            position: "absolute",
+            left: "50%",
+            top: "50%",
+            transform: "translate(-50%,-50%)",
+            zIndex: 25,
+            textAlign: "center",
+            animation: loginError
+              ? "shake 0.4s ease"
+              : "loginIn 0.9s ease forwards",
+            width: 290,
+          }}
+        >
+          <div
+            style={{
+              fontSize: 9,
+              letterSpacing: "0.6em",
+              color: "rgba(212,175,55,0.32)",
+              marginBottom: 6,
+              fontWeight: 500,
+            }}
+          >
+            SYNTERA ERP
           </div>
+
+          <div
+            style={{
+              fontSize: 10,
+              color: "rgba(255,248,230,0.14)",
+              marginBottom: 32,
+              letterSpacing: "0.15em",
+            }}
+          >
+            Enterprise AI Platform
+          </div>
+
+          <form
+            method="post"
+            autoComplete="on"
+            onSubmit={(event) => {
+              event.preventDefault();
+              void handleLogin();
+            }}
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: 12,
+            }}
+          >
+            <input
+              type="email"
+              name="username"
+              value={loginId}
+              onChange={(event) => {
+                setLoginId(event.target.value);
+                setLoginError(false);
+                setLoginErrorMessage("");
+              }}
+              placeholder="E-mail"
+              autoComplete="username"
+              inputMode="email"
+              disabled={loginLoading}
+              style={inputStyle}
+            />
+
+            <input
+              type="password"
+              name="password"
+              value={loginPw}
+              onChange={(event) => {
+                setLoginPw(event.target.value);
+                setLoginError(false);
+                setLoginErrorMessage("");
+              }}
+              placeholder="Senha"
+              autoComplete="current-password"
+              disabled={loginLoading}
+              style={inputStyle}
+            />
+
+            {loginError && (
+              <div
+                role="alert"
+                style={{
+                  fontSize: 10.5,
+                  color: "rgba(220,75,75,0.8)",
+                  letterSpacing: "0.06em",
+                }}
+              >
+                {loginErrorMessage || "E-mail ou senha inválidos."}
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={loginLoading}
+              style={{
+                background:
+                  "linear-gradient(135deg,#9A7206,#D4AF37,#E8C84A)",
+                border: "none",
+                borderRadius: 8,
+                color: "#04070e",
+                fontWeight: 700,
+                fontSize: 13,
+                letterSpacing: "0.2em",
+                padding: 14,
+                cursor: loginLoading ? "wait" : "pointer",
+                fontFamily: "inherit",
+                marginTop: 2,
+                boxShadow:
+                  "0 4px 24px rgba(212,175,55,0.22)",
+                opacity: loginLoading ? 0.7 : 1,
+              }}
+            >
+              {loginLoading ? "ENTRANDO..." : "ENTRAR"}
+            </button>
+
+            <a
+              href="#"
+              onClick={(event) => event.preventDefault()}
+              style={{
+                color: "rgba(212,175,55,0.25)",
+                fontSize: 10,
+                textDecoration: "none",
+                letterSpacing: "0.08em",
+                display: "block",
+                marginTop: 2,
+              }}
+            >
+              Esqueceu a senha?
+            </a>
+          </form>
         </div>
       )}
 

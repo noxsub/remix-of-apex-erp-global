@@ -54,10 +54,17 @@ type NavItem = {
 };
 
 const sections: { label: string; items: NavItem[] }[] = [
-  {
-    label: "Visão Geral",
-    items: [{ title: "Dashboard", url: "/dashboard", icon: LayoutDashboard }],
-  },
+  
+  {  
+  label: "Floki",
+  items: [
+    {
+      title: "Home Inteligente",
+      url: "/home",
+      icon: Sparkles,
+    },
+  ],
+},
   {
     // Sequência fixa: Cadastros → RH → Entradas → Saídas → Financeiro
     label: "Operacional",
@@ -139,12 +146,22 @@ const sections: { label: string; items: NavItem[] }[] = [
       },
     ],
   },
-  {
-    label: "Gestão",
-    items: [
-      { title: "Análise Financeira", url: "/gestao/analise-financeira", icon: FileBarChart2 },
-    ],
-  },
+  
+ {   
+  label: "Gestão",
+  items: [
+    {
+      title: "Dashboard",
+      url: "/dashboard",
+      icon: LayoutDashboard,
+    },
+    {
+      title: "Análise Financeira",
+      url: "/gestao/analise-financeira",
+      icon: FileBarChart2,
+    },
+  ],
+},
   {
     label: "Inteligência",
     items: [
@@ -213,8 +230,8 @@ export function AppSidebar() {
       {/* ─── Logo ─── */}
       <SidebarHeader className="border-b border-sidebar-border px-4 py-5">
         <Link
-          to="/dashboard"
-          aria-label="Ir para o Dashboard do Syntera ERP"
+          to="/home"
+          aria-label="Ir para a Home Inteligente do Syntera ERP"
           className="flex items-center gap-2 rounded-md outline-none transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-gold/60"
         >
           <div className="relative flex h-9 w-9 items-center justify-center rounded-md bg-black ring-1 ring-gold/30 shadow-[0_0_18px_-4px_oklch(0.78_0.13_85/0.55)]">
@@ -241,7 +258,7 @@ export function AppSidebar() {
 
       {/* ─── Floki Intelligence Card (expanded mode) ─── */}
       <Link
-        to="/dashboard"
+        to="/home"
         className="mx-3 mt-3 block rounded-lg border border-gold/20 bg-gold/5 p-3 transition-colors hover:bg-gold/10 group-data-[collapsible=icon]:hidden"
       >
         <div className="flex items-center gap-2">
@@ -308,7 +325,7 @@ export function AppSidebar() {
                       </SidebarMenuButton>
 
                       {/* Badge: alertas Floki no Dashboard */}
-                      {item.url === "/dashboard" && alertas.length > 0 && (
+                      {item.url === "/home" && alertas.length > 0 && (
                         <SidebarMenuBadge>
                           <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-gold/15 px-1.5 text-[10px] font-semibold text-gold">
                             {alertas.length}
